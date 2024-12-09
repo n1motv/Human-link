@@ -6,8 +6,6 @@ Flask-Bcrypt==1.0.1
 Flask-Migrate==3.1.0
 Flask-Mail==0.9.1
 python-dotenv==1.0.0
-psycopg2==2.9.6  # For PostgreSQL if you're using it
-sqlite3  # If you are using SQLite, no separate installation is needed
 Werkzeug==2.3.6  # For various utilities that Flask uses internally
 requests==2.31.0  # If you want to make HTTP requests in your app (e.g., sending emails or notifications)
 gunicorn==20.1.0  # For deploying Flask with Gunicorn in production
