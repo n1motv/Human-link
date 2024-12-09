@@ -1,0 +1,626 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo h1 {
+    font-size: 28px;
+    margin: 0;
+    color: white
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav ul li {
+    margin-left: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+}
+
+nav ul li a:hover {
+    color: #ecf0f1;
+}
+
+/* Main content */
+main {
+    padding: 20px 0;
+}
+
+h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #34495e;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #34495e;
+    color: white;
+}
+
+table td {
+    background-color: #ecf0f1;
+}
+
+table tr:hover {
+    background-color: #dcdfe1;
+}
+
+/* Footer */
+footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.logo h1 {
+    font-size: 28px;
+    margin: 0;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav ul li {
+    margin-left: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+}
+
+nav ul li a:hover {
+    color: #ecf0f1;
+}
+
+/* Main content */
+main {
+    padding: 20px 0;
+}
+
+h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.form-ajout {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-ajout label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+.form-ajout input[type="text"],
+.form-ajout input[type="email"],
+.form-ajout input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-ajout button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-ajout button:hover {
+    background-color: #34495e;
+}
+
+/* Footer */
+footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7fc;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2 {
+    color: #333;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: #007BFF;
+}
+
+a:hover {
+    color: white;
+}
+
+header {
+    background-color: #343a40;
+    color: white;
+    padding: 20px;
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+header nav ul li {
+    margin-left: 20px;
+}
+
+header nav ul li a {
+    color: white;
+    font-weight: bold;
+}
+
+header nav ul li a:hover {
+    color: #ffc107;
+}
+
+main {
+    margin: 20px;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #343a40;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+td {
+    vertical-align: middle;
+}
+
+/* Button Styles */
+button {
+    padding: 8px 15px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px;
+    transition: all 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Input Styles */
+.input-motif {
+    padding: 8px;
+    margin-top: 5px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.input-motif:focus {
+    outline: none;
+    border-color: #007BFF;
+}
+
+/* Link Styles */
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: #007BFF;
+    font-weight: bold;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+
+button.btn-login {
+    padding: 12px 20px;
+    background-color: #343a40;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.10s ease;
+    width: 100%;
+}
+
+button.btn-login:hover {
+    background-color: #4a5b6b;
+}
+
+button.btn-login:focus {
+    outline: none;
+}
+
+/* Responsive Styles */
+@media (max-width: 600px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    button.btn-login {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+/* Style pour les liens avec la classe btn-link en tant que bouton */
+.btn-link {
+    display: inline-block;
+    padding: 10px 20px;
+    color: white;
+    width: 100%;
+    background-color: #4a5b6b;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 5px;
+    text-align: center;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    border: 1px solid transparent; /* Contour transparent pour l'effet de survol */
+}
+
+/* Effet de survol */
+.btn-link:hover {
+    background-color: #4a5b6b; /* Couleur plus foncée au survol */
+    transform: scale(1.05); /* Légère augmentation de taille */
+}
+
+/* Effet de focus (quand le lien est sélectionné ou cliqué) */
+.btn-link:focus {
+    outline: none;
+    border: 1px solid #4a5b6b; /* Ajout d'un contour au focus */
+}
+
+.btn-link:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+input{
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+
+input:focus {
+    border-color: #007BFF;
+    background-color: #e8f0fe;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+.input-motif {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    line-height: 1.5;  /* Améliore la lisibilité du texte */
+    min-height: 100px; /* Assure que l'élément a une hauteur minimale pour l'entrée de texte */
+    resize: vertical; /* Permet à l'utilisateur de redimensionner le champ de texte verticalement */
+}
+
+.input-motif:focus {
+    border-color: red; /* Change la bordure au focus pour plus de visibilité */
+    background-color: #fff; /* Change la couleur de fond quand le champ est sélectionné */
+    box-shadow: 0 0 5px red; /* Ajoute un léger effet d'ombre */
+}
+
+
+label {
+    font-size: 18px;
+    margin-bottom: 8px;
+    display: block;
+    color: #333; 
+}
+
+label:hover {
+    color: #007BFF;
+    cursor: pointer;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: #fff;
+    border-radius: 12px; /* Coins arrondis */
+    overflow: hidden; /* Pour éviter que les bordures soient visibles quand on arrondit */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombre douce autour du tableau */
+    transition: transform 0.3s ease-in-out; /* Animation d'agrandissement */
+}
+
+/* Effet au survol du tableau (agrandissement avec ombre) */
+table:hover {
+    transform: scale(1.02); /* Agrandissement léger au survol */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Ombre plus marquée */
+}
+
+th, td {
+    padding: 20px 25px;
+    text-align: left;
+    font-size: 16px;
+    color: #333;
+    transition: all 0.3s ease-in-out; /* Transition pour l'effet hover */
+}
+
+/* En-têtes */
+th {
+    background-color: #34495e;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Style pour les lignes impaires */
+tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+/* Style pour les lignes paires */
+tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+/* Effet de survol des lignes */
+tr:hover {
+    background-color: #f2f2f2;
+    cursor: pointer;
+}
+
+/* Cellules de données */
+td {
+    font-size: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Cellules d'action */
+td.actions {
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Boutons */
+.btn-success {
+    background-color: #2ecc71;
+    color: #fff;
+    margin-right: 10px;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+button:hover {
+    transform: translateY(-3px); /* Animation de montée */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Ombre pendant le survol */
+}
+
+/* Animation de survol du bouton */
+button:active {
+    transform: translateY(1px); /* Effet au clic */
+}
+
+/* Effet pour les boutons spécifiques */
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+#btn_exept{
+    padding: 8px 15px;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px;
+    transition: all 0.3s;
+}
+
+#btn_exept:hover {
+    transform: scale(1.05);
+}
+
+/* Responsivité pour les petits écrans */
+@media (max-width: 768px) {
+    th, td {
+        font-size: 14px;
+        padding: 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+}

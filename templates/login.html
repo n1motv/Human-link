@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div>
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Connexion à votre compte</h2>
+            {% if message %}
+                <p class="error-message">{{ message }}</p>
+            {% endif %}
+            <form method="POST" class="login-form">
+                <label for="email">Email :</label>
+                <input type="text" name="email" id="email" required placeholder="Entrez votre email"><br>
+                <br>
+                <label for="mot_de_passe">Mot de passe :</label>
+                <input type="password" name="mot_de_passe" id="mot_de_passe" required placeholder="Entrez votre mot de passe"><br>
+                <br>
+            
+
+                <button type="submit" class="btn-login"id= "btn_exept">Connexion</button>
+            </form>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soumettre une Demande de Congé</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Soumettre une Demande de Congé</h2>
+            <form method="POST" class="form-ajout">
+                <label for="raison">Raison:</label>
+                <textarea name="raison" required class="input-motif"></textarea><br>
+
+                <label for="date_debut">Date de début :</label>
+                <input type="date" name="date_debut" required><br>
+
+                <label for="date_fin">Date de fin :</label>
+                <input type="date" name="date_fin" required><br>
+
+                <label for="plus_infos">Informations supplémentaires (facultatif):</label>
+                <textarea name="plus_infos" class="input-motif" ></textarea><br>
+
+                <button type="submit">Soumettre</button>
+            </form>
+            <br>
+            <a href="{{ url_for('voir_mes_info') }}" class="btn-link">Retour à mes informations</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Mon Application. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>

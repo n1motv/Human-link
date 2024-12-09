@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter un Employé</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">Tableau de bord</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Ajouter un Employé</h2>
+            <form method="POST" class="form-ajout">
+                <label for="nom">Nom:</label>
+                <input type="text" name="nom" required><br><br>
+                
+                <label for="prenom">Prénom:</label>
+                <input type="text" name="prenom" required><br><br>
+                
+                <label for="age">Âge:</label>
+                <input type="number" name="age" required><br><br>
+                
+                <label for="poste">Poste:</label>
+                <input type="text" name="poste" required><br><br>
+                
+                <label for="departement">Département:</label>
+                <input type="text" name="departement" required><br><br>
+                
+                <label for="email">Email:</label>
+                <input type="email" name="email" required><br><br>
+                
+                <label for="mot_de_passe">Mot de passe:</label>
+                <input type="password" name="mot_de_passe" required><br><br>
+                
+                <label for="conge">Solde de congé:</label>
+                <input type="number" name="conge" required><br><br>
+                
+                <label for="salaire">Salaire:</label>
+                <input type="number" name="salaire" required><br><br>
+                
+                <button type="submit">Ajouter</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Mon Application. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>

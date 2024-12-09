@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi des Demandes de Congé</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Suivi de mes Demandes de Congé</h2>
+            {% if demandes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Raison</th>
+                        <th>Date de Début</th>
+                        <th>Date de Fin</th>
+                        <th>Infos Supplémentaires</th>
+                        <th>Statut</th>
+                        <th>Motif de Refus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for demande in demandes %}
+                    <tr>
+                        <td>{{ demande[0] }}</td>
+                        <td>{{ demande[1] }}</td>
+                        <td>{{ demande[2] }}</td>
+                        <td>{{ demande[3] }}</td>
+                        <td>{{ demande[4] }}</td>
+                        <td>{{ demande[5] }}</td>
+                        <td>{{ demande[6] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>Aucune demande de congé trouvée.</p>
+            {% endif %}
+            <br>
+            <a href="{{ url_for('voir_mes_info') }}" class="btn-link">Retour à mes informations</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Mon Application. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
