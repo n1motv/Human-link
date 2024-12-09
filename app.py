@@ -62,7 +62,7 @@ def repondre_demande(id):
         return redirect(url_for('demandes_conges'))
     return "Erreur lors du traitement de la demande."
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form['email']
