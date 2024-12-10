@@ -13,20 +13,21 @@ def voir_employes():
     connexion = connect_db()
     curseur = connexion.cursor()
     curseur.execute("""
-        SELECT nom, prenom, age, poste, departement, email, conge, salaire , id FROM users WHERE id != 1 ORDER BY id
+        SELECT nom, prenom, age, poste, departement, email, conge, salaire ,id, role  FROM users WHERE id != 1 ORDER BY id
     """)
     resultats = curseur.fetchall()
+    print(resultats)
     connexion.close()
     return resultats
 
-def ajouter_employe(nom, prenom, age, poste, departement, email, mot_de_passe, conge, salaire):
+def ajouter_employe(nom, prenom, age, poste, departement, email, mot_de_passe, conge, salaire,role):
     mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), bcrypt.gensalt())
     connexion = connect_db()
     curseur = connexion.cursor()
     curseur.execute("""
-        INSERT INTO users (nom, prenom, age, poste, departement, email, mot_de_passe, conge, salaire)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (nom, prenom, age, poste, departement, email, mot_de_passe_hash, conge, salaire))
+        INSERT INTO users (nom, prenom, age, poste, departement, email, mot_de_passe, conge, salaire,role)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+    """, (nom, prenom, age, poste, departement, email, mot_de_passe_hash, conge, salaire,role))
     connexion.commit()
     connexion.close()
 
@@ -45,7 +46,6 @@ def repondre_demande_conge(id_demande, statut, motif_refus=None):
     curseur = connexion.cursor()
     curseur.execute("SELECT * FROM conges WHERE id = ?", (id_demande,))
     demande = curseur.fetchone()
-
     if demande:
         email_employe = demande[1]
         date_debut = datetime.strptime(demande[3], '%Y-%m-%d')

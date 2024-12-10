@@ -2,7 +2,10 @@ import sqlite3
 import bcrypt
 
 def connect_db():
-    return sqlite3.connect("rh_data.db")
+    connexion = sqlite3.connect("rh_data.db")
+    connexion.row_factory = sqlite3.Row  # Pour permettre l'accès par nom aux colonnes
+    return connexion
+
 def verification_creation_table():
     connexion = connect_db()
     cur = connexion.cursor()
@@ -31,7 +34,8 @@ def cree_table_utilisateurs():
                     mot_de_passe TEXT,
                     conge FLOAT,
                     salaire FLOAT,
-                    dernier_mois_maj TEXT)""")
+                    dernier_mois_maj TEXT,
+                    role TEXT)""")
         connexion.commit()
         connexion.close()
 def verification_creation_table_conges():
@@ -67,6 +71,35 @@ def cree_table_conges():
         connexion.commit()
         connexion.close()
         print("Table des congés créée avec succès.")
+
+def verification_creation_table_manager():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='managers';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
+
+def cree_table_manager():
+    if verification_creation_table_manager() :
+        return
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    cur.execute("""
+        CREATE TABLE managers (
+        id_manager INTEGER NOT NULL,
+        id_employe INTEGER NOT NULL,
+        FOREIGN KEY (id_manager) REFERENCES users (id) ON DELETE CASCADE,
+        FOREIGN KEY (id_employe) REFERENCES users (id) ON DELETE CASCADE,
+        PRIMARY KEY (id_manager, id_employe)
+    )
+    """)
+    connexion.commit()
+    connexion.close()
+    print("Table des managers créée avec succès.")
 
 def verifier_admin_existe():
     connexion= connect_db()

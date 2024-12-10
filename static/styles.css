@@ -624,3 +624,252 @@ button:active {
         font-size: 14px;
     }
 }
+/* General styles for the form */
+form {
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Style the <label> elements */
+form label {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+/* Style the <select> dropdown */
+form select {
+    width: 100%; /* Adjust width as needed */
+    padding: 10px;
+    font-size: 16px;
+    color: #555;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    appearance: none; /* Removes default browser styles */
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Add hover and focus effects */
+form select:hover, 
+form select:focus {
+    border-color: #007bff; /* Blue border on focus/hover */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Style the dropdown options */
+form select option {
+    font-size: 16px;
+    color: #333;
+    padding: 5px;
+    background-color: #fff;
+}
+
+/* Optional: Add spacing between form fields */
+form select + br {
+    margin-bottom: 15px;
+}
+
+/* Add a button style for the form */
+form button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}
+.alert.success {
+    color: green;
+    background-color: #e8ffe8;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid green;
+    border-radius: 5px;
+}
+.alert.error {
+    color: red;
+    background-color: #ffe8e8;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid red;
+    border-radius: 5px;
+}
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+
+    /* General body styles */
+    body {
+        font-size: 14px;
+    }
+
+    /* Header adjustments */
+    header {
+        padding: 15px 10px;
+        text-align: center;
+    }
+
+    .logo h1 {
+        font-size: 24px;
+    }
+
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav ul li {
+        margin: 10px 0;
+    }
+
+    nav ul li a {
+        font-size: 16px;
+    }
+
+    /* Container and layout */
+    .container {
+        width: 100%;
+        padding: 15px;
+    }
+
+    /* Form adjustments */
+    .form-ajout {
+        padding: 20px;
+        width: 100%;
+    }
+
+    .form-ajout input[type="text"],
+    .form-ajout input[type="email"],
+    .form-ajout input[type="password"],
+    .form-ajout select {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .form-ajout button {
+        font-size: 16px;
+    }
+
+    /* Main content adjustments */
+    main {
+        padding: 15px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    h3 {
+        font-size: 18px;
+    }
+
+    /* Table styles for mobile */
+    table {
+        width: 100%;
+        overflow-x: auto;
+        display: block; /* Makes the table scrollable */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+    }
+
+    table th, table td {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    /* Table headers adjustments */
+    table th {
+        font-size: 16px;
+    }
+
+    /* Footer adjustments */
+    footer {
+        padding: 10px 5px;
+    }
+
+    footer a {
+        font-size: 14px;
+    }
+
+    /* Button styles */
+    button {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+
+    /* Input adjustments */
+    input, .input-motif {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Links */
+    .back-link {
+        font-size: 14px;
+    }
+
+    /* Adjust for larger buttons */
+    button.btn-login {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Adjust for select dropdowns */
+    form select {
+        width: 100%;
+        font-size: 14px;
+    }
+}
+
+/* Further improvements for mobile devices */
+@media (max-width: 480px) {
+    header {
+        text-align: left;
+    }
+
+    header nav ul {
+        align-items: flex-start;
+    }
+
+    header nav ul li {
+        margin: 8px 0;
+    }
+
+    .form-ajout input,
+    .form-ajout button {
+        font-size: 14px;
+    }
+
+    .form-ajout {
+        padding: 15px;
+    }
+
+    main {
+        padding: 10px;
+    }
+
+    h2, h3 {
+        font-size: 18px;
+    }
+
+    table th, table td {
+        padding: 8px;
+    }
+
+    footer {
+        padding: 10px;
+    }
+
+    footer a {
+        font-size: 12px;
+    }
+}

@@ -15,6 +15,8 @@
             <nav>
                 <ul>
                     <li><a href="{{ url_for('ajouter_employe_page') }}">Ajouter un employé</a></li>
+                    <li><a href="{{ url_for('calendrier_conges') }}">Calendrier Congés</a></li>
+                    <li><a href="{{ url_for('assigner_manager') }}">Assigner Manager</a></li>
                     <li><a href="{{ url_for('demandes_conges') }}">Demandes de congés</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                 </ul>
@@ -38,7 +40,9 @@
                         <th>Email</th>
                         <th>Congé</th>
                         <th>Salaire</th>
+                        <th>role</th>
                         <th>Actions</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
@@ -52,6 +56,7 @@
                         <td>{{ emp[5] }}</td>
                         <td>{{ emp[6] }}</td>
                         <td>{{ emp[7] }}</td>
+                        <td>{{ emp[9] }}</td>
                         <td>
                             <!-- Bouton Modifier avec confirmation -->
                             <button class="btn btn-warning" style = "background-color: #4a5b6b; color: white; width: 90%;" onclick="confirmModification({{ emp[8] }})" id="modifierBtn{{ emp[8] }}">Modifier</button>
@@ -116,7 +121,7 @@
     </script>
     
     <footer>
-        <p>&copy; 2024 Mon Application. Tous droits réservés.</p>
+        <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
     </footer>
 </body>
 </html>

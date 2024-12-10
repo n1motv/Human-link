@@ -4,7 +4,10 @@ from flask import request, redirect, url_for, session, render_template
 
 # Connexion à la base de données
 def connecter_db():
-    return sqlite3.connect("rh_data.db")
+    connexion = sqlite3.connect("rh_data.db")
+    connexion.row_factory = sqlite3.Row  # Permet d'accéder aux colonnes par nom
+    return connexion
+
 
 # Vérification des identifiants dans la base de données
 def verifier_identifiants(email, mot_de_passe):
@@ -63,3 +66,51 @@ def afficher_menu_employe():
         return render_template("employe_menu.html", email=email)
     else:
         return redirect(url_for('connexion'))
+
+def get_demandes_conges_manager(manager_email):
+    """
+    Récupérer les demandes de congé des employés supervisés par ce manager.
+    """
+    connexion = connecter_db()
+    cur = connexion.cursor()
+    
+    # Récupérer l'ID du manager
+    cur.execute("SELECT id FROM users WHERE email = ?", (manager_email,))
+    manager_id = cur.fetchone()
+    
+    if not manager_id:
+        return []  # Aucun manager trouvé
+    
+    manager_id = manager_id['id']
+    
+    # Récupérer les ID des employés supervisés par ce manager
+    cur.execute("""
+        SELECT id_employe FROM managers WHERE id_manager = ?
+    """, (manager_id,))
+    employes_ids = [row['id_employe'] for row in cur.fetchall()]
+    
+    # Récupérer les demandes de congé pour ces employés
+    demandes = []
+    for employe_id in employes_ids:
+        cur.execute("""
+            SELECT * FROM conges WHERE email IN (SELECT email FROM users WHERE id = ?)
+        """, (employe_id,))
+        demandes.extend(cur.fetchall())
+    
+    connexion.close()
+    return demandes
+
+
+def get_all_demandes_conges():
+    """
+    Récupérer toutes les demandes de congé pour un administrateur.
+    """
+    connexion = connecter_db()
+    cur = connexion.cursor()
+    
+    cur.execute("SELECT * FROM conges")
+    demandes = cur.fetchall()
+    
+    connexion.close()
+    return demandes
+
