@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendrier des Congés</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.css" rel="stylesheet" />
+    <style>
+        /* Style global pour le body */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9; /* Fond de page clair */
+    margin: 0;
+    padding: 0;
+}
+
+/* Style du header */
+header {
+    background-color: #343a40; /* Bleu foncé */
+    color: white;
+    padding: 15px 0;
+}
+
+header .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header .logo h1 {
+    font-size: 28px;
+    margin: 0;
+    color: white;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav ul li {
+    margin-left: 20px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+nav ul li a:hover {
+    color: #ecf0f1;
+}
+
+/* Style des titres principaux */
+h1 {
+    font-size: 36px;
+    color: #34495e;
+    text-align: center;
+    margin-top: 30px;
+}
+
+/* Style des sous-titres et messages de bienvenue */
+h2, p {
+    font-size: 20px;
+    text-align: center;
+    color: #34495e;
+    margin-top: 20px;
+}
+
+/* Style du calendrier */
+#calendar2 {
+    max-width: 800px;
+    margin: 40px auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* Personnalisation des événements dans le calendrier */
+.fc-event {
+    background-color: #3498db; /* Bleu pour les événements */
+    color: white;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 95%;
+    padding: 5px 10px;
+}
+
+.fc-event:hover {
+    background-color: #2980b9; /* Couleur plus claire au survol */
+}
+
+footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+}
+footer p {
+    color: white;
+    text-decoration: none;
+}
+    </style>
+    
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">Dashboard Admin</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <h1>Calendrier des Congés</h1>
+    {% if role == 'admin' %}
+        <h2>Bienvenue, Administrateur !</h2>
+    {% elif role == 'manager' %}
+        <p>Bienvenue, Manager !</p>
+    {% endif %}
+
+    <!-- Calendrier FullCalendar -->
+    <div id="calendar2"></div>
+
+    <!-- Lien vers FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar2');
+            
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: [
+                    {% for date, conges in conges_par_jour.items() %}
+                        {% for conge in conges %}
+                            {
+                                title: '{{ conge[1] }}',
+                                start: '{{ date.strftime("%Y-%m-%d") }}',
+                                description: '{{ conge['plus_infos'] }}',
+                                extendedProps: {
+                                    email: '{{ conge['email'] }}',
+                                    statut: '{{ conge['statut'] }}'
+                                }
+                            },
+                        {% endfor %}
+                    {% endfor %}
+                ],
+                eventClick: function(info) {
+                    alert('Congé de ' + info.event.title + '\nStatut: ' + info.event.extendedProps.statut + '\nInfos supplémentaires: ' + info.event.extendedProps.description);
+                }
+            });
+            
+            calendar.render();
+        });
+    </script>
+    <footer>
+        <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>

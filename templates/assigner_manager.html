@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affecter Employés aux Managers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 style="color: white;">Tableau d'Administration</h1>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">Dashboard Admin</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Affecter des Employés à des Managers</h2>
+
+            <!-- Section pour afficher les messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="messages">
+                        {% for category, message in messages %}
+                            <div class="alert {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+
+            <!-- Formulaire d'affectation -->
+            <form action="{{ url_for('assigner_manager') }}" method="POST">
+                <label for="manager">Manager :</label>
+                <select name="manager" required>
+                    <option value="">-- Sélectionnez un Manager --</option>
+                    {% for manager in managers %}
+                        <option value="{{ manager[0] }}">{{ manager[1] }} ({{ manager[2] }})</option>
+                    {% endfor %}
+                </select>
+                <br><br>
+
+                <label for="employe">Employé :</label>
+                <select name="employe" required>
+                    <option value="">-- Sélectionnez un Employé --</option>
+                    {% for employe in employes %}
+                        <option value="{{ employe[0] }}">{{ employe[1] }} ({{ employe[2] }})</option>
+                    {% endfor %}
+                </select>
+                <br><br>
+
+                <button type="submit" class="btn btn-primary " style="background-color: #4a5b6b; color: white;">Affecter</button>
+            </form>
+
+            <h3>Liste des Assignations Actuelles</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Manager</th>
+                        <th>Employé</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignation in assignations %}
+                    <tr>
+                        <td>{{ assignation.manager_nom }}</td>
+                        <td>{{ assignation.employe_nom }}</td>
+                        <td>
+                            <!-- Supprimer une assignation -->
+                            <form action="{{ url_for('supprimer_assignation', manager_id=assignation.manager_id, employe_id=assignation.employe_id) }}" method="POST">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>

@@ -14,7 +14,7 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}">Tableau de bord</a></li>
+                    <li><a href="{{ url_for('manager_dashboard') }}">Tableau de bord</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                 </ul>
             </nav>
@@ -53,7 +53,7 @@
                                 <button type="submit" name="statut" value="refuser" class="btn btn-danger" style="width: 45%";>Refuser</button>
                                 <input type="text" name="motif_refus" placeholder="Motif du refus (si applicable)" class="input-motif">
                             </form>
-                            <form method="POST" action="{{ url_for('supprimer_demande_conge', id=demande[0]) }}">
+                            <form method="POST" action="{{ url_for('supprimer_demande_conge_manager', id=demande[0]) }}">
                                 <button type="submit" class="btn btn-danger" style="width: 100%;">Supprimer</button>
                             </form>
                         </td>

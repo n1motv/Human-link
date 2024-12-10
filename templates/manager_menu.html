@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Mon Application</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('demandes_conges_manager') }}">Demandes de congés</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Bienvenue, {{ manager.nom }}</h2>
+            <h3>Voici vos informations personnelles :</h3>
+
+            <!-- Informations du manager -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Âge</th>
+                        <th>Poste</th>
+                        <th>Département</th>
+                        <th>Email</th>
+                        <th>Congé</th>
+                        <th>Salaire</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ manager.nom }}</td>
+                        <td>{{ manager.prenom }}</td>
+                        <td>{{ manager.age }}</td>
+                        <td>{{ manager.poste }}</td>
+                        <td>{{ manager.departement }}</td>
+                        <td>{{ manager.email }}</td>
+                        <td>{{ manager.conge }}</td>
+                        <td>{{ manager.salaire }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <br>
+
+            <!-- Liste des employés supervisés -->
+            <h3>Vos employés</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Âge</th>
+                        <th>Poste</th>
+                        <th>Département</th>
+                        <th>Email</th>
+                        <th>Congé</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.nom }}</td>
+                        <td>{{ emp.prenom }}</td>
+                        <td>{{ emp.age }}</td>
+                        <td>{{ emp.poste }}</td>
+                        <td>{{ emp.departement }}</td>
+                        <td>{{ emp.email }}</td>
+                        <td>
+                            {% if emp.conge_demande %}
+                                <span class="alert">Demande en attente</span>
+                            {% else %}
+                                Aucun
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
+    </footer>
+</body>
+</html>
