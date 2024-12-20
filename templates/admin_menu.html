@@ -19,6 +19,10 @@
                     <li><a href="{{ url_for('assigner_manager') }}">Assigner Manager</a></li>
                     <li><a href="{{ url_for('demandes_conges') }}">Demandes de congés</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                    <style>
+                        
+                            
+                    </style>
                 </ul>
             </nav>
         </div>
@@ -65,18 +69,18 @@
                             <form id="formModifier{{ emp[8] }}" action="{{ url_for('mettre_a_jour_employe', id=emp[8]) }}" method="POST" style="display:none;">
                                 <input type="text" name="nom" value="{{ emp[0] }}" id="nom{{ emp[8] }}">
                                 <input type="text" name="prenom" value="{{ emp[1] }}" id="prenom{{ emp[8] }}">
-                                <input type="text" name="age" value="{{ emp[2] }}" id="age{{ emp[8] }}">
+                                <input type="number" name="age" value="{{ emp[2] }}" id="age{{ emp[8] }}">
                                 <input type="text" name="poste" value="{{ emp[3] }}" id="poste{{ emp[8] }}">
                                 <input type="text" name="email" value="{{ emp[5] }}" id="email{{ emp[8] }}">
-                                <input type="text" name="salaire" value="{{ emp[7] }}" id="salaire{{ emp[8] }}">
+                                <input type="number" name="salaire" value="{{ emp[7] }}" id="salaire{{ emp[8] }}">
                                 
                                 <!-- Champ de modification du mot de passe -->
-                                <input type="password" name="mot_de_passe" placeholder="Nouveau mot de passe (laisser vide pour ne pas changer)" id="mot_de_passe{{ emp[8] }}">
+                                <input type="password" name="mot_de_passe" placeholder="Nouveau mot de passe (laisser vide pour ne pas changer)" id="mot_de_passe{{ emp[8] }}" required minlength="8">
                             
                                 <!-- Champ de congés si nécessaire -->
                                 <input type="number" name="conge" value="{{ emp[6] }}" id="conge{{ emp[8] }}" placeholder="Nombre de jours de congé">
                             
-                                <button type="submit" class="btn btn-success" style = "width: 90%;">Appliquer</button>
+                                <button type="submit" class="btn btn-success" style = "width: 90%;" >Appliquer</button>
                             </form>
                             
 

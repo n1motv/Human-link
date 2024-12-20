@@ -29,44 +29,6 @@ def verifier_identifiants(email, mot_de_passe):
             return True
     return False
 
-# Fonction pour gérer la connexion utilisateur
-def connexion_utilisateur():
-    email = request.form.get("email")  # Récupère l'email du formulaire
-    mot_de_passe = request.form.get("mot_de_passe")  # Récupère le mot de passe du formulaire
-    role = request.form.get("role")  # Récupère le rôle choisi
-
-    if verifier_identifiants(email, mot_de_passe):
-        session['email'] = email  # Stocke l'email dans la session pour une utilisation ultérieure
-        session['role'] = role
-
-        if role == "admin" and email == "admin":
-            # Redirection vers le menu admin
-            return redirect(url_for('admin_menu'))
-        elif role == "employe":
-            # Redirection vers le menu employé
-            return redirect(url_for('employe_menu'))
-        else:
-            # Si l'utilisateur a un rôle non autorisé
-            return render_template("connexion.html", message="Accès refusé.")
-    else:
-        # Si les identifiants sont incorrects
-        return render_template("connexion.html", message="Identifiants incorrects.")
-
-# Menu principal pour les administrateurs
-def afficher_admin_menu():
-    if 'email' in session and session.get('role') == "admin":
-        return render_template("admin_menu.html")
-    else:
-        return redirect(url_for('connexion'))
-
-# Menu principal pour les employés
-def afficher_menu_employe():
-    if 'email' in session and session.get('role') == "employe":
-        email = session.get('email')
-        return render_template("employe_menu.html", email=email)
-    else:
-        return redirect(url_for('connexion'))
-
 def get_demandes_conges_manager(manager_email):
     """
     Récupérer les demandes de congé des employés supervisés par ce manager.

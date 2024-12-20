@@ -1,10 +1,9 @@
 import sqlite3
-from flask import Flask, render_template, session, redirect, url_for, request ,flash,jsonify
-from main import connexion_utilisateur, afficher_admin_menu, afficher_menu_employe, get_all_demandes_conges, get_demandes_conges_manager
+from flask import Flask, render_template, session, redirect, url_for, request ,flash
+from main import get_all_demandes_conges, get_demandes_conges_manager
 from db_setup import cree_table_utilisateurs, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager
 from fonctionality import ajouter_conge_mensuel
-from admin_menu import voir_employes,ajouter_employe,voir_demandes_conges,repondre_demande_conge
-from getpass import getpass
+from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
 import bcrypt
 from datetime import datetime
 from datetime import datetime, timedelta
