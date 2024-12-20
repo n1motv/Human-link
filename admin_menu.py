@@ -32,15 +32,6 @@ def ajouter_employe(nom, prenom, age, poste, departement, email, mot_de_passe, c
     connexion.close()
 
 
-
-def voir_demandes_conges():
-    connexion = connect_db()
-    cur = connexion.cursor()
-    cur.execute("SELECT * FROM conges")
-    demandes = cur.fetchall()
-    connexion.close()
-    return demandes
-
 def repondre_demande_conge(id_demande, statut, motif_refus=None):
     connexion = connect_db()
     curseur = connexion.cursor()
