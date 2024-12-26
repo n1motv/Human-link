@@ -1,19 +1,37 @@
 import sqlite3
 from flask import Flask, render_template, session, redirect, url_for, request ,flash
 from main import get_all_demandes_conges, get_demandes_conges_manager
-from db_setup import cree_table_utilisateurs, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager
+from db_setup import cree_table_utilisateurs, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie
 from fonctionality import ajouter_conge_mensuel
 from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
-import bcrypt
+import bcrypt,os
+from werkzeug.utils import secure_filename
 from datetime import datetime
 from datetime import datetime, timedelta
 # Initialisation de l'application Flask
 app = Flask(__name__)
 app.secret_key = 'cc'  # Nécessaire pour les sessions
 
+
+def creation_upload_dossier(nom):
+    BASE_UPLOAD_FOLDER = 'HR_management2-main/static/uploads/'
+    full_path = os.path.join(BASE_UPLOAD_FOLDER, nom)  
+    app.config['UPLOAD_FOLDER'] = full_path
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    return full_path
+
+
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 # Vérification et création des tables nécessaires
 def initialiser_base_de_donnees():
-    cree_table_utilisateurs()  # Crée la table des utilisateurs si elle n'existe pas
+    cree_table_utilisateurs()
+    cree_table_arrets_maladie()  # Crée la table des utilisateurs si elle n'existe pas
     cree_compte_admin()        # Crée le compte admin si non existant
     cree_table_conges()
     cree_table_manager()
@@ -78,11 +96,31 @@ def demandes_conges_manager():
     
     return render_template("demandes_conges_manager.html", demandes=demandes)
 
+def get_demande_by_id(id_demande):
+    # Connexion à la base de données
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Exécute la requête pour obtenir les informations de la demande par son ID
+    curseur.execute("SELECT * FROM conges WHERE id = ?", (id_demande,))
+    demande = curseur.fetchone()
+
+    # Ferme la connexion après l'exécution de la requête
+    connexion.close()
+
+    # Retourne les informations de la demande ou None si elle n'existe pas
+    return demande
 
 @app.route("/repondre_demande/<int:id>", methods=["POST"])
 def repondre_demande(id):
     statut = request.form['statut']
     motif_refus = request.form['motif_refus'] if statut == 'refuser' else None
+
+    # Vérifie si la demande est déjà acceptée ou refusée
+    demande = get_demande_by_id(id)  # Supposons que cette fonction récupère la demande
+    if demande[6] in ['accepte', 'refuse']:  # statut est déjà "accepté" ou "refusé"
+        return redirect(url_for('demandes_conges'))
+
     result = repondre_demande_conge(id, statut, motif_refus)
     if result:
         return redirect(url_for('demandes_conges'))
@@ -144,30 +182,85 @@ def voir_mes_info():
     return render_template("employe_info.html", resultats=resultats)
 
 # Fonction pour soumettre une demande de congé
+from flask import flash
+
+from datetime import datetime
+
 @app.route("/soumettre_demande_conge", methods=["GET", "POST"])
 def soumettre_demande_conge():
     if 'email' not in session:
         return redirect(url_for('login'))  # Rediriger si non connecté
     
+    # Connexion à la base de données
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Vérification du solde de congé de l'utilisateur
+    email = session['email']
+    cur.execute("SELECT conge FROM users WHERE email = ?", (email,))
+    solde_conge = cur.fetchone()
+
+    if solde_conge is None:
+        connexion.close()
+        return "Utilisateur non trouvé", 404  # Si l'utilisateur n'existe pas dans la table users
+
+    solde_conge = solde_conge[0]  # Récupérer le solde de congé
+
     if request.method == "POST":
-        email = session['email']
         raison = request.form['raison']
         date_debut = request.form['date_debut']
         date_fin = request.form['date_fin']
-        plus_infos = request.form['plus_infos']
+
+        # Validation de la date de début côté serveur
+        today = datetime.today().date()
+        date_debut = datetime.strptime(date_debut, "%Y-%m-%d").date()
         
+        if date_debut < today:
+            flash("La date de début ne peut pas être avant la date actuelle.", "error")
+            connexion.close()
+            return render_template("soumettre_demande_conge.html")
+
+        # Calcul du nombre de jours de congé demandés
+        date_fin = datetime.strptime(date_fin, "%Y-%m-%d").date()
+        nombre_jours = (date_fin - date_debut).days + 1
+
+        # Vérification si l'utilisateur a assez de jours de congé
+        if solde_conge < nombre_jours:
+            flash(f"Vous n'avez pas assez de jours de congé disponibles. Solde actuel: {solde_conge} jours.", "error")
+            connexion.close()
+            return render_template("soumettre_demande_conge.html")  # Afficher le formulaire avec l'erreur
+
+        plus_infos = request.form['plus_infos']
+        file = request.files.get('piece_jointe')
+        if file and allowed_file(file.filename):
+            # Sécuriser le nom du fichier et le sauvegarder
+            filename = secure_filename(file.filename)
+            file_name_only = os.path.basename(filename)
+            file_path = os.path.join(creation_upload_dossier("congés"), file_name_only)
+            file.save(file_path)
+        else:
+            file_name_only = None  # Aucun fichier ou fichier non valide
+
+        # Si tout est valide, on enregistre la demande
+        cur.execute("""
+            INSERT INTO conges (email, raison, date_debut, date_fin, plus_infos, pièce_jointe)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (email, raison, date_debut, date_fin, plus_infos, file_name_only))
+        connexion.commit()
+        connexion.close()
+
+        # Mise à jour du solde de congé
+        nouveau_solde = solde_conge - nombre_jours
         connexion = connect_db()
         cur = connexion.cursor()
-        cur.execute("""
-            INSERT INTO conges (email, raison, date_debut, date_fin, plus_infos)
-            VALUES (?, ?, ?, ?, ?)
-        """, (email, raison, date_debut, date_fin, plus_infos))
+        cur.execute("UPDATE users SET conge = ? WHERE email = ?", (nouveau_solde, email))
         connexion.commit()
         connexion.close()
 
         return redirect(url_for('voir_suivi_demandes_conges'))
-    
-    return render_template("soumettre_demande_conge.html")
+
+    # Si c'est une requête GET, on affiche le formulaire
+    return render_template('soumettre_demande_conge.html')
 
 # Fonction pour afficher les demandes de congé soumises
 @app.route("/suivi_demandes_conges")
@@ -399,9 +492,11 @@ def manager_dashboard():
     # Passez les données au modèle HTML
     return render_template('manager_menu.html', manager=manager_info, employees=employees)
 
+from datetime import datetime, timedelta
+
 @app.route('/calendrier_conges')
 def calendrier_conges():
-    # Vérification des rôles (admin ou manager)
+    # Vérification du rôle
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
@@ -411,24 +506,147 @@ def calendrier_conges():
     curseur = connexion.cursor()
 
     # Récupération des congés
-    curseur.execute("""SELECT * FROM conges""")
+    curseur.execute("""SELECT c.*, u.prenom, u.nom FROM conges c
+                       JOIN users u ON c.email = u.email
+                       WHERE c.statut = 'accepté'""")  # Filtrer les congés acceptés
     conges = curseur.fetchall()
     connexion.close()
 
     # Organiser les congés par date
     conges_par_jour = {}
     for conge in conges:
-        date_debut = datetime.strptime(conge[3], '%Y-%m-%d')  # date_debut en 3ème colonne
-        date_fin = datetime.strptime(conge[4], '%Y-%m-%d')    # date_fin en 4ème colonne
+        email = conge[1]
+        raison = conge[2]
+        date_debut = datetime.strptime(conge[3], '%Y-%m-%d')  # date_debut
+        date_fin = datetime.strptime(conge[4], '%Y-%m-%d')    # date_fin
+        nom = conge[8]  # Nom de l'utilisateur
+        prenom = conge[9]  # Prénom de l'utilisateur
+        plus_infos = conge[5]
+        statut = conge[6]
+
+        # Vous pouvez choisir une logique pour la couleur, par exemple, baser sur la raison ou le statut
+        if statut == 'accepté':
+            color = '#3498db'  # Bleu pour accepté
+        else:
+            color = '#e67e22'  # Orange pour autres (en attente, refusé)
 
         current_day = date_debut
         while current_day <= date_fin:
             if current_day not in conges_par_jour:
                 conges_par_jour[current_day] = []
-            conges_par_jour[current_day].append(conge)
+            conges_par_jour[current_day].append({
+                'nom': nom,
+                'prenom': prenom,
+                'raison': raison,
+                'plus_infos': plus_infos,
+                'statut': statut,
+                'color': color
+            })
             current_day += timedelta(days=1)
 
     return render_template('calendrier_conges.html', conges_par_jour=conges_par_jour, role=role)
+
+
+@app.route('/depot_arret', methods=['GET', 'POST'])
+def depot_arret():
+    # Vérifiez si l'utilisateur est connecté
+    if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # Récupérez l'email depuis la session
+        employe_email = session['email']
+        type_maladie = request.form['type_maladie']
+        date_debut = request.form['date_debut']
+        date_fin = request.form['date_fin']
+        description = request.form['description']
+        
+        # Validation de la date de début côté serveur
+        today = datetime.today().date()
+        date_debut = datetime.strptime(date_debut, "%Y-%m-%d").date()
+        
+        if date_debut < today:
+            flash("La date de début ne peut pas être avant la date actuelle.", "error")
+            return render_template('depot_arret.html')
+
+        # Traitement du fichier joint
+        file = request.files['piece_jointe']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(creation_upload_dossier("arréts"), filename)
+            file.save(file_path)
+        else:
+            file_path = None
+
+        # Enregistrement dans la base de données
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            INSERT INTO arrets_maladie (employe_email, type_maladie, date_debut, date_fin, description, piece_jointe)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (employe_email, type_maladie, date_debut, date_fin, description, filename))
+        connexion.commit()
+        connexion.close()
+
+        flash('Votre arrêt de maladie a été soumis avec succès.')
+        return redirect(url_for('depot_arret'))
+
+    return render_template('depot_arret.html')
+
+@app.route('/suivi_arrets')
+def suivi_arrets():
+    # Vérifiez si l'utilisateur est connecté
+    if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
+    
+    # Récupérez l'email de l'utilisateur connecté depuis la session
+    employe_email = session['email']
+    
+    # Connexion à la base de données et récupération des arrêts
+    
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT * FROM arrets_maladie WHERE employe_email = ?", (employe_email,))
+    arrets = cur.fetchall()
+    connexion.close()
+    
+    # Affichez les arrêts dans la page HTML
+    return render_template('suivi_arrets.html', arrets=arrets)
+
+
+@app.route('/admin_arrets', methods=['GET', 'POST'])
+def admin_arrets():
+    if request.method == 'POST':
+        id = request.form['id']
+        statut = request.form['statut']
+        motif_refus = request.form.get('motif_refus', None)
+
+        connexion = connect_db()
+        cur = connexion.cursor()
+        if statut == 'refuse':
+            cur.execute("""
+                UPDATE arrets_maladie
+                SET statut = ?, motif_refus = ?
+                WHERE id = ?
+            """, (statut, motif_refus, id))
+        else:
+            cur.execute("""
+                UPDATE arrets_maladie
+                SET statut = ?, motif_refus = NULL
+                WHERE id = ?
+            """, (statut, id))
+        connexion.commit()
+        connexion.close()
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT * FROM arrets_maladie")
+    arrets = cur.fetchall()
+    connexion.close()
+    return render_template('admin_arrets.html', arrets=arrets)
+
 
 @app.route("/logout")
 def logout():

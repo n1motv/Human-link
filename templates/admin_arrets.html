@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des arrêts de maladie</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Gestion des arrêts de maladie</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Type</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Description</th>
+                <th>Pièce jointe</th>
+                <th>Statut</th>
+                <th>Motif de refus</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for arret in arrets %}
+            <tr>
+                <td>{{ arret[0] }}</td>
+                <td>{{ arret[1] }}</td>
+                <td>{{ arret[2] }}</td>
+                <td>{{ arret[3] }}</td>
+                <td>{{ arret[4] }}</td>
+                <td>{{ arret[5] }}</td>
+                <td>
+                    {% if arret[6] %}
+                    <a href="{{ url_for('static', filename='uploads/arréts/' + arret[6]) }}" target="_blank">Voir</a>
+                    {% else %}
+                    Aucune
+                    {% endif %}
+                </td>
+                <td>{{ arret[7] }}</td>
+                <td>{{ arret[8] }}</td>
+                <td>
+                    {% if arret[7] == 'en attente' %}
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="id" value="{{ arret[0] }}">
+                            <select name="statut">
+                                <option value="en attente" {% if arret[7] == 'en attente' %}selected{% endif %}>En attente</option>
+                                <option value="accepte" {% if arret[7] == 'accepte' %}selected{% endif %}>Accepté</option>
+                                <option value="refuse" {% if arret[7] == 'refuse' %}selected{% endif %}>Refusé</option>
+                            </select>
+                            <br>
+                            <textarea name="motif_refus" placeholder="Motif du refus">{{ arret[8] }}</textarea>
+                            <br>
+                            <button type="submit">Mettre à jour</button>
+                        </form>
+                    {% else %}
+                        <span>{{ arret[7] }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

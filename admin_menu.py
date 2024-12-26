@@ -37,7 +37,13 @@ def repondre_demande_conge(id_demande, statut, motif_refus=None):
     curseur = connexion.cursor()
     curseur.execute("SELECT * FROM conges WHERE id = ?", (id_demande,))
     demande = curseur.fetchone()
+    
     if demande:
+        # Vérifie si le statut est déjà accepté ou refusé
+        if demande[6] in ['accepte', 'refuse']:
+            connexion.close()
+            return False  # Ne fait rien si le statut est déjà finalisé
+
         email_employe = demande[1]
         date_debut = datetime.strptime(demande[3], '%Y-%m-%d')
         date_fin = datetime.strptime(demande[4], '%Y-%m-%d')
@@ -46,11 +52,11 @@ def repondre_demande_conge(id_demande, statut, motif_refus=None):
         solde_conge = curseur.fetchone()
 
         if solde_conge and solde_conge[0] >= nombre_jours:
-            if statut == 'accepter':
+            if statut == 'accepte':
                 nouveau_solde = solde_conge[0] - nombre_jours
                 curseur.execute("UPDATE users SET conge = ? WHERE email = ?", (nouveau_solde, email_employe))
                 curseur.execute("UPDATE conges SET statut = 'accepté' WHERE id = ?", (id_demande,))
-            elif statut == 'refuser':
+            elif statut == 'refuse':
                 curseur.execute("UPDATE conges SET statut = 'refusé', motif_refus = ? WHERE id = ?", (motif_refus, id_demande))
             connexion.commit()
             connexion.close()
@@ -61,6 +67,7 @@ def repondre_demande_conge(id_demande, statut, motif_refus=None):
     else:
         connexion.close()
         return False
+
 
 def compter_jours_de_conge(date_debut, date_fin):
     jours_conge = 0

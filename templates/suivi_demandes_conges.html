@@ -12,6 +12,12 @@
             <div class="logo">
                 <h1>Mon Application</h1>
             </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('voir_mes_info') }}" class=>Retour à mes informations</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -46,10 +52,10 @@
                 </tbody>
             </table>
             {% else %}
-            <p>Aucune demande de congé trouvée.</p>
+            <div style="display: flex; justify-content: center;">
+                <p class="alert error" style="width: fit-content;">Aucune demande de congé trouvée.</p>
+            </div>
             {% endif %}
-            <br>
-            <a href="{{ url_for('voir_mes_info') }}" class="btn-link">Retour à mes informations</a>
         </div>
     </main>
 

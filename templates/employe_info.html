@@ -14,6 +14,10 @@
             </div>
             <nav>
                 <ul>
+                    <li><a href="{{ url_for('depot_arret') }}">Soumettre une d'arret</a></li>
+                    <li><a href="{{ url_for('soumettre_demande_conge') }}">Soumettre une demande de congé</a></li>
+                    <li><a href="{{ url_for('suivi_arrets') }}">Voir les arrêts</a></li>
+                    <li><a href="{{ url_for('voir_suivi_demandes_conges') }}">Voir mes demandes de congé</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                 </ul>
             </nav>
@@ -55,11 +59,7 @@
             </table>
 
             <div class="actions">
-                <br>
-                <a href="{{ url_for('soumettre_demande_conge') }}" class="btn-link">Soumettre une demande de congé</a>
-                <br>
-                <br>
-                <a href="{{ url_for('voir_suivi_demandes_conges') }}" class="btn-link">Voir mes demandes de congé</a>
+                
             </div>
         </div>
     </main>
