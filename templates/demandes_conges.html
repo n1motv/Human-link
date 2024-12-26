@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demandes de Congés</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Fonction pour afficher une confirmation avant suppression
+        function confirmerSuppression(event) {
+            if (!confirm("Êtes-vous sûr de vouloir supprimer cette demande ? Cette action est irréversible.")) {
+                event.preventDefault(); // Empêche l'envoi du formulaire si l'utilisateur clique sur "Annuler"
+            }
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -35,6 +43,7 @@
                         <th>Statut</th>
                         <th>Motif de refus</th>
                         <th>Actions</th>
+                        <th>Pièce jointe</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,14 +57,27 @@
                         <td>{{ demande[6] }}</td>
                         <td>{{ demande[7] }}</td>
                         <td>
-                            <form method="POST" action="{{ url_for('repondre_demande', id=demande[0]) }}">
-                                <button type="submit" name="statut" value="accepter" class="btn btn-success" style="width: 45%;">Accepter</button>
-                                <button type="submit" name="statut" value="refuser" class="btn btn-danger" style="width: 45%";>Refuser</button>
-                                <input type="text" name="motif_refus" placeholder="Motif du refus (si applicable)" class="input-motif">
-                            </form>
-                            <form method="POST" action="{{ url_for('supprimer_demande_conge', id=demande[0]) }}">
+                            {% if demande[6] == 'accepte' or demande[6] == 'refuse' %}
+                                <!-- Affiche le statut sans possibilité de modification -->
+                                <strong>{{ demande[6] | capitalize }}</strong>
+                            {% else %}
+                                <!-- Affiche les boutons d'action si le statut n'est pas encore défini -->
+                                <form method="POST" action="{{ url_for('repondre_demande', id=demande[0]) }}">
+                                    <button type="submit" name="statut" value="accepter" class="btn btn-success" style="width: 45%;">Accepter</button>
+                                    <button type="submit" name="statut" value="refuser" class="btn btn-danger" style="width: 45%;">Refuser</button>
+                                    <input type="text" name="motif_refus" placeholder="Motif du refus (si applicable)" class="input-motif">
+                                </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('supprimer_demande_conge', id=demande[0]) }}" onsubmit="confirmerSuppression(event)">
                                 <button type="submit" class="btn btn-danger" style="width: 100%;">Supprimer</button>
                             </form>
+                        </td>
+                        <td>
+                            {% if demande.pièce_jointe %}
+                                <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank">Voir la pièce jointe</a>
+                            {% else %}
+                                Pas de pièce jointe
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -63,6 +85,7 @@
             </table>
         </div>
     </main>
+    <br><br>
     <footer>
         <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
     </footer>

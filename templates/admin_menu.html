@@ -18,6 +18,7 @@
                     <li><a href="{{ url_for('calendrier_conges') }}">Calendrier Congés</a></li>
                     <li><a href="{{ url_for('assigner_manager') }}">Assigner Manager</a></li>
                     <li><a href="{{ url_for('demandes_conges') }}">Demandes de congés</a></li>
+                    <li><a href="{{ url_for('admin_arrets') }}">Demande d'arréts</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                     <style>
                         
@@ -75,7 +76,7 @@
                                 <input type="number" name="salaire" value="{{ emp[7] }}" id="salaire{{ emp[8] }}">
                                 
                                 <!-- Champ de modification du mot de passe -->
-                                <input type="password" name="mot_de_passe" placeholder="Nouveau mot de passe (laisser vide pour ne pas changer)" id="mot_de_passe{{ emp[8] }}" required minlength="8">
+                                <input type="password" name="mot_de_passe" placeholder="Nouveau mot de passe (retaper l'ancien mot de passe)" id="mot_de_passe{{ emp[8] }}" required minlength="8">
                             
                                 <!-- Champ de congés si nécessaire -->
                                 <input type="number" name="conge" value="{{ emp[6] }}" id="conge{{ emp[8] }}" placeholder="Nombre de jours de congé">
@@ -95,6 +96,7 @@
             </table>
         </div>
     </main>
+    <br>
 
     <script>
         // Fonction de confirmation avant modification

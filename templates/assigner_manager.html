@@ -9,10 +9,10 @@
 <body>
     <header>
         <div class="container">
-            <h1 style="color: white;">Tableau d'Administration</h1>
+            <h1>Tableau d'Administration</h1>
             <nav>
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}">Dashboard Admin</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}">Tableau de bord</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                 </ul>
             </nav>
@@ -55,7 +55,9 @@
                 </select>
                 <br><br>
 
-                <button type="submit" class="btn btn-primary " style="background-color: #4a5b6b; color: white;">Affecter</button>
+                <div style="display: flex; justify-content: center;">
+                    <button type="submit" class="btn btn-primary" style="background-color: #4a5b6b; color: white; width: 15%;">Affecter</button>
+                </div>            
             </form>
 
             <h3>Liste des Assignations Actuelles</h3>

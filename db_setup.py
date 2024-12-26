@@ -48,14 +48,16 @@ def verification_creation_table_conges():
     connexion.close()
     return table_exists
 
+
+
 def cree_table_conges():
     if verification_creation_table_conges():
         print("Table des congés déjà créée.")
         return
     else:
+        
         connexion = connect_db()
         cur = connexion.cursor()
-
         cur.execute("""
             CREATE TABLE conges(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,7 +67,8 @@ def cree_table_conges():
                 date_fin DATE,
                 plus_infos TEXT,
                 statut TEXT DEFAULT 'en attente',
-                motif_refus TEXT
+                motif_refus TEXT,
+                pièce_jointe
             )
         """)
         connexion.commit()
@@ -132,6 +135,44 @@ def cree_compte_admin():
     connexion.commit()
     connexion.close()
     print("Compte admin crée avec succès. ")
+
+
+def verification_creation_table_arrets_maladie():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='arrets_maladie';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
+
+
+
+def cree_table_arrets_maladie():
+    if verification_creation_table_arrets_maladie():
+        print("Table des arrets maladie déjà créée.")
+        return
+    else:
+        
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            CREATE TABLE arrets_maladie (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employe_email TEXT NOT NULL,
+            type_maladie TEXT CHECK(type_maladie IN ('justifie', 'non justifie')),
+            date_debut DATE NOT NULL,
+            date_fin DATE NOT NULL,
+            description TEXT,
+            piece_jointe TEXT,
+            statut TEXT DEFAULT 'en attente',
+            motif_refus TEXT
+            )
+        """)
+        connexion.commit()
+        connexion.close()
+        print("Table des arrets_maladie créée avec succès.")
 
 
 

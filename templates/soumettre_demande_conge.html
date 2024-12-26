@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soumettre une Demande de Congé</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Fonction pour valider la date de début
+        function validerDateDebut(event) {
+            const dateDebut = new Date(document.querySelector('input[name="date_debut"]').value);
+            const today = new Date();
+
+            // Réinitialiser le message d'erreur
+            const errorMessage = document.getElementById("date-error-message");
+            errorMessage.style.display = "none";
+
+            // Comparer la date de début avec la date d'aujourd'hui
+            if (dateDebut < today) {
+                // Afficher un message d'erreur si la date de début est avant aujourd'hui
+                errorMessage.style.display = "block";
+                event.preventDefault(); // Empêcher l'envoi du formulaire
+            }
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -12,29 +30,58 @@
             <div class="logo">
                 <h1>Mon Application</h1>
             </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('voir_mes_info') }}" class=>Retour à mes informations</a></li>
+                    <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
     <main>
         <div class="container">
             <h2>Soumettre une Demande de Congé</h2>
-            <form method="POST" class="form-ajout">
+
+            <!-- Afficher les messages flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %} 
+                    <div class="flash-messages" style="display: flex; justify-content: center;">
+                        {% for category, message in messages %}
+                            <div class="alert error" style="width: fit-content;">
+                                <p>{{ message }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %} 
+            {% endwith %}
+
+            <form method="POST" class="form-ajout" enctype="multipart/form-data" onsubmit="validerDateDebut(event)">
                 <label for="raison">Raison:</label>
                 <textarea name="raison" required class="input-motif"></textarea><br>
 
                 <label for="date_debut">Date de début :</label>
                 <input type="date" name="date_debut" required><br>
 
+                <!-- Message d'erreur pour la date de début -->
+                <div id="date-error-message" style="color: red; display: none;">
+                    La date de début ne peut pas être avant la date actuelle.
+                </div>
+
                 <label for="date_fin">Date de fin :</label>
                 <input type="date" name="date_fin" required><br>
 
                 <label for="plus_infos">Informations supplémentaires (facultatif):</label>
-                <textarea name="plus_infos" class="input-motif" ></textarea><br>
+                <textarea name="plus_infos" class="input-motif"></textarea><br>
 
-                <button type="submit">Soumettre</button>
+                <label for="piece_jointe">Pièce jointe (facultatif) :</label>
+                <input type="file" name="piece_jointe" accept="application/pdf,image/*">
+                <br>
+
+                <div style="display: flex; justify-content: center;">
+                    <button type="submit" style="width: 30%;">Soumettre</button>
+                </div>
             </form>
-            <br>
-            <a href="{{ url_for('voir_mes_info') }}" class="btn-link">Retour à mes informations</a>
         </div>
     </main>
 

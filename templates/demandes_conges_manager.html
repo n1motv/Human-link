@@ -35,6 +35,7 @@
                         <th>Statut</th>
                         <th>Motif de refus</th>
                         <th>Actions</th>
+                        <th>Pièce jointe</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,12 +58,20 @@
                                 <button type="submit" class="btn btn-danger" style="width: 100%;">Supprimer</button>
                             </form>
                         </td>
+                        <td>
+                            {% if demande.pièce_jointe %}
+                                <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank">Voir la pièce jointe</a>
+                            {% else %}
+                                Pas de pièce jointe
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </main>
+    <br><br>
     <footer>
         <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
     </footer>

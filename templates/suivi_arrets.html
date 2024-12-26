@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Suivi des arrêts de maladie</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Suivi des arrêts de maladie</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Description</th>
+                <th>Pièce jointe</th>
+                <th>Statut</th>
+                <th>Motif de refus</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for arret in arrets %}
+            <tr>
+                <td>{{ arret[0] }}</td>
+                <td>{{ arret[2] }}</td>
+                <td>{{ arret[3] }}</td>
+                <td>{{ arret[4] }}</td>
+                <td>{{ arret[5] }}</td>
+                <td>
+                    {% if arret[6] %}
+                    <a href="{{ url_for('static', filename='uploads/arréts/' + arret[6]) }}" target="_blank">Voir</a>
+                    {% else %}
+                    Aucune
+                    {% endif %}
+                </td>
+                <td>{{ arret[7] }}</td>
+                <td>{{ arret[8] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

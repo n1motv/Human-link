@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dépôt d'arrêt de maladie</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        // Fonction de validation de la date de début
+        function validerDateDebut(event) {
+            const dateDebut = new Date(document.querySelector('input[name="date_debut"]').value);
+            const today = new Date();
+
+            // Réinitialiser le message d'erreur
+            const errorMessage = document.getElementById("date-error-message");
+            errorMessage.style.display = "none";
+
+            // Comparer la date de début avec la date d'aujourd'hui
+            if (dateDebut < today) {
+                // Afficher un message d'erreur si la date de début est avant aujourd'hui
+                errorMessage.style.display = "block";
+                event.preventDefault(); // Empêcher l'envoi du formulaire
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Dépôt d'arrêt de maladie</h1>
+    <form method="POST" enctype="multipart/form-data" onsubmit="validerDateDebut(event)">
+        <p><strong>Email :</strong> {{ session['email'] }}</p>
+
+        <label for="type_maladie">Type de maladie :</label>
+        <select name="type_maladie" id="type_maladie" required>
+            <option value="justifie">Justifié</option>
+            <option value="non justifie">Non Justifié</option>
+        </select><br><br>
+
+        <label for="date_debut">Date de début :</label>
+        <input type="date" name="date_debut" id="date_debut" required><br><br>
+
+        <!-- Message d'erreur pour la date de début -->
+        <div id="date-error-message" style="color: red; display: none;">
+            La date de début ne peut pas être avant la date actuelle.
+        </div>
+
+        <label for="date_fin">Date de fin :</label>
+        <input type="date" name="date_fin" id="date_fin" required><br><br>
+
+        <label for="description">Description :</label>
+        <textarea name="description" id="description"></textarea><br><br>
+
+        <label for="piece_jointe">Pièce jointe :</label>
+        <input type="file" name="piece_jointe" id="piece_jointe"><br><br>
+
+        <button type="submit">Soumettre</button>
+    </form>
+</body>
+</html>

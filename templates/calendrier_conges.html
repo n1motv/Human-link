@@ -77,7 +77,7 @@ h2, p {
 
 /* Style du calendrier */
 #calendar2 {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 40px auto;
     background-color: white;
     border-radius: 8px;
@@ -130,7 +130,12 @@ th, td {
 th {
     background-color: #f0f0f0; /* Couleur de fond optionnelle pour les en-têtes */
 }
-
+.fc-daygrid-event {
+        width: fit-content; /* Réduction à 80 % de la taille par défaut */
+        white-space: nowrap; /* Empêche le titre de passer à la ligne */
+        overflow: hidden; /* Cache le reste du texte si trop long */
+        text-overflow: ellipsis; 
+    }
 
     </style>
     
@@ -144,6 +149,7 @@ th {
             <nav>
                 <ul>
                     <li><a href="{{ url_for('admin_dashboard') }}">Dashboard Admin</a></li>
+                    <li><a href="{{ url_for('demandes_conges') }}">Demandes de congés</a></li>
                     <li><a href="{{ url_for('logout') }}">Se déconnecter</a></li>
                 </ul>
             </nav>
@@ -172,13 +178,13 @@ th {
                     {% for date, conges in conges_par_jour.items() %}
                         {% for conge in conges %}
                             {
-                                title: '{{ conge[1] }}',
-                                start: '{{ date.strftime("%Y-%m-%d") }}',
-                                description: '{{ conge['plus_infos'] }}',
+                                title: ' {{ conge.prenom }}',
+                                start: '{{ date.strftime("%Y-%m-%d") }}',  // Format de la date
+                                description: '{{ conge.plus_infos }}',
                                 extendedProps: {
-                                    email: '{{ conge['email'] }}',
-                                    statut: '{{ conge['statut'] }}'
-                                }
+                                    statut: '{{ conge.statut }}',
+                                },
+                                color: '{{ conge.color }}'  // Utilisation de la couleur calculée dans le backend
                             },
                         {% endfor %}
                     {% endfor %}
@@ -190,7 +196,7 @@ th {
             
             calendar.render();
         });
-    </script>
+    </script>    
     <footer>
         <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
     </footer>
