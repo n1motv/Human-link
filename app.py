@@ -1,20 +1,36 @@
-import sqlite3
-from flask import Flask, render_template, session, redirect, url_for, request ,flash
+import sqlite3,bcrypt,os,uuid,string,random
+from flask import Flask, render_template, session, redirect, url_for, request ,flash ,jsonify
 from main import get_all_demandes_conges, get_demandes_conges_manager
 from db_setup import cree_table_utilisateurs, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie
 from fonctionality import ajouter_conge_mensuel
 from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
-import bcrypt,os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from datetime import datetime, timedelta
-# Initialisation de l'application Flask
-app = Flask(__name__)
-app.secret_key = 'cc'  # Nécessaire pour les sessions
+from dotenv import load_dotenv
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from forms import LoginForm
+from flask_mailman import Mail, EmailMessage
+from flask_socketio import SocketIO, emit
 
+
+# Initialisation de l'application Flask
+
+load_dotenv()
+app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
+app.config['SESSION_PERMANENT'] = False
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['DEBUG'] = True
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 def creation_upload_dossier(nom):
-    BASE_UPLOAD_FOLDER = 'HR_management2-main/static/uploads/'
+    BASE_UPLOAD_FOLDER = 'static/uploads/'
     full_path = os.path.join(BASE_UPLOAD_FOLDER, nom)  
     app.config['UPLOAD_FOLDER'] = full_path
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -30,7 +46,7 @@ def allowed_file(filename):
 
 # Vérification et création des tables nécessaires
 def initialiser_base_de_donnees():
-    cree_table_utilisateurs()
+    cree_table_utilisateurs() 
     cree_table_arrets_maladie()  # Crée la table des utilisateurs si elle n'existe pas
     cree_compte_admin()        # Crée le compte admin si non existant
     cree_table_conges()
@@ -38,39 +54,162 @@ def initialiser_base_de_donnees():
     ajouter_conge_mensuel()        # Crée la table des congés si elle n'existe pas
 
 # Appel de la fonction d'initialisation
-initialiser_base_de_donnees()
+
 
 @app.template_filter('format_date')
 def format_date(value, format="%d-%m-%Y"):
     if isinstance(value, datetime):
         return value.strftime(format)
     return value
-@app.route("/admin")
 
+def generer_id():
+    numeros = ''.join(random.choices(string.digits, k=5))
+    lettre = random.choice(string.ascii_uppercase)
+    return f"0{numeros}{lettre}"
+def id_existe(id_employe):
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT 1 FROM utilisateurs WHERE id = ?", (id_employe,))
+    return cur.fetchone() is not None
+
+
+##############################################LOGIN#########################################
+
+limiter = Limiter(
+    get_remote_address,
+    app=app
+)
+
+@app.route("/", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        mot_de_passe = form.mot_de_passe.data
+
+        # Vérifier dans la base de données si l'email existe
+        connexion = connect_db()
+        curseur = connexion.cursor()
+
+        # Sélectionner l'utilisateur par email
+        curseur.execute("""
+            SELECT id, email, mot_de_passe, role FROM utilisateurs WHERE email = ?
+        """, (email,))
+        
+        utilisateur = curseur.fetchone()
+        print(utilisateur[3])
+        connexion.close()
+
+        # Vérification du mot de passe avec bcrypt
+        if utilisateur and bcrypt.checkpw(mot_de_passe.encode('utf-8'), utilisateur[2]):
+            session['email'] = email  # Enregistrer l'email de l'utilisateur dans la session
+            session['role'] = 'admin' if email == 'admin@gmail.com' else 'employe'  # Enregistrer le rôle de l'utilisateur
+            if utilisateur[3] == 'manager' :session['role'] = 'manager' 
+            # Rediriger vers le tableau de bord approprié
+            session['id'] = utilisateur[0]
+            session['email'] = utilisateur[1]
+            if session['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))  # Rediriger vers le tableau de bord admin
+            elif session['role'] == 'manager':
+                return redirect(url_for('manager_dashboard'))
+            else:
+                return redirect(url_for('voir_mes_info'))   # Rediriger vers le tableau de bord employé
+        else:
+            flash("Identifiants incorrects", "danger")
+    return render_template("login.html",form=form)
+
+##############################################ADMIN#########################################
+@app.route("/admin")
 def admin_dashboard():
     if 'role' not in session or (session['role'] != 'admin' and session['role']!= 'manager'):
         return redirect(url_for('login'))
+    user_id = session['id']
+    notifications_non_lues = get_notifications_non_lues(user_id)
+
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues(user_id)
     employees = voir_employes()
-    
-    return render_template("admin_menu.html", employees=employees)
+    print(employees)
+    return render_template("admin_menu.html", employees=employees, role=session.get('role'),notifications_non_lues=notifications_non_lues)
+
+def email_existe(email):
+    """Vérifie si un email existe déjà dans la table utilisateurs."""
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT 1 FROM utilisateurs WHERE email = ?", (email,))
+    existe = cur.fetchone() is not None
+    connexion.close()
+    return existe
+
+
 @app.route("/ajouter_employe", methods=["GET", "POST"])
 def ajouter_employe_page():
-    if 'role' not in session or (session['role'] != 'admin' and session['role']!= 'manager'):
+    if 'role' not in session or (session['role'] != 'admin' and session['role'] != 'manager'):
         return redirect(url_for('login'))
+    
+    erreur = None  # Variable pour stocker les messages d'erreur
+
     if request.method == "POST":
-        nom = request.form['nom']
-        prenom = request.form['prenom']
-        age = request.form['age']
-        poste = request.form['poste']
-        departement = request.form['departement']
         email = request.form['email']
-        mot_de_passe = request.form['mot_de_passe']
-        conge = request.form['conge']
-        salaire = request.form['salaire']
-        role = request.form['role']
-        ajouter_employe(nom, prenom, age, poste, departement, email, mot_de_passe, conge, salaire,role)
-        return redirect(url_for('admin_dashboard'))
-    return render_template("ajouter_employe.html")
+        
+        if email_existe(email):
+            erreur = "Cet email est déjà assigné à un autre employé."
+        else:
+            # Récupérer les données du formulaire
+            nom = request.form['nom']
+            prenom = request.form['prenom']
+            date_naissance = request.form['date_naissance']
+            poste = request.form['poste']
+            departement = request.form['departement']
+            telephone = request.form['telephone']
+            adresse = request.form['adresse']
+            ville = request.form['ville']
+            code_postal = request.form['code_postal']
+            pays = request.form['pays']
+            nationalite = request.form['nationalite']
+            numero_securite_sociale = request.form['numero_securite_sociale']
+            date_embauche = request.form['date_embauche']
+            type_contrat = request.form['type_contrat']
+            sexualite = request.form['sexualite']
+            mot_de_passe = request.form['mot_de_passe']
+            solde_congé = request.form['solde_congé']
+            salaire = request.form['salaire']
+            role = request.form['role']
+
+            # Générer un ID unique pour l'employé
+            id_employe = generer_id()
+            while id_existe(id_employe):  # Vérifier si l'ID existe déjà
+                id_employe = generer_id()
+            
+            file = request.files['photo']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                extension = filename.rsplit('.', 1)[1].lower()
+                
+                # Générer un nom unique pour la photo
+                unique_name = f"photo_{uuid.uuid4().hex}.{extension}"
+                upload_folder = creation_upload_dossier("photo_profile")
+
+                # Vérification de l'existence du fichier
+                while os.path.exists(os.path.join(upload_folder, unique_name)):
+                    unique_name = f"photo_{uuid.uuid4().hex}.{extension}"
+
+                # Sauvegarder la photo
+                file.save(os.path.join(upload_folder, unique_name))
+                file_name_only = unique_name
+            else:
+                file_name_only = 'default.png'  # Photo par défaut
+            # Ajouter l'employé dans la base de données
+            ajouter_employe(
+                id_employe, nom, prenom, date_naissance, poste, departement, email, mot_de_passe, 
+                solde_congé, salaire, role, file_name_only, sexualite, telephone, adresse, 
+                ville, code_postal, pays, nationalite, numero_securite_sociale, date_embauche, type_contrat
+            )
+            return redirect(url_for('admin_dashboard'))
+
+    return render_template("ajouter_employe.html", erreur=erreur)
+
 
 @app.route("/demandes_conges")
 def demandes_conges():
@@ -81,7 +220,7 @@ def demandes_conges():
         return redirect(url_for('login'))
     
     demandes = get_all_demandes_conges()
-    return render_template("demandes_conges.html", demandes=demandes)
+    return render_template("voir_demandes_conges_admin.html", demandes=demandes)
 @app.route("/demandes_conges_manager")
 def demandes_conges_manager():
     """
@@ -94,7 +233,7 @@ def demandes_conges_manager():
     manager_email = session['email']  # L'email du manager est stocké dans la session
     demandes = get_demandes_conges_manager(manager_email)
     
-    return render_template("demandes_conges_manager.html", demandes=demandes)
+    return render_template("voir_demandes_conges_manager.html", demandes=demandes)
 
 def get_demande_by_id(id_demande):
     # Connexion à la base de données
@@ -102,7 +241,7 @@ def get_demande_by_id(id_demande):
     curseur = connexion.cursor()
 
     # Exécute la requête pour obtenir les informations de la demande par son ID
-    curseur.execute("SELECT * FROM conges WHERE id = ?", (id_demande,))
+    curseur.execute("SELECT * FROM demandes_congé WHERE id = ?", (id_demande,))
     demande = curseur.fetchone()
 
     # Ferme la connexion après l'exécution de la requête
@@ -114,7 +253,7 @@ def get_demande_by_id(id_demande):
 @app.route("/repondre_demande/<int:id>", methods=["POST"])
 def repondre_demande(id):
     statut = request.form['statut']
-    motif_refus = request.form['motif_refus'] if statut == 'refuser' else None
+    motif_refus = request.form['motif_refus'] if statut == 'refuse' else None
 
     # Vérifie si la demande est déjà acceptée ou refusée
     demande = get_demande_by_id(id)  # Supposons que cette fonction récupère la demande
@@ -123,46 +262,26 @@ def repondre_demande(id):
 
     result = repondre_demande_conge(id, statut, motif_refus)
     if result:
-        return redirect(url_for('demandes_conges'))
-    return "Erreur lors du traitement de la demande."
-
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form['email']
-        mot_de_passe = request.form['mot_de_passe']
-
-        # Vérifier dans la base de données si l'email existe
+        # 📧 Envoi d'un email au demandeur
+        id = demande[1]  # Récupère l'email depuis la demande 
         connexion = connect_db()
         curseur = connexion.cursor()
-
-        # Sélectionner l'utilisateur par email
-        curseur.execute("""
-            SELECT id, email, mot_de_passe, role FROM users WHERE email = ?
-        """, (email,))
-        
-        utilisateur = curseur.fetchone()
-        connexion.close()
-
-        # Vérification du mot de passe avec bcrypt
-        if utilisateur and bcrypt.checkpw(mot_de_passe.encode('utf-8'), utilisateur[2]):
-            session['email'] = email  # Enregistrer l'email de l'utilisateur dans la session
-            session['role'] = 'admin' if email == 'admin' else 'employe'  # Enregistrer le rôle de l'utilisateur
-            if utilisateur[3] == 'manager' :session['role'] = 'manager' 
-            # Rediriger vers le tableau de bord approprié
-            session['user_id'] = utilisateur[0]
-            print(session['user_id'])
-            if session['role'] == 'admin':
-                return redirect(url_for('admin_dashboard'))  # Rediriger vers le tableau de bord admin
-            elif session['role'] == 'manager':
-                return redirect(url_for('manager_dashboard'))
-            else:
-                return redirect(url_for('voir_mes_info'))   # Rediriger vers le tableau de bord employé
+        curseur.execute("""SELECT email FROM utilisateurs WHERE id = ?""",(id,))
+        employe_email= curseur.fetchone()[0]
+        if statut == 'accepte':
+            sujet = "Demande de congé acceptée"
+            contenu = f"Bonjour,\n\nVotre demande de congé a été acceptée.\n\nCordialement,\nL'équipe RH"
         else:
-            message = "Identifiants incorrects"
-            return render_template("login.html", message=message)
+            sujet = "Demande de congé refusée"
+            contenu = f"Bonjour,\n\nVotre demande de congé a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
 
-    return render_template("login.html")
+        envoyer_email(sujet, employe_email, contenu)
+        flash("Réponse envoyée avec succès.", "success")
+        return redirect(url_for('demandes_conges'))
+        
+    return "Erreur lors du traitement de la demande."
+
+
 
 # Fonction pour afficher les informations d'un employé
 @app.route("/employe_info")
@@ -171,38 +290,39 @@ def voir_mes_info():
         return redirect(url_for('login'))  # Rediriger si non connecté
     
     email = session['email']
+    user_id = session['id']
+    notifications_non_lues = get_notifications_non_lues(user_id)
+
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues(user_id)
     connexion = connect_db()
     curseur = connexion.cursor()
     curseur.execute("""
-        SELECT nom, prenom, age, poste, departement, email, conge, salaire FROM users WHERE email = ? 
+        SELECT nom, prenom, date_naissance, poste, departement, email, solde_congé, salaire,photo,id,role,sexualite,telephone,adresse,ville,code_postal,pays,nationalite,numero_securite_sociale,date_embauche,type_contrat FROM utilisateurs WHERE email = ? 
     """, (email,))
+    
     resultats = curseur.fetchall()
     connexion.close()
     
-    return render_template("employe_info.html", resultats=resultats)
+    return render_template("employe_info.html", resultats=resultats, role=session.get('role'),notifications_non_lues=notifications_non_lues)
 
-# Fonction pour soumettre une demande de congé
-from flask import flash
 
-from datetime import datetime
 
 @app.route("/soumettre_demande_conge", methods=["GET", "POST"])
 def soumettre_demande_conge():
-    if 'email' not in session:
-        return redirect(url_for('login'))  # Rediriger si non connecté
     
     # Connexion à la base de données
     connexion = connect_db()
     cur = connexion.cursor()
 
     # Vérification du solde de congé de l'utilisateur
-    email = session['email']
-    cur.execute("SELECT conge FROM users WHERE email = ?", (email,))
+    id = session['id']
+    cur.execute("SELECT solde_congé FROM utilisateurs WHERE id = ?", (id,))
     solde_conge = cur.fetchone()
 
     if solde_conge is None:
         connexion.close()
-        return "Utilisateur non trouvé", 404  # Si l'utilisateur n'existe pas dans la table users
+        return "Utilisateur non trouvé", 404  # Si l'utilisateur n'existe pas dans la table utilisateurs
 
     solde_conge = solde_conge[0]  # Récupérer le solde de congé
 
@@ -230,7 +350,7 @@ def soumettre_demande_conge():
             connexion.close()
             return render_template("soumettre_demande_conge.html")  # Afficher le formulaire avec l'erreur
 
-        plus_infos = request.form['plus_infos']
+        description = request.form['description']
         file = request.files.get('piece_jointe')
         if file and allowed_file(file.filename):
             # Sécuriser le nom du fichier et le sauvegarder
@@ -243,17 +363,23 @@ def soumettre_demande_conge():
 
         # Si tout est valide, on enregistre la demande
         cur.execute("""
-            INSERT INTO conges (email, raison, date_debut, date_fin, plus_infos, pièce_jointe)
+            INSERT INTO demandes_congé (id_utilisateurs, raison, date_debut, date_fin, description, pièce_jointe)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (email, raison, date_debut, date_fin, plus_infos, file_name_only))
+        """, (id, raison, date_debut, date_fin, description, file_name_only))
         connexion.commit()
         connexion.close()
-
+        # 📧 Envoi d'un email de confirmation
+        employe_email = session['email']
+        sujet = "Confirmation de dépôt de demande de congé"
+        contenu = f"Bonjour,\n\nVotre demande de congé du {date_debut} au {date_fin} a été soumise avec succès.\n\nCordialement,\nL'équipe RH"
+        envoyer_email(sujet, employe_email, contenu)
+        contenu=f"Une demande de congé de {employe_email} à été deposer"
+        creer_notification("admin@gmail.com", contenu, "Congé")
         # Mise à jour du solde de congé
         nouveau_solde = solde_conge - nombre_jours
         connexion = connect_db()
         cur = connexion.cursor()
-        cur.execute("UPDATE users SET conge = ? WHERE email = ?", (nouveau_solde, email))
+        cur.execute("UPDATE utilisateurs SET solde_congé = ? WHERE id = ?", (nouveau_solde, id))
         connexion.commit()
         connexion.close()
 
@@ -268,21 +394,21 @@ def voir_suivi_demandes_conges():
     if 'email' not in session:
         return redirect(url_for('login'))  # Rediriger si non connecté
     
-    email = session['email']
+    id = session['id']
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("""
-        SELECT id, raison, date_debut, date_fin, plus_infos, statut, motif_refus
-        FROM conges
-        WHERE email = ?
-    """, (email,))
+        SELECT id, raison, date_debut, date_fin, description, statut, motif_refus
+        FROM demandes_congé
+        WHERE id_utilisateurs = ?
+    """, (id,))
     demandes = cur.fetchall()
     connexion.close()
 
     return render_template("suivi_demandes_conges.html", demandes=demandes)
 
 
-@app.route("/supprimer_employe/<int:id>", methods=["POST"])
+@app.route("/supprimer_employe/<string:id>", methods=["POST"])
 def supprimer_employe(id):
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
@@ -292,7 +418,7 @@ def supprimer_employe(id):
     curseur = connexion.cursor()
     
     # Supprimer l'employé de la base de données
-    curseur.execute("DELETE FROM users WHERE id = ?", (id,))
+    curseur.execute("DELETE FROM utilisateurs WHERE id = ?", (id,))
     connexion.commit()
     connexion.close()
 
@@ -319,8 +445,8 @@ def supprimer_demande_conge(id):
         # Vérifier si l'utilisateur est un manager pour cet employé
         curseur.execute("""
             SELECT 1 FROM managers 
-            WHERE id_manager = (SELECT id FROM users WHERE email = ?) 
-            AND id_employe = (SELECT id FROM conges WHERE id = ?)
+            WHERE id_manager = (SELECT id FROM utilisateurs WHERE email = ?) 
+            AND id_employe = (SELECT id FROM demandes_congé WHERE id = ?)
         """, (email_utilisateur, id))
         if not curseur.fetchone():
             # Le manager n'a pas le droit de supprimer cette demande
@@ -328,7 +454,7 @@ def supprimer_demande_conge(id):
             return "Vous n'avez pas l'autorisation de supprimer cette demande de congé.", 403
     
     # Supprimer la demande de congé
-    curseur.execute("DELETE FROM conges WHERE id = ?", (id,))
+    curseur.execute("DELETE FROM demandes_congé WHERE id = ?", (id,))
     connexion.commit()
     connexion.close()
 
@@ -346,51 +472,96 @@ def supprimer_demande_conge_manager(id):
     # Connexion à la base de données
     connexion = connect_db()
     curseur = connexion.cursor()
-    curseur.execute("DELETE FROM conges WHERE id = ?", (id,))
+    curseur.execute("DELETE FROM demandes_congé WHERE id = ?", (id,))
     connexion.commit()
     connexion.close()
 
     return redirect(url_for('demandes_conges_manager'))
 
-@app.route("/mettre_a_jour_employe/<int:id>", methods=["POST"])
+@app.route("/mettre_a_jour_employe/<string:id>", methods=["POST"])
 def mettre_a_jour_employe(id):
-    if 'role' not in session or (session['role'] != 'admin' and session['role']!= 'manager'):
+    if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
     # Récupérer les informations modifiées depuis le formulaire
-    nom = request.form['nom']
-    prenom = request.form['prenom']
-    age = request.form['age']
-    poste = request.form['poste']
-    email = request.form['email']
-    salaire = request.form['salaire']
-    mot_de_passe = request.form.get('mot_de_passe')  # Récupérer le mot de passe (si fourni)
-    conge = request.form.get('conge')  # Récupérer les congés (par défaut 10 jours si non fourni)
+    champs_a_mettre_a_jour = [
+        ("nom", request.form['nom']),
+        ("prenom", request.form['prenom']),
+        ("date_naissance", request.form['date_naissance']),
+        ("poste", request.form['poste']),
+        ("email", request.form['email']),
+        ("salaire", request.form['salaire']),
+        ("solde_congé", request.form['solde_congé']),
+        ("role", request.form['role']),
+        ("sexualite", request.form['sexualite']),
+        ("telephone", request.form['telephone']),
+        ("adresse", request.form['adresse']),
+        ("ville", request.form['ville']),
+        ("code_postal", request.form['code_postal']),
+        ("pays", request.form['pays']),
+        ("nationalite", request.form['nationalite']),
+        ("numero_securite_sociale", request.form['numero_securite_sociale']),
+        ("date_embauche", request.form['date_embauche']),
+        ("type_contrat", request.form['type_contrat'])
+    ]
 
-    # Appeler la fonction pour mettre à jour l'employé avec tous les paramètres nécessaires
+    file = request.files.get('photo')  # Récupérer le fichier s'il existe
+    if file and allowed_file(file.filename):  # Vérifier si un fichier valide est uploadé
+        filename = secure_filename(file.filename)
+        file_name_only = os.path.basename(filename)
+        file.save(os.path.join(creation_upload_dossier("photo_profile"), file_name_only))
+        champs_a_mettre_a_jour.append(("photo", file_name_only))
+    mot_de_passe = request.form.get('mot_de_passe')
     if mot_de_passe:
         mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), bcrypt.gensalt())
-    else:
-        mot_de_passe_hash = None  # Si le mot de passe n'est pas fourni, ne pas le modifier
+        champs_a_mettre_a_jour.append(("mot_de_passe", mot_de_passe_hash))
 
-    # Connexion à la base de données
+    # Construire dynamiquement la requête SQL
+    set_clause = ", ".join([f"{champ} = ?" for champ, _ in champs_a_mettre_a_jour])
+    valeurs = [valeur for _, valeur in champs_a_mettre_a_jour]
+    valeurs.append(id)
+
     connexion = connect_db()
     curseur = connexion.cursor()
-    
-    # Mise à jour des informations de l'employé dans la base de données
-    curseur.execute("""
-        UPDATE users
-        SET nom = ?, prenom = ?, age = ?, poste = ?, email = ?, mot_de_passe = ?, conge = ?, salaire = ?
-        WHERE id = ?
-    """, (nom, prenom, age, poste, email, mot_de_passe_hash, conge, salaire, id))
-    
-    connexion.commit()  # Sauvegarde des changements
+    curseur.execute(f"UPDATE utilisateurs SET {set_clause} WHERE id = ?", valeurs)
+    connexion.commit()
     connexion.close()
 
-    # Rediriger vers le tableau de bord admin
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/affecter_manager', methods=['GET', 'POST'])
+@app.route('/api/get_assignations', methods=['GET'])
+def get_assignations():
+    if 'role' not in session or session['role'] != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 401
+
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Récupérer les assignations
+    curseur.execute("""
+        SELECT m.id AS manager_id, m.nom AS manager_nom, 
+               s.id AS supervise_id, s.nom AS supervise_nom
+        FROM managers
+        JOIN utilisateurs m ON managers.id_manager = m.id
+        JOIN utilisateurs s ON managers.id_supervise = s.id
+    """)
+    assignations = curseur.fetchall()
+    connexion.close()
+
+    # Convertir les résultats en une liste de dictionnaires
+    result = []
+    for assignation in assignations:
+        result.append({
+            "manager_id": assignation["manager_id"],
+            "manager_nom": assignation["manager_nom"],
+            "supervise_id": assignation["supervise_id"],
+            "supervise_nom": assignation["supervise_nom"]
+        })
+
+    return jsonify(result)
+
+
+@app.route('/assigner_manager', methods=['GET', 'POST'])
 def assigner_manager():
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
@@ -398,91 +569,259 @@ def assigner_manager():
     connexion = connect_db()
     curseur = connexion.cursor()
 
-    # Fetch all available managers and employees
-    curseur.execute("SELECT id, nom, email FROM users WHERE role = 'manager'")
+    # Récupérer les managers et employés disponibles
+    curseur.execute("SELECT id, nom, email FROM utilisateurs WHERE role = 'manager'")
     managers = curseur.fetchall()
 
-    curseur.execute("SELECT id, nom, email FROM users WHERE role = 'employe'")
+    curseur.execute("SELECT id, nom, email FROM utilisateurs WHERE role = 'employe'")
     employes = curseur.fetchall()
 
+    # Récupérer l'ID du directeur
+    curseur.execute("SELECT id FROM utilisateurs WHERE is_director = 1")
+    directeur = curseur.fetchone()
+    directeur_id = directeur["id"] if directeur else None
+
+    # Exclure le directeur et le manager sélectionné des supervisés
     if request.method == 'POST':
         id_manager = request.form.get('manager')
-        id_employe = request.form.get('employe')
+        id_supervise = request.form.get('supervise')
 
         try:
-            # Insert the assignment into the database
-            curseur.execute("""
-                INSERT INTO managers (id_manager, id_employe)
-                VALUES (?, ?)
-            """, (id_manager, id_employe))
-            connexion.commit()
-            flash("L'employé a été affecté au manager avec succès.", "success")
+            if id_manager == id_supervise:
+                flash("Un manager ne peut pas se superviser lui-même.", "error")
+            else:
+                curseur.execute("""
+                    INSERT INTO managers (id_manager, id_supervise)
+                    VALUES (?, ?)
+                """, (id_manager, id_supervise))
+                connexion.commit()
+                flash("Supervision assignée avec succès.", "success")
         except sqlite3.IntegrityError:
-            # Handle the error when the assignment already exists
-            flash("Cet employé est déjà affecté à ce manager.", "error")
+            flash("Cette supervision existe déjà.", "error")
 
-    # Fetch all existing assignments
+    # Récupérer les assignations actuelles
     curseur.execute("""
         SELECT m.id AS manager_id, m.nom AS manager_nom, 
-               e.id AS employe_id, e.nom AS employe_nom
+               e.id AS supervise_id, e.nom AS supervise_nom
         FROM managers
-        JOIN users m ON managers.id_manager = m.id
-        JOIN users e ON managers.id_employe = e.id
+        JOIN utilisateurs m ON managers.id_manager = m.id
+        JOIN utilisateurs e ON managers.id_supervise = e.id
     """)
     assignations = curseur.fetchall()
 
     connexion.close()
 
     return render_template(
-        'assigner_manager.html', 
-        managers=managers, 
-        employes=employes, 
-        assignations=assignations
+        'assigner_manager.html',
+        managers=managers,
+        employes=employes,
+        assignations=assignations,
+        directeur_id=directeur_id
     )
 
+@app.route('/api/get_user_data', methods=['GET'])
+def get_user_data():
+    user_id = request.args.get('user_id')
+    user_type = request.args.get('user_type')
 
-@app.route('/supprimer_assignation/<int:manager_id>/<int:employe_id>', methods=['POST'])
-def supprimer_assignation(manager_id, employe_id):
+    if not user_id or not user_type:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    connexion = connect_db()
+    connexion.row_factory = sqlite3.Row
+    curseur = connexion.cursor()
+
+    def row_to_dict(row):
+        return dict(row)
+
+    try:
+        if user_type == "directeur":
+            curseur.execute("""
+                SELECT id, nom, email FROM utilisateurs WHERE id = ? AND is_director = 1
+            """, (user_id,))
+            directeur = curseur.fetchone()
+
+            if directeur:
+                directeur = row_to_dict(directeur)
+                curseur.execute("""
+                    SELECT u.id, u.nom, u.email FROM managers
+                    JOIN utilisateurs u ON managers.id_supervise = u.id
+                    WHERE managers.id_manager = ?
+                """, (directeur['id'],))
+                directeur['supervises'] = [row_to_dict(row) for row in curseur.fetchall()]
+                return jsonify({"directeur": directeur}), 200
+            else:
+                return jsonify({"error": "Directeur introuvable"}), 404
+
+        elif user_type == "manager":
+            curseur.execute("""
+                SELECT id, nom, email FROM utilisateurs WHERE id = ? AND role = 'manager'
+            """, (user_id,))
+            manager = curseur.fetchone()
+
+            if manager:
+                manager = row_to_dict(manager)
+                curseur.execute("""
+                    SELECT u.id, u.nom, u.email FROM managers
+                    JOIN utilisateurs u ON managers.id_supervise = u.id
+                    WHERE managers.id_manager = ?
+                """, (manager['id'],))
+                manager['supervises'] = [row_to_dict(row) for row in curseur.fetchall()]
+                curseur.execute("""
+                    SELECT id, nom, email FROM utilisateurs WHERE id = (
+                        SELECT id_manager FROM managers WHERE id_supervise = ?
+                    )
+                """, (manager['id'],))
+                parent_manager = curseur.fetchone()
+                manager['directeur'] = row_to_dict(parent_manager) if parent_manager else None
+                return jsonify({"manager": manager}), 200
+            else:
+                return jsonify({"error": "Manager introuvable"}), 404
+
+        elif user_type == "employe":
+            curseur.execute("""
+                SELECT id, nom, email FROM utilisateurs WHERE id = ? AND role = 'employe'
+            """, (user_id,))
+            employe = curseur.fetchone()
+
+            if employe:
+                employe = row_to_dict(employe)
+                curseur.execute("""
+                    SELECT id, nom, email FROM utilisateurs WHERE id = (
+                        SELECT id_manager FROM managers WHERE id_supervise = ?
+                    )
+                """, (employe['id'],))
+                manager = curseur.fetchone()
+                employe['manager'] = row_to_dict(manager) if manager else None
+                return jsonify({"employe": employe}), 200
+            else:
+                return jsonify({"error": "Employé introuvable"}), 404
+
+    except Exception as e:
+        print(f"Erreur: {e}")
+        return jsonify({"error": "Une erreur est survenue"}), 500
+
+    finally:
+        connexion.close()
+
+@app.route('/api/get_orgchart', methods=['GET'])
+def get_orgchart():
+    if 'role' not in session or session['role'] != 'admin':
+        return jsonify({"error": "Unauthorized access"}), 401
+
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Récupérer le directeur
+    curseur.execute("SELECT id, nom FROM utilisateurs WHERE is_director = 1")
+    directeur = curseur.fetchone()
+
+    if not directeur:
+        return jsonify({"error": "No director found"}), 400
+
+    # Construire l'arbre de l'organigramme
+    def build_tree(manager_id):
+        curseur.execute("""
+            SELECT u.id, u.nom 
+            FROM managers m
+            JOIN utilisateurs u ON m.id_supervise = u.id
+            WHERE m.id_manager = ?
+        """, (manager_id,))
+        children = curseur.fetchall()
+        return [
+            {
+                "name": child["nom"],
+                "children": build_tree(child["id"])
+            }
+            for child in children
+        ]
+
+    orgchart_data = {
+        "name": directeur["nom"],
+        "children": build_tree(directeur["id"])
+    }
+
+    connexion.close()
+    print(jsonify(orgchart_data))
+    return jsonify(orgchart_data)
+
+
+@app.route('/designer_directeur', methods=['POST'])
+def designer_directeur():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    manager_id = request.form.get('manager')
+    if not manager_id:
+        flash("Veuillez sélectionner un manager.", "error")
+        return redirect(url_for('assigner_manager'))
+
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Réinitialiser tous les directeurs
+    curseur.execute("UPDATE utilisateurs SET is_director = 0")
+    # Définir le nouveau directeur
+    curseur.execute("UPDATE utilisateurs SET is_director = 1 WHERE id = ?", (manager_id,))
+    connexion.commit()
+    connexion.close()
+
+    flash("Le directeur a été mis à jour.", "success")
+    return redirect(url_for('assigner_manager'))
+
+@app.route('/supprimer_assignation/<string:manager_id>/<string:supervise_id>', methods=['POST'])
+def supprimer_assignation(manager_id, supervise_id):
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
     connexion = connect_db()
     curseur = connexion.cursor()
-    curseur.execute("DELETE FROM managers WHERE id_manager = ? AND id_employe = ?", (manager_id, employe_id))
-    connexion.commit()
-    connexion.close()
+
+    try:
+        # Vérifier si l'assignation existe
+        curseur.execute(
+            "SELECT id_manager, id_supervise FROM managers WHERE id_manager = ? AND id_supervise = ?",
+            (manager_id, supervise_id)
+        )
+        assignation = curseur.fetchone()
+
+        if assignation:
+            # Supprimer l'assignation
+            curseur.execute(
+                "DELETE FROM managers WHERE id_manager = ? AND id_supervise = ?",
+                (manager_id, supervise_id)
+            )
+            connexion.commit()
+            flash("Assignation supprimée avec succès.", "success")
+        else:
+            flash("Aucune assignation trouvée pour les IDs spécifiés.", "error")
+    except Exception as e:
+        connexion.rollback()
+        flash(f"Erreur lors de la suppression de l'assignation : {str(e)}", "error")
+    finally:
+        connexion.close()
 
     return redirect(url_for('assigner_manager'))
+
+
 @app.route('/manager_dashboard')
 def manager_dashboard():
     # Vérifiez si l'utilisateur est connecté et s'il est un manager
     if 'role' not in session or session['role'] != 'manager':
         return redirect(url_for('login'))
 
-    manager_id = session['user_id']  # Récupérez l'ID du manager depuis la session
+    manager_id = session['id']  # Récupérez l'ID du manager depuis la session
     connexion = connect_db()
     curseur = connexion.cursor()
 
-    # Récupérez les informations du manager
-    curseur.execute("""
-        SELECT nom, prenom, age, poste, departement, email, conge, salaire
-        FROM users
-        WHERE id = ?
-    """, (manager_id,))
-    manager_info = curseur.fetchone()
-
-    if not manager_info:
-        # Si aucune information n'est trouvée pour le manager, afficher une erreur
-        return "Erreur: Aucune information pour ce manager."
-
     # Récupérez les employés supervisés par ce manager
     curseur.execute("""
-        SELECT u.id, u.nom, u.prenom, u.age, u.poste, u.departement, u.email, 
+        SELECT u.id, u.nom, u.prenom, u.date_naissance, u.poste, u.departement, u.email, u.photo,
                (CASE WHEN EXISTS (
-                   SELECT 1 FROM conges WHERE conges.email = u.email AND conges.statut = 'en attente'
+                   SELECT 1 FROM demandes_congé WHERE demandes_congé.id_utilisateurs = u.id AND demandes_congé.statut = 'en attente'
                ) THEN 1 ELSE 0 END) AS conge_demande
-        FROM users u
-        JOIN managers m ON m.id_employe = u.id
+        FROM utilisateurs u
+        JOIN managers m ON m.id_supervise = u.id
         WHERE m.id_manager = ?
     """, (manager_id,))
     employees = curseur.fetchall()
@@ -490,61 +829,48 @@ def manager_dashboard():
     connexion.close()
 
     # Passez les données au modèle HTML
-    return render_template('manager_menu.html', manager=manager_info, employees=employees)
+    return render_template('manager_menu.html', employees=employees)
 
-from datetime import datetime, timedelta
-
-@app.route('/calendrier_conges')
-def calendrier_conges():
-    # Vérification du rôle
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
-
-    user_id = session.get('user_id')
-    role = session.get('role')
+def get_conges_acceptes():
+    """
+    Récupérer toutes les demandes de congé acceptées.
+    """
     connexion = connect_db()
-    curseur = connexion.cursor()
-
-    # Récupération des congés
-    curseur.execute("""SELECT c.*, u.prenom, u.nom FROM conges c
-                       JOIN users u ON c.email = u.email
-                       WHERE c.statut = 'accepté'""")  # Filtrer les congés acceptés
-    conges = curseur.fetchall()
+    cur = connexion.cursor()
+    
+    cur.execute("SELECT * FROM demandes_congé WHERE statut = 'accepte'")
+    demandes = cur.fetchall()
+    
     connexion.close()
+    return demandes
 
-    # Organiser les congés par date
+
+@app.route("/calendrier_conges")
+def calendrier_conges():
+    """
+    Afficher le calendrier des congés acceptés.
+    """
+    if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        return redirect(url_for('login'))
+    
+    conges_acceptes = get_conges_acceptes()
     conges_par_jour = {}
-    for conge in conges:
-        email = conge[1]
-        raison = conge[2]
-        date_debut = datetime.strptime(conge[3], '%Y-%m-%d')  # date_debut
-        date_fin = datetime.strptime(conge[4], '%Y-%m-%d')    # date_fin
-        nom = conge[8]  # Nom de l'utilisateur
-        prenom = conge[9]  # Prénom de l'utilisateur
-        plus_infos = conge[5]
-        statut = conge[6]
 
-        # Vous pouvez choisir une logique pour la couleur, par exemple, baser sur la raison ou le statut
-        if statut == 'accepté':
-            color = '#3498db'  # Bleu pour accepté
-        else:
-            color = '#e67e22'  # Orange pour autres (en attente, refusé)
-
-        current_day = date_debut
-        while current_day <= date_fin:
-            if current_day not in conges_par_jour:
-                conges_par_jour[current_day] = []
-            conges_par_jour[current_day].append({
-                'nom': nom,
-                'prenom': prenom,
-                'raison': raison,
-                'plus_infos': plus_infos,
-                'statut': statut,
-                'color': color
-            })
-            current_day += timedelta(days=1)
-
-    return render_template('calendrier_conges.html', conges_par_jour=conges_par_jour, role=role)
+    for conge in conges_acceptes:
+        date_debut = datetime.strptime(conge[3], '%Y-%m-%d')
+        date_fin = datetime.strptime(conge[4], '%Y-%m-%d')
+        employe = {
+            'email': conge[1],
+            'description': conge[5],
+            'statut': conge[6],
+            'color': '#000427'  # Vous pouvez personnaliser la couleur ici
+        }
+        for single_date in (date_debut + timedelta(n) for n in range((date_fin - date_debut).days + 1)):
+            if single_date not in conges_par_jour:
+                conges_par_jour[single_date] = []
+            conges_par_jour[single_date].append(employe)
+    
+    return render_template("calendrier_conges.html", conges_par_jour=conges_par_jour, role=session['role'])
 
 
 @app.route('/depot_arret', methods=['GET', 'POST'])
@@ -577,22 +903,29 @@ def depot_arret():
             file_path = os.path.join(creation_upload_dossier("arréts"), filename)
             file.save(file_path)
         else:
-            file_path = None
+            filename = None
 
         # Enregistrement dans la base de données
         connexion = connect_db()
         cur = connexion.cursor()
         cur.execute("""
-            INSERT INTO arrets_maladie (employe_email, type_maladie, date_debut, date_fin, description, piece_jointe)
+            INSERT INTO demandes_arrêt (employe_email, type_maladie, date_debut, date_fin, description, piece_jointe)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (employe_email, type_maladie, date_debut, date_fin, description, filename))
         connexion.commit()
         connexion.close()
 
-        flash('Votre arrêt de maladie a été soumis avec succès.')
+        # 📧 Envoi d'un email de confirmation
+        sujet = "Confirmation de dépôt d'arrêt maladie"
+        contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie pour {type_maladie} a été déposée avec succès.\n\nCordialement,\nL'équipe RH"
+        envoyer_email(sujet, employe_email, contenu)
+        creer_notification("admin@gmail.com", contenu, "Arret")
+        flash("Demande d'arrêt maladie déposée avec succès. Un email de confirmation a été envoyé.", "success")
+        
         return redirect(url_for('depot_arret'))
 
     return render_template('depot_arret.html')
+
 
 @app.route('/suivi_arrets')
 def suivi_arrets():
@@ -608,7 +941,7 @@ def suivi_arrets():
     
     connexion = connect_db()
     cur = connexion.cursor()
-    cur.execute("SELECT * FROM arrets_maladie WHERE employe_email = ?", (employe_email,))
+    cur.execute("SELECT * FROM demandes_arrêt WHERE employe_email = ?", (employe_email,))
     arrets = cur.fetchall()
     connexion.close()
     
@@ -618,35 +951,400 @@ def suivi_arrets():
 
 @app.route('/admin_arrets', methods=['GET', 'POST'])
 def admin_arrets():
-    if request.method == 'POST':
-        id = request.form['id']
-        statut = request.form['statut']
-        motif_refus = request.form.get('motif_refus', None)
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
 
-        connexion = connect_db()
-        cur = connexion.cursor()
-        if statut == 'refuse':
-            cur.execute("""
-                UPDATE arrets_maladie
-                SET statut = ?, motif_refus = ?
-                WHERE id = ?
-            """, (statut, motif_refus, id))
-        else:
-            cur.execute("""
-                UPDATE arrets_maladie
-                SET statut = ?, motif_refus = NULL
-                WHERE id = ?
-            """, (statut, id))
-        connexion.commit()
-        connexion.close()
+    if request.method == 'POST':
+        try:
+            id = request.form['id']
+            statut = request.form['statut']
+            motif_refus = request.form.get('motif_refus', None)
+
+            connexion = connect_db()
+            cur = connexion.cursor()
+            cur.execute("SELECT employe_email FROM demandes_arrêt WHERE id = ?", (id,))
+            employe_email = cur.fetchone()[0]
+
+            if statut == 'refuse':
+                cur.execute("""
+                    UPDATE demandes_arrêt
+                    SET statut = ?, motif_refus = ?
+                    WHERE id = ?
+                """, (statut, motif_refus, id))
+
+                # 📧 Envoi d'un email de refus
+                sujet = "Refus de votre demande d'arrêt maladie"
+                contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
+            else:
+                cur.execute("""
+                    UPDATE demandes_arrêt
+                    SET statut = ?, motif_refus = NULL
+                    WHERE id = ?
+                """, (statut, id))
+
+                # 📧 Envoi d'un email d'acceptation
+                sujet = "Acceptation de votre demande d'arrêt maladie"
+                contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
+
+            connexion.commit()
+            connexion.close()
+
+            # 📧 Envoi de l'email
+            envoyer_email(sujet, employe_email, contenu)
+            flash("Réponse envoyée avec succès.", "success")
+        except KeyError:
+            flash("Une erreur s'est produite : l'ID est manquant.", "danger")
 
     connexion = connect_db()
     cur = connexion.cursor()
-    cur.execute("SELECT * FROM arrets_maladie")
+    cur.execute("SELECT * FROM demandes_arrêt")
     arrets = cur.fetchall()
     connexion.close()
     return render_template('admin_arrets.html', arrets=arrets)
 
+
+
+@app.route("/supprimer_demande_arrets/<int:id>", methods=["POST"])
+def supprimer_demande_arrets(id):
+    """
+    Supprimer une demande d'arrêt. L'administrateur ou le manager peut supprimer les demandes.
+    """
+    if 'role' not in session or (session['role'] != 'admin' and session['role'] != 'manager'):
+        return redirect(url_for('login'))
+
+    # Connexion à la base de données
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Récupérer l'email de l'utilisateur connecté
+    email_utilisateur = session['email']
+
+    # Si c'est un manager, vérifier qu'il peut supprimer la demande d'arrêt
+    if session['role'] == 'manager':
+        curseur.execute("""
+            SELECT 1 FROM managers 
+            WHERE id_manager = (SELECT id FROM utilisateurs WHERE email = ?) 
+            AND id_employe = (SELECT id_employe FROM demandes_arrêt WHERE id = ?)
+        """, (email_utilisateur, id))
+        if not curseur.fetchone():
+            connexion.close()
+            return "Vous n'avez pas l'autorisation de supprimer cette demande.", 403
+
+    # Supprimer la demande d'arrêt
+    curseur.execute("DELETE FROM demandes_arrêt WHERE id = ?", (id,))
+    connexion.commit()
+    connexion.close()
+
+    # Retourner une redirection vers la page des demandes d'arrêt
+    flash("La demande d'arrêt a été supprimée avec succès.", "success")
+    return redirect(url_for('admin_arrets'))
+
+def envoyer_email(sujet, destinataire, contenu):
+    message = EmailMessage(
+        subject=sujet,
+        body=contenu,
+        from_email=app.config['MAIL_USERNAME'],
+        to=[destinataire]
+    )
+    try:
+        message.send()
+        print(f"Email envoyé à {destinataire}")
+    except Exception as e:
+        print(f"Erreur lors de l'envoi du mail : {e}")
+
+
+@app.route('/reset_password', methods=["GET", "POST"])
+def reset_password():
+    if request.method == "POST":
+        email = request.form['email']
+        lien = "http://localhost:5000/update_password"  # À personnaliser
+        contenu = f"Bonjour,\n\nPour réinitialiser votre mot de passe, cliquez sur le lien suivant : {lien}"
+        envoyer_email("Réinitialisation de mot de passe", email, contenu)
+        flash("Un email de réinitialisation a été envoyé.")
+        return redirect(url_for('reset_password.html'))
+
+    return render_template('reset_password.html')
+
+@app.route('/update_password', methods=['GET', 'POST'])
+def update_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        new_password = request.form['new_password']
+
+        # Hashage du nouveau mot de passe avec bcrypt
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+        # Mise à jour du mot de passe dans la base de données
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            UPDATE utilisateurs
+            SET mot_de_passe = ?
+            WHERE email = ?
+        """, (hashed_password, email))
+        connexion.commit()
+        connexion.close()
+
+        flash('Votre mot de passe a été mis à jour avec succès.', 'success')
+        return redirect(url_for('update_password.html'))
+
+    return render_template('update_password.html')
+
+
+@app.route("/modifier_infos", methods=["GET", "POST"])
+def modifier_infos():
+    if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
+
+    email = session['email']
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if request.method == "POST":
+        # Récupérer les données du formulaire
+        nom = request.form['nom']
+        prenom = request.form['prenom']
+        date_naissance = request.form['date_naissance']
+        adresse = request.form['adresse']
+        ville = request.form['ville']
+        code_postal = request.form['code_postal']
+        pays = request.form['pays']
+        nationalite = request.form['nationalite']
+        telephone = request.form['telephone']
+
+        # Mise à jour de la photo de profil si fournie
+        file = request.files.get('photo')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            photo_path = os.path.join('static/uploads/photo_profile', filename)
+            file.save(photo_path)
+            cur.execute("""
+                UPDATE utilisateurs
+                SET nom = ?, prenom = ?, date_naissance = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?, nationalite = ?, telephone = ?, photo = ?
+                WHERE email = ?
+            """, (nom, prenom, date_naissance, adresse, ville, code_postal, pays, nationalite, telephone, filename, email))
+        else:
+            cur.execute("""
+                UPDATE utilisateurs
+                SET nom = ?, prenom = ?, date_naissance = ?, adresse = ?, ville = ?, code_postal = ?, pays = ?, nationalite = ?, telephone = ?
+                WHERE email = ?
+            """, (nom, prenom, date_naissance, adresse, ville, code_postal, pays, nationalite, telephone, email))
+
+        connexion.commit()
+        connexion.close()
+
+        flash("Vos informations ont été mises à jour avec succès.", "success")
+        return redirect(url_for('voir_mes_info'))
+
+    # Récupérer les informations actuelles de l'utilisateur
+    cur.execute("""
+        SELECT nom, prenom, date_naissance, email, adresse, ville, code_postal, pays, nationalite, telephone, photo
+        FROM utilisateurs
+        WHERE email = ?
+    """, (email,))
+    result = cur.fetchone()
+    connexion.close()
+
+    return render_template("modifier_infos.html", result=result)
+
+BASE_COFFRE_FORT = "static/coffre_fort/"
+
+def generer_nom_fichier(type_document, nom, prenom, mois=None, annee=None, nom_document=None):
+    random_digits = ''.join(random.choices(string.digits, k=8))
+    if type_document == "bulletin":
+        return f"{nom}.{prenom}_Bulletin_{mois}_{annee}_{random_digits}.pdf"
+    elif type_document == "contrat":
+        return f"{nom}.{prenom}_Contrat_{mois}_{annee}_{random_digits}.pdf"
+    else:
+        return f"{nom}.{prenom}_{nom_document}_{random_digits}.pdf"
+
+
+@app.route('/deposer_document/<string:id_employe>', methods=['GET', 'POST'])
+def deposer_document(id_employe):
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT nom, prenom FROM utilisateurs WHERE id = ?", (id_employe,))
+    employe = cur.fetchone()
+
+    if not employe:
+        flash("Employé introuvable.", "danger")
+        return redirect(url_for('admin_dashboard'))
+
+    nom, prenom = employe
+    dossier_bulletins = os.path.join(BASE_COFFRE_FORT, "bulletins", f"{nom}{prenom}")
+    dossier_contrats = os.path.join(BASE_COFFRE_FORT, "contrats", f"{nom}{prenom}")
+    dossier_autres = os.path.join(BASE_COFFRE_FORT, "autres", f"{nom}{prenom}")
+
+    # Crée les dossiers s'ils n'existent pas
+    os.makedirs(dossier_bulletins, exist_ok=True)
+    os.makedirs(dossier_contrats, exist_ok=True)
+    os.makedirs(dossier_autres, exist_ok=True)
+
+    if request.method == 'POST':
+        type_document = request.form['type_document']
+        fichier = request.files['fichier']
+
+        if not fichier or not allowed_file(fichier.filename):
+            flash("Format de fichier non autorisé.", "danger")
+            return redirect(request.url)
+
+        if type_document == "autre":
+            nom_document = request.form['nom_document']
+            if not nom_document:
+                flash("Le nom du document est requis pour les documents autres.", "danger")
+                return redirect(request.url)
+            nom_fichier = generer_nom_fichier(type_document, nom, prenom, nom_document=nom_document)
+            chemin_fichier = os.path.join(dossier_autres, nom_fichier)
+        else:
+            mois = request.form['mois']
+            annee = request.form['annee']
+            if not mois or not annee:
+                flash("Le mois et l'année sont requis pour les bulletins et contrats.", "danger")
+                return redirect(request.url)
+            nom_fichier = generer_nom_fichier(type_document, nom, prenom, mois, annee)
+            chemin_fichier = os.path.join(dossier_bulletins if type_document == "bulletin" else dossier_contrats, nom_fichier)
+
+        fichier.save(chemin_fichier)
+        cur.execute("SELECT email FROM utilisateurs WHERE id = ?", (id_employe,))
+        destinataire = cur.fetchone()[0]
+        sujet="Dépot de document"
+        contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
+        envoyer_email(sujet, destinataire, contenu)
+        creer_notification(destinataire, contenu, "document")
+
+    return render_template('deposer_document.html', employe=employe)
+
+@app.route('/coffre_fort', methods=['GET', 'POST'])
+def coffre_fort():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Si l'utilisateur est admin
+    if session.get('role') == 'admin':
+        if request.method == 'POST':
+            employe_id = request.form['employe_id']
+            cur.execute("SELECT nom, prenom FROM utilisateurs WHERE id = ?", (employe_id,))
+            employe = cur.fetchone()
+
+            if employe:
+                nom, prenom = employe
+                chemin_bulletins = os.path.join(BASE_COFFRE_FORT, "bulletins", f"{nom}{prenom}")
+                chemin_contrats = os.path.join(BASE_COFFRE_FORT, "contrats", f"{nom}{prenom}")
+                chemin_autres = os.path.join(BASE_COFFRE_FORT, "autres", f"{nom}{prenom}")
+
+                bulletins = os.listdir(chemin_bulletins) if os.path.exists(chemin_bulletins) else []
+                contrats = os.listdir(chemin_contrats) if os.path.exists(chemin_contrats) else []
+                autres = os.listdir(chemin_autres) if os.path.exists(chemin_autres) else []
+
+                return render_template(
+                    'coffre_fort.html', 
+                    bulletins=bulletins, 
+                    contrats=contrats, 
+                    autres=autres, 
+                    nom=nom, 
+                    prenom=prenom, 
+                    employe_id=employe_id
+                )
+            else:
+                flash("Employé introuvable.", "danger")
+                return redirect(url_for('coffre_fort'))
+
+        # Charger la liste des employés
+        cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE id != 0")
+        employes = cur.fetchall()
+        return render_template('coffre_fort_admin.html', employes=employes)
+
+    # Si l'utilisateur est un employé
+    else:
+        email = session['email']
+        cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE email = ?", (email,))
+        employe = cur.fetchone()
+
+        if not employe:
+            flash("Utilisateur introuvable.", "danger")
+            return redirect(url_for('login'))
+
+        employe_id, nom, prenom = employe
+        chemin_bulletins = os.path.join(BASE_COFFRE_FORT, "bulletins", f"{nom}{prenom}")
+        chemin_contrats = os.path.join(BASE_COFFRE_FORT, "contrats", f"{nom}{prenom}")
+        chemin_autres = os.path.join(BASE_COFFRE_FORT, "autres", f"{nom}{prenom}")
+
+        bulletins = os.listdir(chemin_bulletins) if os.path.exists(chemin_bulletins) else []
+        contrats = os.listdir(chemin_contrats) if os.path.exists(chemin_contrats) else []
+        autres = os.listdir(chemin_autres) if os.path.exists(chemin_autres) else []
+
+        return render_template(
+            'coffre_fort.html', 
+            bulletins=bulletins, 
+            contrats=contrats, 
+            autres=autres, 
+            nom=nom, 
+            prenom=prenom, 
+            employe_id=employe_id
+        )
+
+
+"""@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500"""
+
+def creer_notification(employe_email, message, type_notification):
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        INSERT INTO notifications (email, message, type)
+        VALUES (?, ?, ?)
+    """, (employe_email, message, type_notification))
+    connexion.commit()
+    connexion.close()
+
+def get_notifications_non_lues(employe_email):
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT id, message, type, created_at FROM notifications
+        WHERE email = ? AND is_read = 0
+        ORDER BY created_at DESC
+    """, (employe_email,))
+    
+    notifications = cur.fetchall()
+    connexion.close()
+
+    # Utiliser une date par défaut si created_at est None
+    notifications = [
+        (n[0], n[1], n[2], datetime.strptime(n[3], '%Y-%m-%d %H:%M:%S') if n[3] else datetime.now())
+        for n in notifications
+    ]
+    print(notifications)
+    return notifications
+
+def marquer_notifications_comme_lues(employe_email):
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        UPDATE notifications
+        SET is_read = 1
+        WHERE email = ?
+    """, (employe_email,))
+    connexion.commit()
+    connexion.close()
+
+@app.template_filter('format_datetime')
+def format_datetime(value, format='%d-%m-%Y %H:%M'):
+    if isinstance(value, datetime):
+        return value.strftime(format)
+    return value
 
 @app.route("/logout")
 def logout():
@@ -654,6 +1352,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-
+initialiser_base_de_donnees()
 if __name__ == "__main__":
+    mail = Mail(app)
     app.run(debug=True)

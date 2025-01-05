@@ -16,7 +16,7 @@ def verifier_identifiants(email, mot_de_passe):
         return None
     curseur = connexion.cursor()
     curseur.execute("""
-        SELECT mot_de_passe FROM users WHERE email = ?
+        SELECT mot_de_passe FROM utilisateurs WHERE email = ?
     """, (email,))
     resultats = curseur.fetchone()
     connexion.close()
@@ -37,7 +37,7 @@ def get_demandes_conges_manager(manager_email):
     cur = connexion.cursor()
     
     # Récupérer l'ID du manager
-    cur.execute("SELECT id FROM users WHERE email = ?", (manager_email,))
+    cur.execute("SELECT id FROM utilisateurs WHERE email = ?", (manager_email,))
     manager_id = cur.fetchone()
     
     if not manager_id:
@@ -55,7 +55,7 @@ def get_demandes_conges_manager(manager_email):
     demandes = []
     for employe_id in employes_ids:
         cur.execute("""
-            SELECT * FROM conges WHERE email IN (SELECT email FROM users WHERE id = ?)
+            SELECT * FROM demandes_congé WHERE email IN (SELECT email FROM utilisateurs WHERE id = ?)
         """, (employe_id,))
         demandes.extend(cur.fetchall())
     
@@ -70,7 +70,7 @@ def get_all_demandes_conges():
     connexion = connecter_db()
     cur = connexion.cursor()
     
-    cur.execute("SELECT * FROM conges")
+    cur.execute("SELECT * FROM demandes_congé")
     demandes = cur.fetchall()
     
     connexion.close()

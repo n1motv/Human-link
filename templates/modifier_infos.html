@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Mes Informations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a href="{{ url_for('voir_mes_info') }}">
+            <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+<div id="main-body">
+<main class="container py-5">
+    <h1 class="text-center text-white mb-4">Modifier Mes Informations</h1>
+
+    <form action="{{ url_for('modifier_infos') }}" method="POST" enctype="multipart/form-data" class="bg-dark p-4 rounded shadow-lg">
+        <div class="mb-3">
+            <label for="nom" class="form-label text-white">Nom</label>
+            <input type="text" class="form-control" id="nom" name="nom" value="{{ result[0] }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="prenom" class="form-label text-white">Prénom</label>
+            <input type="text" class="form-control" id="prenom" name="prenom" value="{{ result[1] }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="date_naissance" class="form-label text-white">Date de naissance</label>
+            <input type="date" class="form-control" id="date_naissance" name="date_naissance" value="{{ result[2] }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label text-white">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ result[3] }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="adresse" class="form-label text-white">Adresse</label>
+            <input type="text" class="form-control" id="adresse" name="adresse" value="{{ result[4] }}" required>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+            <label for="code_postal" class="form-label text-white">Code Postal</label>
+            <input type="text" id="code_postal" name="code_postal" class="form-control" value="{{ result[6] }}" placeholder="Ex : 13001" required>
+        </div>
+            <div class="col-md-6 mb-3">
+                <label for="ville" class="form-label text-white">Ville</label>
+                <input type="text" id="ville" name="ville" class="form-control" value="{{ result[5] }}" placeholder="Ville" required>
+           </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="pays" class="form-label text-white">Pays</label>
+            <select id="pays" name="pays" class="form-select" required>
+                <option value="{{ result[7] }}">{{ result[7] }}</option>
+            </select>
+        </div>
+
+        <!-- Nationalité -->
+        <div class="mb-3">
+            <label for="nationalite" class="form-label text-white">Nationalité</label>
+            <select id="nationalite" name="nationalite" class="form-select" required>
+                <option value="{{ result[8] }}">{{ result[8] }}</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="telephone" class="form-label text-white">Téléphone</label>
+            <input type="text" class="form-control" id="telephone" name="telephone" value="{{ result[9] }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="photo" class="form-label text-white">Nouvelle photo de profil (facultatif)</label>
+            <input type="file" class="form-control" id="photo" name="photo">
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">Mettre à jour mes informations</button>
+    </form>
+</main>
+
+<footer class="py-3">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Remplir la liste des pays
+        const selectPays = document.getElementById('pays');
+        fetch('https://restcountries.com/v3.1/all')
+            .then(response => response.json())
+            .then(data => {
+                // Trier les pays par ordre alphabétique
+                const sortedCountries = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+                selectPays.innerHTML = '<option value="">Sélectionner un pays</option>';
+                sortedCountries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.name.common;
+                    option.textContent = country.name.common;
+                    selectPays.appendChild(option);
+                });
+            });
+
+        // Liste déroulante des nationalités
+        const nationalites = ["Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
+            "Argentine", "Arménienne", "Australienne", "Autrichienne", "Azerbaïdjanaise", "Bahreïnie", "Bangladaise", 
+            "Belge", "Béninoise", "Bhoutanaise", "Biélorusse", "Birmane", "Bolivienne", "Bosnienne", "Botswanaise", 
+            "Brésilienne", "Bruneienne", "Bulgare", "Burkinabè", "Burundaise", "Cambodgienne", "Camerounaise", "Canadienne",
+            "Cap-verdienne", "Centrafricaine", "Chilienne", "Chinoise", "Chypriote", "Colombienne", "Comorienne", 
+            "Congolaise", "Costaricaine", "Croate", "Cubaine", "Danoise", "Djiboutienne", "Dominicaine", "Égyptienne",
+            "Émiratie", "Équatorienne", "Érythréenne", "Espagnole", "Estonienne", "Éthiopienne", "Fidjienne", 
+            "Finlandaise", "Française", "Gabonaise", "Gambienne", "Géorgienne", "Ghanéenne", "Grecque", "Guatémaltèque",
+                "Guinéenne", "Haïtienne", "Hondurienne", "Hongroise", "Indienne", "Indonésienne", "Iranienne", "Irakienne", 
+                "Irlandaise", "Islandaise", "Israélienne", "Italienne", "Ivoirienne", "Jamaïcaine", "Japonaise", 
+                "Jordanienne", "Kazakhstanaise", "Kényane", "Kirghize", "Laotienne", "Libanaise", "Libérienne", "Libyenne", 
+                "Lituanienne", "Luxembourgeoise", "Malaisienne", "Malienne", "Maltaise", "Marocaine", "Mauricienne", "Mexicaine", 
+                "Monégasque", "Mozambicaine", "Namibienne", "Néerlandaise", "Népalaise", "Nigériane", "Nigérienne", "Norvégienne", 
+                "Pakistanaise", "Palestinienne", "Panaméenne", "Paraguayenne", "Péruvienne", "Philippine", "Polonaise", "Portugaise", 
+                "Qatarienne", "Roumaine", "Russe", "Rwandaise", "Salvadorienne", "Sénégalaise", "Serbe", "Singapourienne", "Slovaque", "Slovène", 
+                "Somalienne", "Soudanaise", "Sri-lankaise", "Suédoise", "Suisse", "Syrienne", "Tadjike", "Tanzanienne", "Thaïlandaise", "Togolaise", 
+                "Tunisienne", "Turque", "Ukrainienne", "Uruguayenne", "Vénézuélienne", "Vietnamienne", "Yéménite", "Zambienne", "Zimbabwéenne"
+        ];
+        const selectNationalite = document.getElementById('nationalite');
+        nationalites.forEach(nationalite => {
+            const option = document.createElement('option');
+            option.value = nationalite;
+            option.textContent = nationalite;
+            selectNationalite.appendChild(option);
+        });
+
+        // Remplir automatiquement la ville à partir du code postal
+        const codePostalInput = document.getElementById('code_postal');
+        const villeInput = document.getElementById('ville');
+        codePostalInput.addEventListener('input', function () {
+            const codePostal = codePostalInput.value.trim();
+            if (/^\d{5}$/.test(codePostal)) {
+                fetch(`https://api.zippopotam.us/fr/${codePostal}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        villeInput.value = data.places[0]['place name'];
+                    })
+                    .catch(() => villeInput.value = '');
+            } else {
+                villeInput.value = '';
+            }
+        });
+    });
+</script>
+</body>
+</html>
