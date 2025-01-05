@@ -35,8 +35,8 @@ function highlightEmployeeDays(email) {
         fetch(`/get_employee_leave_days/${email}`)
             .then(response => response.json())
             .then(data => {
-                data.forEach(conge => {
-                    if (conge.day === dayNum) {
+                data.forEach(solde_congé => {
+                    if (solde_congé.day === dayNum) {
                         day.style.backgroundColor = 'green';
                     }
                 });

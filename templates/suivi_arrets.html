@@ -29,14 +29,14 @@
                 <td>{{ arret[4] }}</td>
                 <td>{{ arret[5] }}</td>
                 <td>
-                    {% if arret[6] %}
-                    <a href="{{ url_for('static', filename='uploads/arréts/' + arret[6]) }}" target="_blank">Voir</a>
+                    {% if arret[8] %}
+                    <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank">Voir</a>
                     {% else %}
                     Aucune
                     {% endif %}
                 </td>
+                <td>{{ arret[6] }}</td>
                 <td>{{ arret[7] }}</td>
-                <td>{{ arret[8] }}</td>
             </tr>
             {% endfor %}
         </tbody>
