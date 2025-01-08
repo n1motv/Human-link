@@ -9,6 +9,13 @@ body {
 main {
     flex: 1;
 }
+
+a{
+    white-space: nowrap; /* Évite que le texte aille à la ligne */
+    overflow: hidden; /* Cache le texte qui dépasse */
+    text-overflow: ellipsis; /* Ajoute "..." si le texte dépasse */
+}
+
 #main-body{
     background: linear-gradient(135deg, #000427, #72b59a);
     flex: 1;
@@ -29,7 +36,12 @@ main {
     transform: scale(1.1);
     opacity: 0.9;
 }
-
+#oublie{
+    text-align: center;
+    white-space: wrap;
+    overflow: visible; /* Cache le texte qui dépasse */
+    text-overflow: clip; /* Ajoute "..." si le texte dépasse */
+}
 
 /*******************************************Nav*****************************************************************/
 nav li {
@@ -96,6 +108,9 @@ nav li {
     margin-top: 20px;
     width : fit-content;
 }
+#navbarNav{
+    text-align: center;
+}
 /*******************************************footer*****************************************************************/
 
 footer {
@@ -146,6 +161,19 @@ footer {
     overflow-y: auto; /* Active le défilement si nécessaire */
     padding: 0; /* Supprime le padding pour un alignement propre */
 }
+
+#photoPreviewContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#photoPreview {
+    border-radius: 50%;
+    border: 2px solid #72b59a;
+    padding: 5px;
+}
+
 /*******************************************Organigramme*****************************************************************/
 .org-chart-container {
     display: flex;
@@ -251,3 +279,55 @@ a {
         margin-right: 8px;
     }
 }
+/* Dropdown Notification Styling */
+.notification-menu {
+    background-color: #333;
+    border: #ffffff;
+    border-radius: 8px;
+    min-width: 300px;
+    max-width: 400px;
+    max-height: 400px;
+    overflow: hidden;
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    border-bottom: 1px solid #72b59a;
+}
+.notification-list li {
+    width: 100%;
+}
+
+.notification-item:hover {
+    background-color: #72b59a;
+}
+
+.notification-item p {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.notification-item small {
+    font-size: 12px;
+}
+
+.notification-item .btn-outline-danger {
+    border-color: #333;
+    color: #333;
+}
+
+.notification-item .btn-outline-danger:hover {
+    background-color: #000427;
+    color: #72b59a;
+}
+a:hover{
+    background-color: none;
+}
+
+
+
