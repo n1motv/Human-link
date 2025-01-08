@@ -1,7 +1,7 @@
 import sqlite3,bcrypt,os,uuid,string,random
 from flask import Flask, render_template, session, redirect, url_for, request ,flash ,jsonify
 from main import get_all_demandes_conges, get_demandes_conges_manager
-from db_setup import cree_table_utilisateurs, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie
+from db_setup import cree_table_utilisateurs,cree_table_prime, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie
 from fonctionality import ajouter_conge_mensuel
 from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
 from werkzeug.utils import secure_filename
@@ -11,9 +11,8 @@ from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from forms import LoginForm
-from flask_mailman import Mail, EmailMessage
-from flask_socketio import SocketIO, emit
-
+from flask_mail import Mail, Message
+from random import randint
 
 # Initialisation de l'application Flask
 
@@ -51,16 +50,21 @@ def initialiser_base_de_donnees():
     cree_compte_admin()        # Crée le compte admin si non existant
     cree_table_conges()
     cree_table_manager()
+    cree_table_prime()
     ajouter_conge_mensuel()        # Crée la table des congés si elle n'existe pas
 
 # Appel de la fonction d'initialisation
 
 
-@app.template_filter('format_date')
-def format_date(value, format="%d-%m-%Y"):
+@app.template_filter('format_datetime')
+def format_datetime(value, format='%d-%m-%Y %H:%M'):
     if isinstance(value, datetime):
         return value.strftime(format)
-    return value
+    try:
+        value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        return value.strftime(format)
+    except Exception:
+        return value
 
 def generer_id():
     numeros = ''.join(random.choices(string.digits, k=5))
@@ -98,7 +102,6 @@ def login():
         """, (email,))
         
         utilisateur = curseur.fetchone()
-        print(utilisateur[3])
         connexion.close()
 
         # Vérification du mot de passe avec bcrypt
@@ -110,28 +113,103 @@ def login():
             session['id'] = utilisateur[0]
             session['email'] = utilisateur[1]
             if session['role'] == 'admin':
-                return redirect(url_for('admin_dashboard'))  # Rediriger vers le tableau de bord admin
+                return render_template('loading.html', redirect_url=url_for('admin_dashboard'))  # Rediriger vers le tableau de bord admin
             elif session['role'] == 'manager':
-                return redirect(url_for('manager_dashboard'))
+                return render_template('loading.html', redirect_url=url_for('manager_dashboard'))
             else:
-                return redirect(url_for('voir_mes_info'))   # Rediriger vers le tableau de bord employé
+
+                return render_template('loading.html', redirect_url=url_for('voir_mes_infos'))
         else:
             flash("Identifiants incorrects", "danger")
     return render_template("login.html",form=form)
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Total des employés
+    cur.execute("""SELECT COUNT(*) FROM utilisateurs WHERE email NOT IN ("admin@gmail.com", "admin")
+                """)
+    total_employes = cur.fetchone()[0]
+
+    # Total des départements distincts
+    cur.execute("""SELECT COUNT(DISTINCT(departement)) FROM utilisateurs WHERE email NOT IN ("admin@gmail.com", "admin")
+                """)
+    total_departements = cur.fetchone()[0]
+
+    # Total des congés acceptés
+    cur.execute("SELECT COUNT(*) FROM demandes_congé WHERE statut = 'accepte'")
+    conges_acceptes = cur.fetchone()[0]
+
+    # Salaire moyen
+    cur.execute("""SELECT AVG(salaire) FROM utilisateurs WHERE email NOT IN ("admin@gmail.com", "admin")
+                """)
+    salaire_moyen = round(cur.fetchone()[0], 2)
+
+    # Congés acceptés par mois
+    cur.execute("""
+        SELECT strftime('%m', date_debut) AS mois, COUNT(*) 
+        FROM demandes_congé 
+        WHERE statut = 'accepte' 
+        GROUP BY mois
+    """)
+    conges_par_mois_data = cur.fetchall()
+    mois_labels = [row[0] for row in conges_par_mois_data]
+    conges_par_mois = [row[1] for row in conges_par_mois_data]
+
+        # Congés actifs par jour
+    cur.execute("""
+        SELECT date_debut, COUNT(*) 
+        FROM demandes_congé 
+        WHERE statut = 'accepte' 
+        GROUP BY date_debut 
+        ORDER BY date_debut
+    """)
+    conges_par_jour_data = cur.fetchall()
+    jours_labels = [row[0] for row in conges_par_jour_data]
+    conges_par_jour = [row[1] for row in conges_par_jour_data]
+
+
+    # Nombre d'employés par département
+    cur.execute("""
+        SELECT departement, COUNT(*) 
+        FROM utilisateurs WHERE email NOT IN ("admin@gmail.com", "admin")
+        GROUP BY departement
+    """)
+    employes_par_departement_data = cur.fetchall()
+    departement_labels = [row[0] for row in employes_par_departement_data]
+    employes_par_departement = [row[1] for row in employes_par_departement_data]
+
+    connexion.close()
+
+    return render_template(
+        'admin_dashboard.html',
+        total_employes=total_employes,
+        total_departements=total_departements,
+        conges_acceptes=conges_acceptes,
+        salaire_moyen=salaire_moyen,
+        mois_labels=mois_labels,
+        conges_par_mois=conges_par_mois,
+        jours_labels=jours_labels,
+        conges_par_jour=conges_par_jour,
+        departement_labels=departement_labels,
+        employes_par_departement=employes_par_departement
+    )
 
 ##############################################ADMIN#########################################
-@app.route("/admin")
-def admin_dashboard():
-    if 'role' not in session or (session['role'] != 'admin' and session['role']!= 'manager'):
+@app.route("/afficher_employers")
+def afficher_employés():
+    if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
     user_id = session['id']
-    notifications_non_lues = get_notifications_non_lues(user_id)
-
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
     # Marquer les notifications comme lues après les avoir affichées
-    marquer_notifications_comme_lues(user_id)
+    marquer_notifications_comme_lues("admin@gmail.com")
     employees = voir_employes()
-    print(employees)
-    return render_template("admin_menu.html", employees=employees, role=session.get('role'),notifications_non_lues=notifications_non_lues)
+    return render_template("afficher_employés.html", employees=employees, role=session.get('role'), notifications=notifications, nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 def email_existe(email):
     """Vérifie si un email existe déjà dans la table utilisateurs."""
@@ -206,13 +284,13 @@ def ajouter_employe_page():
                 solde_congé, salaire, role, file_name_only, sexualite, telephone, adresse, 
                 ville, code_postal, pays, nationalite, numero_securite_sociale, date_embauche, type_contrat
             )
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('afficher_employés'))
 
     return render_template("ajouter_employe.html", erreur=erreur)
 
 
-@app.route("/demandes_conges")
-def demandes_conges():
+@app.route("/afficher_demandes_congé")
+def afficher_demandes_congé():
     """
     Afficher toutes les demandes de congé pour l'administrateur.
     """
@@ -220,7 +298,7 @@ def demandes_conges():
         return redirect(url_for('login'))
     
     demandes = get_all_demandes_conges()
-    return render_template("voir_demandes_conges_admin.html", demandes=demandes)
+    return render_template("admin_congés.html", demandes=demandes)
 @app.route("/demandes_conges_manager")
 def demandes_conges_manager():
     """
@@ -250,15 +328,15 @@ def get_demande_by_id(id_demande):
     # Retourne les informations de la demande ou None si elle n'existe pas
     return demande
 
-@app.route("/repondre_demande/<int:id>", methods=["POST"])
-def repondre_demande(id):
+@app.route("/répondre_congés/<int:id>", methods=["POST"])
+def répondre_congés(id):
     statut = request.form['statut']
     motif_refus = request.form['motif_refus'] if statut == 'refuse' else None
 
     # Vérifie si la demande est déjà acceptée ou refusée
     demande = get_demande_by_id(id)  # Supposons que cette fonction récupère la demande
     if demande[6] in ['accepte', 'refuse']:  # statut est déjà "accepté" ou "refusé"
-        return redirect(url_for('demandes_conges'))
+        return redirect(url_for('afficher_demandes_congé'))
 
     result = repondre_demande_conge(id, statut, motif_refus)
     if result:
@@ -275,26 +353,27 @@ def repondre_demande(id):
             sujet = "Demande de congé refusée"
             contenu = f"Bonjour,\n\nVotre demande de congé a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
 
-        envoyer_email(sujet, employe_email, contenu)
-        flash("Réponse envoyée avec succès.", "success")
-        return redirect(url_for('demandes_conges'))
+        #envoyer_email(sujet, employe_email, contenu)
+        creer_notification(employe_email, contenu, "Congé")
+        return redirect(url_for('afficher_demandes_congé'))
         
     return "Erreur lors du traitement de la demande."
 
 
 
 # Fonction pour afficher les informations d'un employé
-@app.route("/employe_info")
-def voir_mes_info():
+@app.route("/voir_mes_infos")
+def voir_mes_infos():
     if 'email' not in session:
         return redirect(url_for('login'))  # Rediriger si non connecté
     
     email = session['email']
     user_id = session['id']
-    notifications_non_lues = get_notifications_non_lues(user_id)
+    notifications = récupérer_notifications(email)
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(email)
 
     # Marquer les notifications comme lues après les avoir affichées
-    marquer_notifications_comme_lues(user_id)
+    marquer_notifications_comme_lues(email)
     connexion = connect_db()
     curseur = connexion.cursor()
     curseur.execute("""
@@ -304,7 +383,7 @@ def voir_mes_info():
     resultats = curseur.fetchall()
     connexion.close()
     
-    return render_template("employe_info.html", resultats=resultats, role=session.get('role'),notifications_non_lues=notifications_non_lues)
+    return render_template("voir_mes_infos.html", resultats=resultats, role=session.get('role'), notifications=notifications, nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 
 
@@ -372,7 +451,7 @@ def soumettre_demande_conge():
         employe_email = session['email']
         sujet = "Confirmation de dépôt de demande de congé"
         contenu = f"Bonjour,\n\nVotre demande de congé du {date_debut} au {date_fin} a été soumise avec succès.\n\nCordialement,\nL'équipe RH"
-        envoyer_email(sujet, employe_email, contenu)
+        #envoyer_email(sujet, employe_email, contenu)
         contenu=f"Une demande de congé de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Congé")
         # Mise à jour du solde de congé
@@ -383,14 +462,14 @@ def soumettre_demande_conge():
         connexion.commit()
         connexion.close()
 
-        return redirect(url_for('voir_suivi_demandes_conges'))
+        return redirect(url_for('mes_demandes_conges'))
 
     # Si c'est une requête GET, on affiche le formulaire
     return render_template('soumettre_demande_conge.html')
 
 # Fonction pour afficher les demandes de congé soumises
-@app.route("/suivi_demandes_conges")
-def voir_suivi_demandes_conges():
+@app.route("/mes_demandes_conges")
+def mes_demandes_conges():
     if 'email' not in session:
         return redirect(url_for('login'))  # Rediriger si non connecté
     
@@ -405,7 +484,7 @@ def voir_suivi_demandes_conges():
     demandes = cur.fetchall()
     connexion.close()
 
-    return render_template("suivi_demandes_conges.html", demandes=demandes)
+    return render_template("mes_demandes_conges.html", demandes=demandes)
 
 
 @app.route("/supprimer_employe/<string:id>", methods=["POST"])
@@ -423,7 +502,7 @@ def supprimer_employe(id):
     connexion.close()
 
     # Redirection vers la page des employés après suppression
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('afficher_employés'))
 
 @app.route("/supprimer_demande_conge/<int:id>", methods=["POST"])
 def supprimer_demande_conge(id):
@@ -458,7 +537,7 @@ def supprimer_demande_conge(id):
     connexion.commit()
     connexion.close()
 
-    return redirect(url_for('demandes_conges') if session['role'] == 'admin' else url_for('demandes_conges_manager'))
+    return redirect(url_for('afficher_demandes_congé') if session['role'] == 'admin' else url_for('demandes_conges_manager'))
 
 @app.route("/supprimer_demande_conge_manager/<int:id>", methods=["POST"])
 def supprimer_demande_conge_manager(id):
@@ -527,10 +606,10 @@ def mettre_a_jour_employe(id):
     connexion.commit()
     connexion.close()
 
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('afficher_employés'))
 
-@app.route('/api/get_assignations', methods=['GET'])
-def get_assignations():
+@app.route('/api/récupérer_assignations', methods=['GET'])
+def récupérer_assignations():
     if 'role' not in session or session['role'] != 'admin':
         return jsonify({"error": "Unauthorized access"}), 401
 
@@ -619,8 +698,8 @@ def assigner_manager():
         directeur_id=directeur_id
     )
 
-@app.route('/api/get_user_data', methods=['GET'])
-def get_user_data():
+@app.route('/api/récupérer_user_infos', methods=['GET'])
+def récupérer_user_infos():
     user_id = request.args.get('user_id')
     user_type = request.args.get('user_type')
 
@@ -704,8 +783,8 @@ def get_user_data():
     finally:
         connexion.close()
 
-@app.route('/api/get_orgchart', methods=['GET'])
-def get_orgchart():
+@app.route('/api/récupérer_orgchart', methods=['GET'])
+def récupérer_orgchart():
     if 'role' not in session or session['role'] != 'admin':
         return jsonify({"error": "Unauthorized access"}), 401
 
@@ -829,9 +908,9 @@ def manager_dashboard():
     connexion.close()
 
     # Passez les données au modèle HTML
-    return render_template('manager_menu.html', employees=employees)
+    return render_template('manager_menu.html', employees=employees,role= session['role'])
 
-def get_conges_acceptes():
+def récupérer_congés_acceptes():
     """
     Récupérer toutes les demandes de congé acceptées.
     """
@@ -844,37 +923,46 @@ def get_conges_acceptes():
     connexion.close()
     return demandes
 
+def générer_couleur():
+    """
+    Générer une couleur pastel aléatoire adaptée à un fond blanc.
+    """
+    r = randint(0, 200)
+    g = randint(0, 200)
+    b = randint(0, 200)
+    return f'rgb({r}, {g}, {b})'
 
-@app.route("/calendrier_conges")
-def calendrier_conges():
+@app.route("/calendrier_congés")
+def calendrier_congés():
     """
     Afficher le calendrier des congés acceptés.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
         return redirect(url_for('login'))
     
-    conges_acceptes = get_conges_acceptes()
+    conges_acceptes = récupérer_congés_acceptes()
     conges_par_jour = {}
 
     for conge in conges_acceptes:
         date_debut = datetime.strptime(conge[3], '%Y-%m-%d')
         date_fin = datetime.strptime(conge[4], '%Y-%m-%d')
+        couleur = générer_couleur()
         employe = {
             'email': conge[1],
             'description': conge[5],
             'statut': conge[6],
-            'color': '#000427'  # Vous pouvez personnaliser la couleur ici
+            'color': couleur  # Vous pouvez personnaliser la couleur ici
         }
         for single_date in (date_debut + timedelta(n) for n in range((date_fin - date_debut).days + 1)):
             if single_date not in conges_par_jour:
                 conges_par_jour[single_date] = []
             conges_par_jour[single_date].append(employe)
     
-    return render_template("calendrier_conges.html", conges_par_jour=conges_par_jour, role=session['role'])
+    return render_template("calendrier_congés.html", conges_par_jour=conges_par_jour, role=session['role'])
 
 
-@app.route('/depot_arret', methods=['GET', 'POST'])
-def depot_arret():
+@app.route('/soumettre_demande_arrêt', methods=['GET', 'POST'])
+def soumettre_demande_arrêt():
     # Vérifiez si l'utilisateur est connecté
     if 'email' not in session:
         flash("Vous devez être connecté pour accéder à cette page.")
@@ -884,17 +972,18 @@ def depot_arret():
         # Récupérez l'email depuis la session
         employe_email = session['email']
         type_maladie = request.form['type_maladie']
-        date_debut = request.form['date_debut']
-        date_fin = request.form['date_fin']
         description = request.form['description']
         
         # Validation de la date de début côté serveur
         today = datetime.today().date()
-        date_debut = datetime.strptime(date_debut, "%Y-%m-%d").date()
+        # Convertir les dates de chaîne en objet datetime
+        date_debut = datetime.strptime(request.form['date_debut'], "%Y-%m-%d").date()
+        date_fin = datetime.strptime(request.form['date_fin'], "%Y-%m-%d").date()
+
         
         if date_debut < today:
             flash("La date de début ne peut pas être avant la date actuelle.", "error")
-            return render_template('depot_arret.html')
+            return render_template('soumettre_demande_arrêt.html')
 
         # Traitement du fichier joint
         file = request.files['piece_jointe']
@@ -911,24 +1000,30 @@ def depot_arret():
         cur.execute("""
             INSERT INTO demandes_arrêt (employe_email, type_maladie, date_debut, date_fin, description, piece_jointe)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (employe_email, type_maladie, date_debut, date_fin, description, filename))
+        """, (
+            employe_email,
+            type_maladie,
+            date_debut.strftime('%Y-%m-%d'),
+            date_fin.strftime('%Y-%m-%d'),
+            description,
+            filename
+        ))
         connexion.commit()
         connexion.close()
 
         # 📧 Envoi d'un email de confirmation
         sujet = "Confirmation de dépôt d'arrêt maladie"
         contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie pour {type_maladie} a été déposée avec succès.\n\nCordialement,\nL'équipe RH"
-        envoyer_email(sujet, employe_email, contenu)
+        #envoyer_email(sujet, employe_email, contenu)
+        contenu=f"Une demande d'arrêt de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Arret")
-        flash("Demande d'arrêt maladie déposée avec succès. Un email de confirmation a été envoyé.", "success")
-        
-        return redirect(url_for('depot_arret'))
+        return redirect(url_for('mes_demandes_d_arrêts'))
 
-    return render_template('depot_arret.html')
+    return render_template('soumettre_demande_arrêt.html')
 
 
-@app.route('/suivi_arrets')
-def suivi_arrets():
+@app.route('/mes_demandes_d_arrêts')
+def mes_demandes_d_arrêts():
     # Vérifiez si l'utilisateur est connecté
     if 'email' not in session:
         flash("Vous devez être connecté pour accéder à cette page.")
@@ -946,11 +1041,11 @@ def suivi_arrets():
     connexion.close()
     
     # Affichez les arrêts dans la page HTML
-    return render_template('suivi_arrets.html', arrets=arrets)
+    return render_template('mes_demandes_d_arrêts.html', arrets=arrets)
 
 
-@app.route('/admin_arrets', methods=['GET', 'POST'])
-def admin_arrets():
+@app.route('/afficher_demandes_arrêts', methods=['GET', 'POST'])
+def afficher_demandes_arrêts():
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
@@ -990,8 +1085,8 @@ def admin_arrets():
             connexion.close()
 
             # 📧 Envoi de l'email
-            envoyer_email(sujet, employe_email, contenu)
-            flash("Réponse envoyée avec succès.", "success")
+            #envoyer_email(sujet, employe_email, contenu)
+            creer_notification(employe_email, contenu, "Arrét")
         except KeyError:
             flash("Une erreur s'est produite : l'ID est manquant.", "danger")
 
@@ -1000,12 +1095,12 @@ def admin_arrets():
     cur.execute("SELECT * FROM demandes_arrêt")
     arrets = cur.fetchall()
     connexion.close()
-    return render_template('admin_arrets.html', arrets=arrets)
+    return render_template('admin_arrêts.html', arrets=arrets)
 
 
 
-@app.route("/supprimer_demande_arrets/<int:id>", methods=["POST"])
-def supprimer_demande_arrets(id):
+@app.route("/supprimer_demande_arrêts/<int:id>", methods=["POST"])
+def supprimer_demande_arrêts(id):
     """
     Supprimer une demande d'arrêt. L'administrateur ou le manager peut supprimer les demandes.
     """
@@ -1037,20 +1132,21 @@ def supprimer_demande_arrets(id):
 
     # Retourner une redirection vers la page des demandes d'arrêt
     flash("La demande d'arrêt a été supprimée avec succès.", "success")
-    return redirect(url_for('admin_arrets'))
+    return redirect(url_for('afficher_demandes_arrêts'))
 
 def envoyer_email(sujet, destinataire, contenu):
-    message = EmailMessage(
+    message = Message(
         subject=sujet,
         body=contenu,
-        from_email=app.config['MAIL_USERNAME'],
-        to=[destinataire]
+        sender=app.config['MAIL_USERNAME'],  # Correctement configuré
+        recipients=[destinataire]  # Utilise "recipients" au lieu de "to"
     )
     try:
-        message.send()
+        mail.send(message)
         print(f"Email envoyé à {destinataire}")
     except Exception as e:
         print(f"Erreur lors de l'envoi du mail : {e}")
+
 
 
 @app.route('/reset_password', methods=["GET", "POST"])
@@ -1091,8 +1187,8 @@ def update_password():
     return render_template('update_password.html')
 
 
-@app.route("/modifier_infos", methods=["GET", "POST"])
-def modifier_infos():
+@app.route("/modifier_mes_infos", methods=["GET", "POST"])
+def modifier_mes_infos():
     if 'email' not in session:
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
@@ -1134,8 +1230,7 @@ def modifier_infos():
         connexion.commit()
         connexion.close()
 
-        flash("Vos informations ont été mises à jour avec succès.", "success")
-        return redirect(url_for('voir_mes_info'))
+        return redirect(url_for('voir_mes_infos'))
 
     # Récupérer les informations actuelles de l'utilisateur
     cur.execute("""
@@ -1146,7 +1241,7 @@ def modifier_infos():
     result = cur.fetchone()
     connexion.close()
 
-    return render_template("modifier_infos.html", result=result)
+    return render_template("modifier_mes_infos.html", result=result)
 
 BASE_COFFRE_FORT = "static/coffre_fort/"
 
@@ -1172,7 +1267,7 @@ def deposer_document(id_employe):
 
     if not employe:
         flash("Employé introuvable.", "danger")
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('afficher_employés'))
 
     nom, prenom = employe
     dossier_bulletins = os.path.join(BASE_COFFRE_FORT, "bulletins", f"{nom}{prenom}")
@@ -1213,7 +1308,7 @@ def deposer_document(id_employe):
         destinataire = cur.fetchone()[0]
         sujet="Dépot de document"
         contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
-        envoyer_email(sujet, destinataire, contenu)
+        #envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
 
     return render_template('deposer_document.html', employe=employe)
@@ -1250,7 +1345,8 @@ def coffre_fort():
                     autres=autres, 
                     nom=nom, 
                     prenom=prenom, 
-                    employe_id=employe_id
+                    employe_id=employe_id,
+                    role=session.get('role')
                 )
             else:
                 flash("Employé introuvable.", "danger")
@@ -1287,7 +1383,8 @@ def coffre_fort():
             autres=autres, 
             nom=nom, 
             prenom=prenom, 
-            employe_id=employe_id
+            employe_id=employe_id,
+            role=session.get('role'),
         )
 
 
@@ -1299,46 +1396,203 @@ def page_not_found(e):
 def server_error(e):
     return render_template('500.html'), 500"""
 
-def creer_notification(employe_email, message, type_notification):
+def creer_notification(email, message, type_notification):
     connexion = connect_db()
     cur = connexion.cursor()
+
+    date_creation = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    cur.execute("SELECT 1 FROM utilisateurs WHERE email = ?", (email,))
+    if not cur.fetchone():
+        print("Utilisateur introuvable.")
+        connexion.close()
+        return False
+
     cur.execute("""
-        INSERT INTO notifications (email, message, type)
-        VALUES (?, ?, ?)
-    """, (employe_email, message, type_notification))
+        INSERT INTO notifications (email, message, type, created_at, is_read)
+        VALUES (?, ?, ?, ?, 0)
+    """, (email, message, type_notification, date_creation))
+        # Supprimer les anciennes notifications si plus de 5
+    cur.execute("""
+        DELETE FROM notifications
+        WHERE email = ?
+        AND id NOT IN (
+            SELECT id FROM notifications
+            WHERE email = ?
+            ORDER BY created_at DESC
+            LIMIT 5
+        )
+    """, (email, email))
     connexion.commit()
     connexion.close()
+    print(f"Notification créée pour {email}.")
+    return True
 
-def get_notifications_non_lues(employe_email):
+
+def récupérer_notifications(email):
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("""
-        SELECT id, message, type, created_at FROM notifications
-        WHERE email = ? AND is_read = 0
+        SELECT id, message, type, created_at, is_read
+        FROM notifications
+        WHERE email = ?
         ORDER BY created_at DESC
-    """, (employe_email,))
-    
+    """, (email,))
     notifications = cur.fetchall()
     connexion.close()
-
-    # Utiliser une date par défaut si created_at est None
-    notifications = [
-        (n[0], n[1], n[2], datetime.strptime(n[3], '%Y-%m-%d %H:%M:%S') if n[3] else datetime.now())
+    
+    return [
+        {
+            'id': n[0],
+            'message': n[1],
+            'type': n[2],
+            'created_at': datetime.strptime(n[3], '%Y-%m-%d %H:%M:%S') if isinstance(n[3], str) else n[3],
+            'is_read': n[4]
+        }
         for n in notifications
     ]
-    print(notifications)
-    return notifications
 
-def marquer_notifications_comme_lues(employe_email):
+def récupérer_nombre_notifications_non_lues(email):
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE email = ? AND is_read = 0
+    """, (email,))
+    count = cur.fetchone()[0]
+    connexion.close()
+    return count
+
+def marquer_notifications_comme_lues(email):
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("""
         UPDATE notifications
         SET is_read = 1
         WHERE email = ?
-    """, (employe_email,))
+    """, (email,))
     connexion.commit()
     connexion.close()
+
+@app.route('/mark_notifications_as_read', methods=['POST'])
+def mark_notifications_as_read():
+    if 'email' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    email = session['email']
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        UPDATE notifications
+        SET is_read = 1
+        WHERE email = ? AND is_read = 0
+    """, (email,))
+    connexion.commit()
+    connexion.close()
+    return jsonify({'success': True})
+
+@app.route('/supprimer_notification/<int:id>', methods=['POST'])
+def supprimer_notification(id):
+    try:
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("DELETE FROM notifications WHERE id = ?", (id,))
+        connexion.commit()
+        connexion.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Erreur : {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/soumettre_demande_prime', methods=['GET', 'POST'])
+def soumettre_demande_prime():
+    if 'role' not in session or session['role'] != 'manager':
+        return redirect(url_for('login'))
+
+    id_manager = session['id']  # Récupérer l'ID du manager connecté
+
+    if request.method == 'POST':
+        id_employe = request.form['id_employe']
+        montant = float(request.form['montant'])
+        motif = request.form['motif']
+
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            INSERT INTO demandes_prime (id_manager, id_employe, montant, motif)
+            VALUES (?, ?, ?, ?)
+        """, (id_manager, id_employe, montant, motif))
+        connexion.commit()
+        connexion.close()
+
+        flash("Demande de prime soumise avec succès.", "success")
+        return redirect(url_for('manager_dashboard'))
+
+    # Récupérer les employés supervisés par ce manager
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT u.id, u.nom, u.prenom
+        FROM utilisateurs u
+        JOIN managers m ON m.id_supervise = u.id
+        WHERE m.id_manager = ?
+    """, (id_manager,))
+    employes = cur.fetchall()
+    connexion.close()
+
+    return render_template('soumettre_demande_prime.html', employes=employes)
+
+@app.route('/afficher_demandes_prime')
+def afficher_demandes_prime():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT dp.id, u.nom AS employe_nom, u.prenom AS employe_prenom, m.nom AS manager_nom, 
+               m.prenom AS manager_prenom, dp.montant, dp.motif, dp.statut, dp.motif_refus
+        FROM demandes_prime dp
+        JOIN utilisateurs u ON dp.id_employe = u.id
+        JOIN utilisateurs m ON dp.id_manager = m.id
+        ORDER BY dp.date_creation DESC
+    """)
+    demandes = cur.fetchall()
+    connexion.close()
+
+    return render_template('voir_demandes_prime.html', demandes=demandes)
+
+@app.route('/traiter_demande_prime/<int:id>', methods=['POST'])
+def traiter_demande_prime(id):
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    statut = request.form['statut']
+    motif_refus = request.form.get('motif_refus')
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if statut == 'refuse' and motif_refus:
+        cur.execute("""
+            UPDATE demandes_prime
+            SET statut = ?, motif_refus = ?
+            WHERE id = ?
+        """, (statut, motif_refus, id))
+    elif statut == 'accepte':
+        cur.execute("""
+            UPDATE demandes_prime
+            SET statut = ?, motif_refus = NULL
+            WHERE id = ?
+        """, (statut, id))
+
+    connexion.commit()
+    connexion.close()
+
+    flash("Demande de prime traitée avec succès.", "success")
+    return redirect(url_for('afficher_demandes_prime'))
+
 
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d-%m-%Y %H:%M'):

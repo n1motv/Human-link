@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h2>Soumettre une demande de prime</h2>
+    <form method="POST" action="{{ url_for('soumettre_demande_prime') }}">
+        <div class="mb-3">
+            <label for="id_employe" class="form-label">Employé supervisé</label>
+            <select name="id_employe" id="id_employe" class="form-select" required>
+                {% for employe in employes %}
+                    <option value="{{ employe.id }}">{{ employe.nom }} {{ employe.prenom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="montant" class="form-label">Montant de la prime (€)</label>
+            <input type="number" name="montant" id="montant" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="motif" class="form-label">Motif</label>
+            <textarea name="motif" id="motif" class="form-control" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Soumettre la demande</button>
+    </form>
+
+</body>
+</html>

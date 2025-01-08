@@ -13,20 +13,20 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
-                <img id="main-logo" src="../static/logo/logo-white.png" alt="">
-            </a>            
+                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
+            </a>          
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>            
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('admin_dashboard') }}">
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
                             <i class="bi bi-person"></i> Voir les employés
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('calendrier_conges') }}">
+                        <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
                             <i class="bi bi-calendar-check"></i> Calendrier Congés
                         </a>
                     </li>
@@ -42,12 +42,12 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li class="nav-item" >
-                                <a class="nav-link mx-2" href="{{ url_for('demandes_conges') }}" >
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}" >
                                     <i class="bi bi-envelope-fill"></i> Demandes de congés
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('admin_arrets') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
                                 </a>
                             </li>
@@ -70,6 +70,15 @@
     <div id="main-body">
     <main class="py-5">
         <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert alert-danger" role="alert">
+                    {% for category, message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
             <h1 class="text-center text-white mb-4">Ajouter un Employé</h1>
             <form method="POST" enctype="multipart/form-data">
                 <div class="row">

@@ -10,6 +10,7 @@
 </head>
 <body>
     <!-- Barre de navigation -->
+    {% if role == 'admin' %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
@@ -26,7 +27,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('admin_dashboard') }}">
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
                             <i class="bi bi-person"></i> Tableau de Bord
                         </a>
                     </li>
@@ -36,12 +37,12 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li class="nav-item" >
-                                <a class="nav-link mx-2" href="{{ url_for('demandes_conges') }}" >
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}" >
                                     <i class="bi bi-envelope-fill"></i> Demandes de congés
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_conges') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
                                     <i class="bi bi-calendar-check"></i> Calendrier Congés
                                 </a>
                             </li>
@@ -51,7 +52,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('admin_arrets') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
                                 </a>
                             </li>
@@ -66,9 +67,79 @@
             </div>
         </div>
     </nav>
+    {% elif role =='employe' %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a href="{{ url_for('voir_mes_infos') }}">
+                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link mx-2" href="{{ url_for('voir_mes_infos') }}">
+                            <i class="bi bi-eye"></i> Voir mes infos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_arrêt') }}">
+                            <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown ">
+                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Plus
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_conge') }}">
+                                    <i class="bi bi-calendar-plus"></i> Soumettre une demande de congé
+                                </a>
+                            </li>       
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('mes_demandes_d_arrêts') }}">
+                                    <i class="bi bi-file-earmark-text"></i> Voir les arrêts
+                                </a>
+                            </li>
+                            <!-- Voir mes demandes de congé -->
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('mes_demandes_conges') }}">
+                                    <i class="bi bi-calendar-check"></i> Voir mes demandes de congé
+                                </a>
+                            </li>
+                                                <!-- Voir les documents (Coffre-Fort) -->
+
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('modifier_mes_infos') }}">
+                                    <i class="bi bi-gear"></i> Modifier mes infos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> Se déconnecter
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
     <div id="main-body">
     <!-- Contenu principal -->
     <div class="container py-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-danger" role="alert">
+                {% for category, message in messages %}
+                    {{ message }}
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <h1 class="text-center text-white mb-4">Coffre-Fort</h1>
 
         <!-- Carte pour chaque section -->
@@ -78,7 +149,7 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    {% for bulletin in bulletins %}
+                    {% for bulletin in bulletins | reverse %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a href="{{ url_for('static', filename='coffre_fort/bulletins/' ~ nom ~ prenom ~ '/' ~ bulletin) }}" target="_blank">
                                 {{ bulletin }}
@@ -96,7 +167,7 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    {% for contrat in contrats %}
+                    {% for contrat in contrats | reverse %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a href="{{ url_for('static', filename='coffre_fort/contrats/' ~ nom ~ prenom ~ '/' ~ contrat) }}" target="_blank">
                                 {{ contrat }}
@@ -114,7 +185,7 @@
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    {% for autre in autres %}
+                    {% for autre in autres | reverse %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <a href="{{ url_for('static', filename='coffre_fort/autres/' ~ nom ~ prenom ~ '/' ~ autre) }}" target="_blank">
                                 {{ autre }}

@@ -21,7 +21,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('admin_dashboard') }}">
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
                             <i class="bi bi-person"></i> Tableau de Bord
                         </a>
                     </li>
@@ -36,17 +36,17 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_conges') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
                                     <i class="bi bi-calendar-check"></i> Calendrier Congés
                                 </a>
                             </li>
                             <li class="nav-item" >
-                                <a class="nav-link mx-2" href="{{ url_for('demandes_conges') }}" >
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}" >
                                     <i class="bi bi-envelope-fill"></i> Demandes de congés
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('admin_arrets') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
                                 </a>
                             </li>
@@ -64,6 +64,15 @@
     <div id="main-body">
     <!-- Contenu principal -->
     <div class="container py-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-danger" role="alert">
+                {% for category, message in messages %}
+                    {{ message }}
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <h1 class="text-center text-white mb-4">Coffre-Fort - Administrateur</h1>
 
         <!-- Carte pour la sélection de l'employé -->
@@ -76,7 +85,7 @@
                     <div class="mb-3">
                         <label for="employe_id" class="form-label">Employé :</label>
                         <select name="employe_id" id="employe_id" class="form-select" required>
-                            {% for emp in employes %}
+                            {% for emp in employes | reverse %}
                                 <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
                             {% endfor %}
                         </select>

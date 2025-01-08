@@ -25,15 +25,16 @@
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
+                            <i class="bi bi-person"></i> Voir les employés
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
                             <i class="bi bi-person-plus-fill"></i> Ajouter un employé
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('admin_dashboard') }}">
-                            <i class="bi bi-person"></i> Voir les employés
-                        </a>
-                    </li>
+
                     
                     <li class="nav-item">
                         <form class="d-flex mx-2">
@@ -54,17 +55,17 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_conges') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
                                     <i class="bi bi-calendar-check"></i> Calendrier Congés
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('demandes_conges') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}">
                                     <i class="bi bi-envelope-fill"></i> Demandes de congés
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('admin_arrets') }}">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
                                 </a>
                             </li>
@@ -91,20 +92,17 @@
                 <div id="search-results" class="container m-3"></div>
             </div>
             <div class="toggle-visibility">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="alert alert-danger" role="alert">
+                        {% for category, message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
             <h1 class="text-center text-white mb-4">Affecter des Employés aux Managers</h1>
 
-            <!-- Section pour afficher les messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="d-flex justify-content-center">
-                        <div class="alert alert-warning text-center" style="font-size: 0.875rem; padding: 0.5rem; display: inline-block; width: fit-content;">
-                            {% for category, message in messages %}
-                                <div class="alert {{ category }} mb-1" style="padding: 0.5rem;">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endif %}
-            {% endwith %}
 
             <!-- Formulaire pour designer un directeur -->
             <div class="d-flex justify-content-center mb-4">
@@ -214,7 +212,7 @@
     <script>
         $(document).ready(function () {
             function refreshOrgChart() {
-                $.get('/api/get_orgchart', function (data) {
+                $.get('/api/récupérer_orgchart', function (data) {
                     $('#orgChart').empty().orgchart({
                         data: data,
                         nodeContent: 'title',
@@ -266,7 +264,7 @@
                 return;
             }
 
-            fetch(`/api/get_user_data?user_id=${userId}&user_type=${userType}`)
+            fetch(`/api/récupérer_user_infos?user_id=${userId}&user_type=${userType}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {

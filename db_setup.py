@@ -63,6 +63,41 @@ def verification_creation_table_conges():
     return table_exists
 
 
+def verification_creation_table_prime():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='demandes_prime';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
+
+
+def cree_table_prime():
+    if verification_creation_table_prime():
+        print("Table des demandes_prime déjà créée.")
+        return
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        CREATE TABLE demandes_prime (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_manager TEXT NOT NULL,
+            id_employe TEXT NOT NULL,
+            montant FLOAT NOT NULL,
+            motif TEXT NOT NULL,
+            statut TEXT DEFAULT 'en attente',
+            motif_refus TEXT,
+            date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (id_manager) REFERENCES utilisateurs(id),
+            FOREIGN KEY (id_employe) REFERENCES utilisateurs(id)
+        )
+    """)
+    connexion.commit()
+    connexion.close()
+    print("Table des demandes_prime créée avec succès.")
 
 def cree_table_conges():
     if verification_creation_table_conges():
@@ -128,13 +163,12 @@ def cree_table_manager():
     cur.execute("""
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT,
+            email TEXT NOT NULL,
             message TEXT NOT NULL,
-            type TEXT NOT NULL,  -- 'conge', 'arret', 'document'
-            is_read BOOLEAN DEFAULT 0,
-            created_at DATETIME,
-            FOREIGN KEY(email) REFERENCES utilisateurs(email)
-        ) ;
+            type TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_read INTEGER DEFAULT 0
+        )
     """)
     connexion.commit()
     connexion.close()
