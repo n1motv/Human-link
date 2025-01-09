@@ -1593,6 +1593,31 @@ def traiter_demande_prime(id):
     flash("Demande de prime traitée avec succès.", "success")
     return redirect(url_for('afficher_demandes_prime'))
 
+@app.route('/supprimer_demande_prime/<int:id>', methods=['POST'])
+def supprimer_demande_prime(id):
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Vérifiez si la demande existe
+    cur.execute("SELECT * FROM demandes_prime WHERE id = ?", (id,))
+    demande = cur.fetchone()
+
+    if not demande:
+        flash("La demande de prime n'existe pas.", "danger")
+        connexion.close()
+        return redirect(url_for('afficher_demandes_prime'))
+
+    # Supprimez la demande
+    cur.execute("DELETE FROM demandes_prime WHERE id = ?", (id,))
+    connexion.commit()
+    connexion.close()
+
+    flash("La demande de prime a été supprimée avec succès.", "success")
+    return redirect(url_for('afficher_demandes_prime'))
+
 
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d-%m-%Y %H:%M'):
