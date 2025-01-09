@@ -77,6 +77,9 @@ nav li {
 .dropdown-menu-dark .dropdown-item:hover {
     background-color: #72b59a;
 }
+#searchInput{
+    border-radius: 8px;
+}
 .btn-custom-search {
     border-color: #72b59a;
     border-radius: 25%;
