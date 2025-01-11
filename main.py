@@ -47,15 +47,15 @@ def get_demandes_conges_manager(manager_email):
     
     # Récupérer les ID des employés supervisés par ce manager
     cur.execute("""
-        SELECT id_employe FROM managers WHERE id_manager = ?
+        SELECT id_supervise FROM managers WHERE id_manager = ?
     """, (manager_id,))
-    employes_ids = [row['id_employe'] for row in cur.fetchall()]
+    employes_ids = [row['id_supervise'] for row in cur.fetchall()]
     
     # Récupérer les demandes de congé pour ces employés
     demandes = []
     for employe_id in employes_ids:
         cur.execute("""
-            SELECT * FROM demandes_congé WHERE email IN (SELECT email FROM utilisateurs WHERE id = ?)
+            SELECT * FROM demandes_congé WHERE id_utilisateurs IN (SELECT id FROM utilisateurs WHERE id = ?)
         """, (employe_id,))
         demandes.extend(cur.fetchall())
     

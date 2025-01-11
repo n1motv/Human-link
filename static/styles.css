@@ -77,9 +77,6 @@ nav li {
 .dropdown-menu-dark .dropdown-item:hover {
     background-color: #72b59a;
 }
-#searchInput{
-    border-radius: 8px;
-}
 .btn-custom-search {
     border-color: #72b59a;
     border-radius: 25%;
@@ -282,54 +279,103 @@ a {
         margin-right: 8px;
     }
 }
-/* Dropdown Notification Styling */
-.notification-menu {
+/* Style pour l'icône flottante de notifications */
+#notification-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
     background-color: #333;
-    border: #ffffff;
-    border-radius: 8px;
-    min-width: 300px;
-    max-width: 400px;
-    max-height: 400px;
-    overflow: hidden;
+    color: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 9999;
+    transition: background-color 0.3s ease;
 }
 
-.notification-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.notification-item {
-    border-bottom: 1px solid #72b59a;
-}
-.notification-list li {
-    width: 100%;
-}
-
-.notification-item:hover {
+#notification-icon:hover {
     background-color: #72b59a;
 }
 
-.notification-item p {
-    font-size: 16px;
+#notification-icon .badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff3e3e;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 6px;
+    border-radius: 50%;
+}
+
+/* Style de la carte des notifications */
+#notification-panel {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 300px;
+    max-height: 400px;
+    background-color: #333;
+    color: #000000;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+}
+
+#notification-panel .notification-header {
+    padding: 12px;
+    background-color: #333;
+    color: #ffffff;
     font-weight: bold;
-    margin: 0;
+    text-align: center;
+    border-bottom: 1px solid #ffffff;
 }
 
-.notification-item small {
-    font-size: 12px;
+#notification-panel .notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+    min-height: fit-content;
 }
 
-.notification-item .btn-outline-danger {
-    border-color: #333;
-    color: #333;
+#notification-panel .notification-item {
+    padding: 10px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #333;
 }
 
-.notification-item .btn-outline-danger:hover {
+
+#notification-panel .btn-outline-danger {
+    border-color: #000427;
+    color: #000427;
+}
+
+#notification-panel .btn-outline-danger:hover {
     background-color: #000427;
     color: #72b59a;
 }
+#notification-panel p {
+    color: #000427;
+    font-weight: bold;
+}
+#notification-icon:hover {
+    background-color: #ffffff;
+    color: #333;
+}
+
 a:hover{
     background-color: none;
+}
+@media (max-width: 768px) {
+    .navbar-nav .nav-item {
+        text-align: center;
+    }
 }
 
 

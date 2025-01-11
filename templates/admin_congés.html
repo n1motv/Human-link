@@ -11,16 +11,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="alert alert-danger" role="alert">
-                    {% for category, message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-            <a href="{{ url_for('afficher_employés') }}">
+            <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="../static/logo/logo-white.png" alt="">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,6 +78,15 @@
     <div id="main-body">
     <main class="py-5">
         <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert alert-danger" role="alert">
+                    {% for category, message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
             <h1 class="text-center text-white mb-4">Demandes de Congés</h1>
             <div id="error-message" class="alert alert-warning d-none text-center">Aucune demande trouvée pour cet e-mail.</div>
             {% if demandes %}
