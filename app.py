@@ -294,25 +294,18 @@ def afficher_demandes_congé():
     """
     Afficher toutes les demandes de congé pour l'administrateur.
     """
-    if 'role' not in session or session['role'] != 'admin':
+    print(session['role'])
+    if 'role' not in session:
         return redirect(url_for('login'))
-    
-    demandes = get_all_demandes_conges()
-    return render_template("admin_congés.html", demandes=demandes)
-@app.route("/demandes_conges_manager")
-def demandes_conges_manager():
-    """
-    Afficher les demandes de congé des employés supervisés par le manager.
-    """
-    if 'role' not in session or session['role'] != 'manager':
+    manager_email = session['email']
+    if session['role'] == 'admin' :
+        demandes = get_all_demandes_conges()
+        return render_template("admin_congés.html", demandes=demandes)
+    elif session['role'] == 'manager' :
+        demandes = get_demandes_conges_manager(manager_email)    
+        return render_template("voir_demandes_conges_manager.html", demandes=demandes)
+    else:
         return redirect(url_for('login'))
-    
-    # Obtenir les demandes de congé des employés supervisés par ce manager
-    manager_email = session['email']  # L'email du manager est stocké dans la session
-    demandes = get_demandes_conges_manager(manager_email)
-    
-    return render_template("voir_demandes_conges_manager.html", demandes=demandes)
-
 def get_demande_by_id(id_demande):
     # Connexion à la base de données
     connexion = connect_db()
@@ -353,7 +346,7 @@ def répondre_congés(id):
             sujet = "Demande de congé refusée"
             contenu = f"Bonjour,\n\nVotre demande de congé a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
 
-        #envoyer_email(sujet, employe_email, contenu)
+        envoyer_email(sujet, employe_email, contenu)
         creer_notification(employe_email, contenu, "Congé")
         return redirect(url_for('afficher_demandes_congé'))
         
@@ -451,7 +444,7 @@ def soumettre_demande_conge():
         employe_email = session['email']
         sujet = "Confirmation de dépôt de demande de congé"
         contenu = f"Bonjour,\n\nVotre demande de congé du {date_debut} au {date_fin} a été soumise avec succès.\n\nCordialement,\nL'équipe RH"
-        #envoyer_email(sujet, employe_email, contenu)
+        envoyer_email(sujet, employe_email, contenu)
         contenu=f"Une demande de congé de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Congé")
         # Mise à jour du solde de congé
@@ -1014,7 +1007,7 @@ def soumettre_demande_arrêt():
         # 📧 Envoi d'un email de confirmation
         sujet = "Confirmation de dépôt d'arrêt maladie"
         contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie pour {type_maladie} a été déposée avec succès.\n\nCordialement,\nL'équipe RH"
-        #envoyer_email(sujet, employe_email, contenu)
+        envoyer_email(sujet, employe_email, contenu)
         contenu=f"Une demande d'arrêt de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Arret")
         return redirect(url_for('mes_demandes_d_arrêts'))
@@ -1085,7 +1078,7 @@ def afficher_demandes_arrêts():
             connexion.close()
 
             # 📧 Envoi de l'email
-            #envoyer_email(sujet, employe_email, contenu)
+            envoyer_email(sujet, employe_email, contenu)
             creer_notification(employe_email, contenu, "Arrét")
         except KeyError:
             flash("Une erreur s'est produite : l'ID est manquant.", "danger")
@@ -1308,7 +1301,7 @@ def deposer_document(id_employe):
         destinataire = cur.fetchone()[0]
         sujet="Dépot de document"
         contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
-        #envoyer_email(sujet, destinataire, contenu)
+        envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
 
     return render_template('deposer_document.html', employe=employe)
@@ -1511,20 +1504,53 @@ def soumettre_demande_prime():
         return redirect(url_for('login'))
 
     id_manager = session['id']  # Récupérer l'ID du manager connecté
+    manager_email = session['email']  # Récupérer l'e-mail du manager connecté
 
     if request.method == 'POST':
         id_employe = request.form['id_employe']
         montant = float(request.form['montant'])
         motif = request.form['motif']
 
+        # Connexion à la base de données et insertion de la demande
         connexion = connect_db()
         cur = connexion.cursor()
         cur.execute("""
             INSERT INTO demandes_prime (id_manager, id_employe, montant, motif)
             VALUES (?, ?, ?, ?)
         """, (id_manager, id_employe, montant, motif))
+
+        # Récupérer les informations de l'employé
+        cur.execute("""
+            SELECT nom, prenom, email
+            FROM utilisateurs
+            WHERE id = ?
+        """, (id_employe,))
+        employe = cur.fetchone()
+        cur.execute("""
+            SELECT nom, prenom
+            FROM utilisateurs
+            WHERE id = ?
+        """, (id_employe,))
+        manager = cur.fetchone()
         connexion.commit()
         connexion.close()
+
+        # Récupérer les détails de l'employé
+        if employe:
+            nom_employe, prenom_employe, employe_email = employe
+            nom_manager , prenom_manager = manager
+            # Création du contenu de l'e-mail et de la notification
+            sujet = "Nouvelle demande de prime soumise"
+            contenu = f"Bonjour,\n\nUne demande de prime a été soumise par votre manager {nom_manager} {prenom_manager} pour vous.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
+
+            # 📧 Envoi de l'e-mail
+            envoyer_email(sujet, "employe_email", contenu)
+            contenu = f"Bonjour,\n\nUne demande de prime a été soumise par vous pour l'employé {nom_employe} {prenom_employe}.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
+
+            envoyer_email(sujet, "employe_email", contenu)
+
+            #Création de la notification
+            creer_notification("admin@gmail.com", contenu, "Prime")
 
         flash("Demande de prime soumise avec succès.", "success")
         return redirect(url_for('manager_dashboard'))
@@ -1542,6 +1568,7 @@ def soumettre_demande_prime():
     connexion.close()
 
     return render_template('soumettre_demande_prime.html', employes=employes)
+
 
 @app.route('/afficher_demandes_prime')
 def afficher_demandes_prime():
@@ -1571,15 +1598,37 @@ def traiter_demande_prime(id):
     statut = request.form['statut']
     motif_refus = request.form.get('motif_refus')
 
+    # Connexion à la base de données
     connexion = connect_db()
     cur = connexion.cursor()
 
+    # Récupérer les détails de la demande de prime
+    cur.execute("""
+        SELECT u.nom, u.prenom, m.email 
+        FROM demandes_prime dp
+        JOIN utilisateurs u ON dp.id_employe = u.id
+        JOIN utilisateurs m ON dp.id_manager = m.id
+        WHERE dp.id = ?
+    """, (id,))
+    demande = cur.fetchone()
+
+    if demande:
+        nom_employe, prenom_employe, manager_email = demande
+    else:
+        flash("Demande de prime introuvable.", "danger")
+        return redirect(url_for('afficher_demandes_prime'))
+
+    # Mettre à jour la demande de prime en fonction du statut
     if statut == 'refuse' and motif_refus:
         cur.execute("""
             UPDATE demandes_prime
             SET statut = ?, motif_refus = ?
             WHERE id = ?
         """, (statut, motif_refus, id))
+
+        sujet = "Refus de votre demande de prime"
+        contenu = f"Bonjour,\n\nVotre demande de prime pour monsieur {nom_employe} {prenom_employe} a été refusée.\n\nCordialement,\nL'équipe RH"
+
     elif statut == 'accepte':
         cur.execute("""
             UPDATE demandes_prime
@@ -1587,8 +1636,16 @@ def traiter_demande_prime(id):
             WHERE id = ?
         """, (statut, id))
 
+        sujet = "Acceptation de votre demande de prime"
+        contenu = f"Bonjour,\n\nVotre demande de prime pour monsieur {nom_employe} {prenom_employe} a été acceptée.\n\nCordialement,\nL'équipe RH"
+
+    # Valider les modifications dans la base de données
     connexion.commit()
     connexion.close()
+
+    # 📧 Envoi de l'email et création de la notification
+    envoyer_email(sujet, manager_email, contenu)
+    creer_notification(manager_email, contenu, "Prime")
 
     flash("Demande de prime traitée avec succès.", "success")
     return redirect(url_for('afficher_demandes_prime'))

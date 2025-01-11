@@ -1,5 +1,4 @@
 import sqlite3
-from tabulate import tabulate
 from getpass import getpass
 import bcrypt
 from datetime import datetime
