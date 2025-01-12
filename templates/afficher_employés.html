@@ -39,38 +39,6 @@
                             </button>                            
                         </form>
                     </li>
-                    
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-bell-fill"></i>
-                            {% if nombre_notifications_non_lues > 0 %}
-                                <span class="badge top-0 start-100 translate-middle bg-danger rounded-pill">
-                                    {{ nombre_notifications_non_lues }}
-                                </span>
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg notification-menu" aria-labelledby="notificationsDropdown" style="width: fit-content;">
-                            <li class="dropdown-header text-white" style="background-color: #333;">Notifications</li>
-                            <div class="notification-list">
-                                {% for notification in notifications %}
-                                    <li class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %} p-3 border-bottom">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p class="mb-1" style="color: #000427;">{{ notification.message }}</p>
-                                                <small class="text-muted">{{ notification.created_at | format_datetime }}</small>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="supprimerNotification({{ notification.id }})">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </li>
-                                {% endfor %}
-                            </div>
-                            {% if notifications|length == 0 %}
-                                <li class="dropdown-item text-muted text-center py-3">Aucune notification</li>
-                            {% endif %}
-                        </ul>
-                    </li>                                                                                        
                     <li class="nav-item dropdown ">
                         <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Plus
@@ -129,13 +97,13 @@
                     <div class="card shadow-sm border-0">
                         <img src="../static/uploads/photo_profile/{{ emp[10] }}" class="card-img-top id-pic" alt="Photo de l'employé">
                         <div class="card-body">
-                            <p class="card-text">
+                            <p class="card-text" >
                                 <h5 class="card-title text-center" style="font-size: 1.5rem;">Informations Complètes</h5>
                                 <div class="text-center py-3" style="background-color: #72b59a78; border-radius:10px;  margin: 20px;">
                                     <h3 class="mb-0" style="color: #000427; font-weight: bold; margin: 5px;">Nom: {{ emp[0] }} Prénom: {{ emp[1] }}</h3>
                                     <p class="mb-0" style="color: #000427; margin: 5px;">Matricule: {{ emp[8] }}</p>
                                 </div>
-                                <p class="card-text">
+                                <p class="card-text" id ="infos">
                                 <strong>Date de naissance :</strong> {{ emp[2] }}<br>
                                 <strong>Poste :</strong> {{ emp[3] }}<br>
                                 <strong>Département :</strong> {{ emp[4] }}<br>
@@ -236,10 +204,6 @@
                                             <label for="ville" class="form-label text-white">Ville :</label>
                                             <input type="text" id="ville" name="ville" class="form-control" required placeholder="Ville">
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="code_postal" class="form-label text-white">Code Postal :</label>
-                                            <input type="text" id="code_postal" name="code_postal" class="form-control" required placeholder="Ex: 13003">
-                                        </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
@@ -276,16 +240,15 @@
                                                 <option value="Freelance" {% if emp[18] == 'Freelance' %}selected{% endif %}>Freelance</option>
                                             </select>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="mot_de_passe" class="form-label">Mot de passe :</label>
-                                            <input type="password" name="mot_de_passe" class="form-control" required placeholder="Nouveau mot de passe ou ancien requis">
-                                        </div>
-                                      
+                                 
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between">
-                                    <button type="button" class="btn btn-secondary cancel-edit">Annuler</button>                                    
-                                    <button type="submit" class="btn btn-success">Confirmer</button>
+                                    <button type="button" class="btn btn-secondary cancel-edit mx-2">Annuler</button>                                    
+                                    <button class="btn btn-secondary" onclick="envoyerEmailReinitialisation('{{ emp[5] }}')">
+                                        <i class="bi bi-envelope-fill"></i> Réinitialiser le mot de passe
+                                    </button>
+                                    <button type="submit" class="btn btn-success mx-2">Confirmer</button>
                                 </div>
                             </form>                            
                             <div class="d-flex justify-content-between edit-actions">
@@ -341,7 +304,8 @@
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const card = button.closest('.employee-card');
-
+                const infos = card.querySelector('#infos');
+                infos.style.display = 'none';
                 // Si une carte est déjà en cours de modification, la réinitialiser
                 if (currentlyEditingCard && currentlyEditingCard !== card) {
                     resetCard(currentlyEditingCard);
@@ -388,6 +352,10 @@
         document.querySelectorAll('.cancel-edit').forEach(button => {
             button.addEventListener('click', () => {
                 const card = button.closest('.employee-card');
+                const infos = card.querySelector('#infos');
+
+                // Réafficher le paragraphe "infos"
+                if (infos) infos.style.display = '';
                 resetCard(card);
                 currentlyEditingCard = null;
             });
@@ -440,61 +408,6 @@
         });
     </script>
     {% endfor %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var notificationsDropdown = document.getElementById('notificationsDropdown');
-    
-            notificationsDropdown.addEventListener('click', function () {
-                fetch('/mark_notifications_as_read', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Supprimer le badge des notifications non lues
-                        var badge = notificationsDropdown.querySelector('.badge');
-                        if (badge) badge.remove();
-                    }
-                })
-                .catch(error => console.error('Erreur:', error));
-            });
-        });
-    </script>
-    <script>
-        function supprimerNotification(id) {
-            if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
-                fetch(`/supprimer_notification/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Supprimer la notification de la liste sans recharger la page
-                        const notificationElement = document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('li');
-                        notificationElement.remove();
-
-                        // Mettre à jour le badge de notifications non lues
-                        const badge = document.querySelector('#notificationsDropdown .badge');
-                        if (badge) {
-                            const count = parseInt(badge.innerText) - 1;
-                            if (count > 0) {
-                                badge.innerText = count;
-                            } else {
-                                badge.remove();
-                            }
-                        }
-                    }
-                })
-                .catch(error => console.error('Erreur :', error));
-            }
-        }
-    </script>
      <script>
         document.addEventListener('DOMContentLoaded', function () {
             const nationalites = ["Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
@@ -577,5 +490,24 @@
             });
         });
     </script>
+    <script>
+        function envoyerEmailReinitialisation(email) {
+            if (confirm(`Voulez-vous vraiment envoyer un email de réinitialisation de mot de passe à ${email} ?`)) {
+                fetch(`/envoyer_email_reinitialisation?email=${encodeURIComponent(email)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Email de réinitialisation envoyé avec succès.');
+                        } else {
+                            alert('Erreur lors de l\'envoi de l\'email.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur :', error);
+                        alert('Une erreur est survenue.');
+                    });
+            }
+        }
+    </script>    
 </body>
 </html>

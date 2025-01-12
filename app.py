@@ -1,7 +1,7 @@
 import sqlite3,bcrypt,os,uuid,string,random
 from flask import Flask, render_template, session, redirect, url_for, request ,flash ,jsonify
 from main import get_all_demandes_conges, get_demandes_conges_manager
-from db_setup import cree_table_utilisateurs,cree_table_prime, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie
+from db_setup import cree_table_utilisateurs,cree_table_prime, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie,    cree_table_meetings , cree_table_meeting_attendance
 from fonctionality import ajouter_conge_mensuel
 from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
 from werkzeug.utils import secure_filename
@@ -52,7 +52,8 @@ def initialiser_base_de_donnees():
     cree_table_manager()
     cree_table_prime()
     ajouter_conge_mensuel()        # Crée la table des congés si elle n'existe pas
-
+    cree_table_meetings()  # Create the meetings table
+    cree_table_meeting_attendance() 
 # Appel de la fonction d'initialisation
 
 
@@ -183,7 +184,10 @@ def admin_dashboard():
     employes_par_departement = [row[1] for row in employes_par_departement_data]
 
     connexion.close()
-
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
     return render_template(
         'admin_dashboard.html',
         total_employes=total_employes,
@@ -195,7 +199,9 @@ def admin_dashboard():
         jours_labels=jours_labels,
         conges_par_jour=conges_par_jour,
         departement_labels=departement_labels,
-        employes_par_departement=employes_par_departement
+        employes_par_departement=employes_par_departement,
+        notifications=notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues
     )
 
 ##############################################ADMIN#########################################
@@ -204,12 +210,8 @@ def afficher_employés():
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
     user_id = session['id']
-    notifications = récupérer_notifications("admin@gmail.com")
-    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
-    # Marquer les notifications comme lues après les avoir affichées
-    marquer_notifications_comme_lues("admin@gmail.com")
     employees = voir_employes()
-    return render_template("afficher_employés.html", employees=employees, role=session.get('role'), notifications=notifications, nombre_notifications_non_lues=nombre_notifications_non_lues)
+    return render_template("afficher_employés.html", employees=employees, role=session.get('role'))
 
 def email_existe(email):
     """Vérifie si un email existe déjà dans la table utilisateurs."""
@@ -219,7 +221,6 @@ def email_existe(email):
     existe = cur.fetchone() is not None
     connexion.close()
     return existe
-
 
 @app.route("/ajouter_employe", methods=["GET", "POST"])
 def ajouter_employe_page():
@@ -932,25 +933,50 @@ def calendrier_congés():
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
         return redirect(url_for('login'))
-    
-    conges_acceptes = récupérer_congés_acceptes()
-    conges_par_jour = {}
 
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if session['role'] == 'admin':
+        # Récupérer tous les congés acceptés
+        cur.execute("""
+            SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
+            FROM demandes_congé dc
+            JOIN utilisateurs u ON dc.id_utilisateurs = u.id
+            WHERE dc.statut = 'accepte'
+        """)
+    elif session['role'] == 'manager':
+        # Récupérer les congés acceptés des employés supervisés par ce manager
+        manager_id = session['id']
+        cur.execute("""
+            SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
+            FROM demandes_congé dc
+            JOIN utilisateurs u ON dc.id_utilisateurs = u.id
+            JOIN managers m ON m.id_supervise = dc.id_utilisateurs
+            WHERE dc.statut = 'accepte' AND m.id_manager = ?
+        """, (manager_id,))
+
+    conges_acceptes = cur.fetchall()
+    connexion.close()
+
+    # Construire le dictionnaire des congés par jour
+    conges_par_jour = {}
     for conge in conges_acceptes:
-        date_debut = datetime.strptime(conge[3], '%Y-%m-%d')
-        date_fin = datetime.strptime(conge[4], '%Y-%m-%d')
-        couleur = générer_couleur()
+        id_utilisateur, date_debut, date_fin, description, email = conge
+        couleur = générer_couleur()  # Couleur personnalisée pour chaque employé
         employe = {
-            'email': conge[1],
-            'description': conge[5],
-            'statut': conge[6],
-            'color': couleur  # Vous pouvez personnaliser la couleur ici
+            'id_utilisateur': id_utilisateur,
+            'description': description,
+            'statut': 'accepte',
+            'color': couleur
         }
+        date_debut = datetime.strptime(date_debut, '%Y-%m-%d')
+        date_fin = datetime.strptime(date_fin, '%Y-%m-%d')
         for single_date in (date_debut + timedelta(n) for n in range((date_fin - date_debut).days + 1)):
             if single_date not in conges_par_jour:
                 conges_par_jour[single_date] = []
             conges_par_jour[single_date].append(employe)
-    
+
     return render_template("calendrier_congés.html", conges_par_jour=conges_par_jour, role=session['role'])
 
 
@@ -1140,6 +1166,25 @@ def envoyer_email(sujet, destinataire, contenu):
     except Exception as e:
         print(f"Erreur lors de l'envoi du mail : {e}")
 
+@app.route('/envoyer_email_reinitialisation')
+def envoyer_email_reinitialisation():
+    email = request.args.get('email')
+    
+    if not email:
+        return jsonify({'success': False, 'error': 'Email non fourni'}), 400
+    
+    # Générer un lien unique de réinitialisation de mot de passe
+    lien_reinitialisation = f"http://localhost:5000/update_password?email={email}"
+    
+    # Contenu de l'email
+    sujet = "Réinitialisation de votre mot de passe"
+    contenu = f"Bonjour,\n\nCliquez sur le lien suivant pour réinitialiser votre mot de passe : {lien_reinitialisation}\n\nCordialement,\nL'équipe RH."
+    
+    try:
+        envoyer_email(sujet, email, contenu)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/reset_password', methods=["GET", "POST"])
@@ -1156,14 +1201,12 @@ def reset_password():
 
 @app.route('/update_password', methods=['GET', 'POST'])
 def update_password():
+    email = request.args.get('email')
+    
     if request.method == 'POST':
-        email = request.form['email']
         new_password = request.form['new_password']
-
-        # Hashage du nouveau mot de passe avec bcrypt
         hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
 
-        # Mise à jour du mot de passe dans la base de données
         connexion = connect_db()
         cur = connexion.cursor()
         cur.execute("""
@@ -1175,9 +1218,9 @@ def update_password():
         connexion.close()
 
         flash('Votre mot de passe a été mis à jour avec succès.', 'success')
-        return redirect(url_for('update_password.html'))
+        return redirect(url_for('login'))
 
-    return render_template('update_password.html')
+    return render_template('update_password.html', email=email)
 
 
 @app.route("/modifier_mes_infos", methods=["GET", "POST"])
@@ -1675,7 +1718,92 @@ def supprimer_demande_prime(id):
     flash("La demande de prime a été supprimée avec succès.", "success")
     return redirect(url_for('afficher_demandes_prime'))
 
+# Route to schedule a meeting (Manager)
+@app.route('/meetings_scheduler', methods=['GET', 'POST'])
+def meetings_scheduler():
+    if 'role' not in session or session['role'] != 'manager':
+        return redirect(url_for('login'))
 
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if request.method == 'POST':
+        title = request.form['title']
+        date_time = request.form['date_time']
+        invited_employees = request.form.getlist('employees')
+
+        # Insert the new meeting
+        cur.execute("""
+            INSERT INTO meetings (title, date_time, status)
+            VALUES (?, ?, 'Scheduled')
+        """, (title, date_time))
+        meeting_id = cur.lastrowid
+
+        # Insert invited employees
+        for employee_id in invited_employees:
+            cur.execute("""
+                INSERT INTO meeting_attendance (meeting_id, employee_id, status)
+                VALUES (?, ?, 'Pending')
+            """, (meeting_id, employee_id))
+
+        connexion.commit()
+        connexion.close()
+        flash("L'invitation pour la réunion a été envoyer !", 'success')
+        return redirect(url_for('meetings_scheduler'))
+
+    # Retrieve employees for the form
+    cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE role = 'employe'")
+    employees = cur.fetchall()
+
+    # Retrieve meetings for the manager to view
+    cur.execute("""
+        SELECT m.id, m.title, m.date_time, COUNT(a.id) AS invited_count, 
+        SUM(CASE WHEN a.status = 'Accepted' THEN 1 ELSE 0 END) AS accepted_count,
+        SUM(CASE WHEN a.status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_count
+        FROM meetings m
+        JOIN meeting_attendance a ON m.id = a.meeting_id
+        GROUP BY m.id
+        ORDER BY m.date_time DESC
+    """)
+    meetings = cur.fetchall()
+
+    connexion.close()
+    return render_template('meetings_scheduler.html', employees=employees, meetings=meetings)
+
+
+# Route for employees to view and respond to meeting invitations
+@app.route('/meeting_invitations', methods=['GET', 'POST'])
+def meeting_invitations():
+    if 'role' not in session or session['role'] != 'employe':
+        return redirect(url_for('login'))
+
+    employee_id = session['id']
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if request.method == 'POST':
+        meeting_id = request.form['meeting_id']
+        response = request.form['response']
+
+        cur.execute("""
+            UPDATE meeting_attendance
+            SET status = ?
+            WHERE meeting_id = ? AND employee_id = ?
+        """, (response, meeting_id, employee_id))
+        connexion.commit()
+        flash('Ta réponse a été enregistrer !', 'success')
+
+    # Retrieve meeting invitations for the employee
+    cur.execute("""
+        SELECT m.id, m.title, m.date_time, a.status
+        FROM meetings m
+        JOIN meeting_attendance a ON m.id = a.meeting_id
+        WHERE a.employee_id = ?
+    """, (employee_id,))
+    invitations = cur.fetchall()
+
+    connexion.close()
+    return render_template('meeting_invitations.html', invitations=invitations)
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d-%m-%Y %H:%M'):
     if isinstance(value, datetime):

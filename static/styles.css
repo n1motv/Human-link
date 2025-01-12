@@ -173,7 +173,9 @@ footer {
     border: 2px solid #72b59a;
     padding: 5px;
 }
-
+.cropper-container .cropper-bg {
+    height: max-content;
+}
 /*******************************************Organigramme*****************************************************************/
 .org-chart-container {
     display: flex;
@@ -378,5 +380,32 @@ a:hover{
     }
 }
 
+/* Centrer la carte des notifications sur les petits écrans */
+@media (max-width: 768px) {
+    .notification-menu {
+        width: 100% !important;
+        left: 50%;
+        top: 60px;
+    }
+}
 
+/* Ajuster le badge des notifications */
+.badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+    background-color: #ff3e3e;
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
+
+#infos {
+    transition: opacity 0.3s ease-in-out;
+}
+
+#infos.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
 

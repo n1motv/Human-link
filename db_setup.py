@@ -63,6 +63,96 @@ def verification_creation_table_conges():
     return table_exists
 
 
+
+
+def cree_table_conges():
+    if verification_creation_table_conges():
+        connexion = connect_db()
+        cur = connexion.cursor()
+        print("Table des congés déjà créée.")
+        return
+    else:
+        
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            CREATE TABLE demandes_congé(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_utilisateurs INTEGER NOT NULL,
+                raison TEXT,
+                date_debut DATE,
+                date_fin DATE,
+                description TEXT,
+                statut TEXT DEFAULT 'en attente',
+                motif_refus TEXT,
+                pièce_jointe TEXT
+            )
+        """)
+        connexion.commit()
+        connexion.close()
+        print("Table des congés créée avec succès.")
+
+def verification_creation_table_meetings():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='meetings';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
+
+def cree_table_meetings():
+    if verification_creation_table_meetings():
+        print("Table 'meetings' déjà créée.")
+        return
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        CREATE TABLE meetings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            date_time DATETIME NOT NULL,
+            status TEXT DEFAULT 'Scheduled'
+        )
+    """)
+    connexion.commit()
+    connexion.close()
+    print("Table 'meetings' créée avec succès.")
+
+
+def verification_creation_table_meeting_attendance():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='meeting_attendance';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
+
+def cree_table_meeting_attendance():
+    if verification_creation_table_meeting_attendance():
+        print("Table 'meeting_attendance' déjà créée.")
+        return
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        CREATE TABLE meeting_attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            meeting_id INTEGER,
+            employee_id INTEGER,
+            status TEXT DEFAULT 'Pending',
+            FOREIGN KEY (meeting_id) REFERENCES meetings(id),
+            FOREIGN KEY (employee_id) REFERENCES utilisateurs(id)
+        )
+    """)
+    connexion.commit()
+    connexion.close()
+    print("Table 'meeting_attendance' créée avec succès.")
+
 def verification_creation_table_prime():
     connexion = connect_db()
     cur = connexion.cursor()
@@ -98,34 +188,6 @@ def cree_table_prime():
     connexion.commit()
     connexion.close()
     print("Table des demandes_prime créée avec succès.")
-
-def cree_table_conges():
-    if verification_creation_table_conges():
-        connexion = connect_db()
-        cur = connexion.cursor()
-        print("Table des congés déjà créée.")
-        return
-    else:
-        
-        connexion = connect_db()
-        cur = connexion.cursor()
-        cur.execute("""
-            CREATE TABLE demandes_congé(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_utilisateurs INTEGER NOT NULL,
-                raison TEXT,
-                date_debut DATE,
-                date_fin DATE,
-                description TEXT,
-                statut TEXT DEFAULT 'en attente',
-                motif_refus TEXT,
-                pièce_jointe TEXT
-            )
-        """)
-        connexion.commit()
-        connexion.close()
-        print("Table des congés créée avec succès.")
-
 def verification_creation_table_manager():
     connexion = connect_db()
     cur = connexion.cursor()

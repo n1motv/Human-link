@@ -82,6 +82,32 @@
         </div>
     </div>
 </nav>
+<div id="notification-icon" onclick="toggleNotificationPanel()">
+    <i class="bi bi-bell-fill"></i>
+    {% if nombre_notifications_non_lues > 0 %}
+        <span class="badge">{{ nombre_notifications_non_lues }}</span>
+    {% endif %}
+</div>
+<!-- Panneau des notifications -->
+<div id="notification-panel">
+    <div class="notification-header">Notifications</div>
+    <div class="notification-list">
+        {% for notification in notifications %}
+            <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <p>{{ notification.message }}</p>
+                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="supprimerNotification({{ notification.id }})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <small>{{ notification.created_at | format_datetime }}</small>
+            </div>
+        {% endfor %}
+        {% if notifications|length == 0 %}
+            <div class="notification-item text-center">Aucune notification</div>
+        {% endif %}
+    </div>
+</div>
 <div id="main-body">
     <main class="py-5" >
         <div class="container">
@@ -154,6 +180,8 @@
     </footer>
 </div>
 <!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 <script>
     // Données pour les congés par mois
     const joursLabels = {{ jours_labels | tojson }};
@@ -241,7 +269,94 @@ document.getElementById('btnMois').addEventListener('click', () => {
         }
     });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var notificationsDropdown = document.getElementById('notificationsDropdown');
+
+        notificationsDropdown.addEventListener('click', function () {
+            fetch('/mark_notifications_as_read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprimer le badge des notifications non lues
+                    var badge = notificationsDropdown.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        });
+    });
+</script>
+<script>
+    function supprimerNotification(id) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
+            fetch(`/supprimer_notification/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprimer la notification de la liste sans recharger la page
+                    const notificationElement = document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('li');
+                    notificationElement.remove();
+
+                    // Mettre à jour le badge de notifications non lues
+                    const badge = document.querySelector('#notificationsDropdown .badge');
+                    if (badge) {
+                        const count = parseInt(badge.innerText) - 1;
+                        if (count > 0) {
+                            badge.innerText = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Erreur :', error));
+        }
+    }
+</script>
+<script>
+    function toggleNotificationPanel() {
+        const panel = document.getElementById('notification-panel');
+        panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+    }
+
+    function supprimerNotification(id) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
+            fetch(`/supprimer_notification/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('.notification-item').remove();
+                    const badge = document.querySelector('#notification-icon .badge');
+                    if (badge) {
+                        let count = parseInt(badge.innerText) - 1;
+                        if (count > 0) {
+                            badge.innerText = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Erreur :', error));
+        }
+    }
+</script>
 
 </body>
 </html>
