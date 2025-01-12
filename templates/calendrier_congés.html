@@ -78,7 +78,14 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <h1 class="text-center text-white mb-4">Calendrier des Congés</h1>
+            <h1 class="text-center text-white mb-4">
+                Calendrier des Congés
+                {% if role == 'admin' %}
+                    <small class=" text-white">(Vue Admin)</small>
+                {% elif role == 'manager' %}
+                    <small class=" text-white">(Vue Manager)</small>
+                {% endif %}
+            </h1>            
             <div id="calendar2"></div>
         </div>
     </main>
@@ -114,7 +121,7 @@
                     {% for date, demandes_congé in conges_par_jour.items() %}
                         {% for conge in demandes_congé %}
                             {
-                                title: ' {{ conge.email }}',
+                                title: ' {{ conge.id_utilisateur }}',
                                 start: '{{ date.strftime("%Y-%m-%d") }}',
                                 description: '{{ conge.description }}',
                                 extendedProps: {
