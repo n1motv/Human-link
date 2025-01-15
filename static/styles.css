@@ -17,7 +17,7 @@ a{
 }
 
 #main-body{
-    background: linear-gradient(135deg, #000427, #72b59a);
+    background: linear-gradient(135deg, #111535, #72b59a);
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -135,7 +135,7 @@ footer {
     object-fit: cover;
     width: 100%;
     height: 100%;
-    max-height: 300px;
+    max-height: 382px;
 }
 
 /*******************************************Cropper*****************************************************************/
@@ -390,7 +390,7 @@ a:hover{
 }
 
 /* Ajuster le badge des notifications */
-.badge {
+#badgePerso {
     position: absolute;
     top: 0;
     right: 0;
@@ -409,3 +409,65 @@ a:hover{
     visibility: hidden;
 }
 
+.form-control{
+    border-color:#000;
+}
+.form-select{
+    border-color: #000;
+}
+
+/* Positionnement des messages flash en haut à droite */
+.alert {
+    animation: fadeOut 5s forwards;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        display: none;
+    }
+}
+.demandes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.demande-card {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.demande-card.agrandie {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.2);
+    z-index: 1050;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.flou::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+}
+
+body.flou {
+    overflow: hidden;
+}

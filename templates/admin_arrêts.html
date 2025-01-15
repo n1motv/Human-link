@@ -20,13 +20,13 @@
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
-                            <i class="bi bi-person-plus-fill"></i> Ajouter un employé
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
+                            <i class="bi bi-person"></i> Voir les employés
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
-                            <i class="bi bi-person"></i> Voir les employés
+                        <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
+                            <i class="bi bi-person-plus-fill"></i> Ajouter un employé
                         </a>
                     </li>
                     <li class="nav-item">
@@ -63,6 +63,16 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}">
+                                    <i class="bi bi-piggy-bank"></i>Demandes de prime 
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}">
+                                    <i class="bi bi-calendar-check"></i> Calendrier télétravail
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('logout') }}">
                                     <i class="bi bi-box-arrow-right"></i> Se déconnecter
                                 </a>
@@ -92,7 +102,7 @@
             <div class="row">
                 {% for arret in arrets | reverse %}
                 <div class="col-md-6 col-lg-4 arret-card">
-                    <div class="card">
+                    <div class="card demande-card" onclick="agrandirCarte(this)">
                         <div class="card-body">
                             <h5 class="card-title">Arrêt de {{ arret[1] }}</h5>
                             <p class="card-text">
@@ -148,6 +158,7 @@
         </div>
     </footer>
     </div>
+    <script src="../static/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         function confirmerSuppression(event) {
@@ -178,5 +189,6 @@
             }
         }
     </script>
+
 </body>
 </html>

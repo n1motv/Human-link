@@ -46,18 +46,22 @@
                                     <i class="bi bi-calendar-check"></i> Voir mes demandes de congé
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('modifier_mes_infos') }}">
-                                    <i class="bi bi-gear"></i> Modifier mes infos
-                                </a>
-                            </li>
-                                                <!-- Voir les documents (Coffre-Fort) -->
+                            <!-- Voir les documents (Coffre-Fort) -->
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('coffre_fort') }}">
                                     <i class="bi bi-folder"></i> Voir les documents
                                 </a>
                             </li>
-
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('modifier_mes_infos') }}">
+                                    <i class="bi bi-gear"></i> Modifier mes infos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('meeting_invitations') }}">
+                                    <i class="bi bi-calendar-event"></i> Invitation réunion
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('logout') }}">
                                     <i class="bi bi-box-arrow-right"></i> Se déconnecter

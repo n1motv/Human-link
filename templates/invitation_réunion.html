@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../static/styles.css">
 </head>
 <body>
-    <!-- Navbar -->
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a href="{{ url_for('voir_mes_infos') }}">
@@ -18,17 +18,47 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse text-center" id="navbarNav">
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('voir_mes_infos') }}">
-                            <i class="bi bi-person"></i> Mes Informations
+                        <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_arrêt') }}">
+                            <i class="bi bi-file-earmark-medical"></i> Soumettre une demande arrêt
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('logout') }}">
-                            <i class="bi bi-box-arrow-right"></i> Se Déconnecter
+                    <li class="nav-item ">
+                        <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_conge') }}">
+                            <i class="bi bi-calendar-plus"></i> Soumettre une demande de congé
                         </a>
+                    </li>        
+                    <li class="nav-item dropdown ">
+                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Plus
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('mes_demandes_d_arrêts') }}">
+                                    <i class="bi bi-file-earmark-text"></i> Voir mes demandes arrêts
+                                </a>
+                            </li>
+                            <!-- Voir mes demandes de congé -->
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('mes_demandes_conges') }}">
+                                    <i class="bi bi-calendar-check"></i> Voir mes demandes de congé
+                                </a>
+                            </li>
+                                                <!-- Voir les documents (Coffre-Fort) -->
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('coffre_fort') }}">
+                                    <i class="bi bi-folder"></i> Voir les documents
+                                </a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('modifier_mes_infos') }}"><i class="bi bi-gear"></i> Modifier mes infos</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('logout') }}">
+                                    <i class="bi bi-box-arrow-right"></i> Se déconnecter
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -38,8 +68,6 @@
     <!-- Main Content -->
     <div id="main-body">
         <div class="container py-5">
-            <h1 class="text-white mb-4">Invitations aux Réunions</h1>
-
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -50,9 +78,9 @@
                     </div>
                 {% endif %}
             {% endwith %}
-
+            <h1 class="text-white text-center mb-4">Invitations aux Réunions</h1>
             <!-- Meeting Invitations -->
-            <div class="row">
+            <div class="row d-flex flex-wrap justify-content-center">
                 {% for invitation in invitations %}
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card shadow-sm border-0">
@@ -61,11 +89,11 @@
                             <p class="card-text">
                                 <strong>Date & Heure :</strong> {{ invitation[2] }}<br>
                                 {% if invitation[3] == 'Accepted' %}
-                                    <span class="badge bg-success">Acceptée</span>
+                                    <span class="badge bg-success" id="badgePerso">Acceptée</span>
                                 {% elif invitation[3] == 'Rejected' %}
-                                    <span class="badge bg-danger">Refusée</span>
+                                    <span class="badge bg-danger" id="badgePerso">Refusée</span>
                                 {% else %}
-                                    <span class="badge bg-warning">En attente</span>
+                                    <span class="badge bg-warning" id="badgePerso">En attente</span>
                                 {% endif %}
                             </p>
 

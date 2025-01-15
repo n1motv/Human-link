@@ -1,7 +1,7 @@
 import sqlite3,bcrypt,os,uuid,string,random
 from flask import Flask, render_template, session, redirect, url_for, request ,flash ,jsonify
 from main import get_all_demandes_conges, get_demandes_conges_manager
-from db_setup import cree_table_utilisateurs,cree_table_prime, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie,    cree_table_meetings , cree_table_meeting_attendance
+from db_setup import cree_table_utilisateurs,cree_table_prime, cree_compte_admin, cree_table_conges,connect_db,cree_table_manager, cree_table_arrets_maladie,cree_table_demandes_contact,    cree_table_meetings , cree_table_meeting_attendance,cree_table_teletravail
 from fonctionality import ajouter_conge_mensuel
 from admin_menu import voir_employes,ajouter_employe,repondre_demande_conge
 from werkzeug.utils import secure_filename
@@ -27,6 +27,7 @@ app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+admin_mail="admin@gmail.com"
 
 def creation_upload_dossier(nom):
     BASE_UPLOAD_FOLDER = 'static/uploads/'
@@ -42,6 +43,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+admin_mail="admin@gmail.com"
 
 # Vérification et création des tables nécessaires
 def initialiser_base_de_donnees():
@@ -53,7 +55,9 @@ def initialiser_base_de_donnees():
     cree_table_prime()
     ajouter_conge_mensuel()        # Crée la table des congés si elle n'existe pas
     cree_table_meetings()  # Create the meetings table
-    cree_table_meeting_attendance() 
+    cree_table_meeting_attendance()
+    cree_table_teletravail()
+    cree_table_demandes_contact()
 # Appel de la fonction d'initialisation
 
 
@@ -123,6 +127,7 @@ def login():
         else:
             flash("Identifiants incorrects", "danger")
     return render_template("login.html",form=form)
+
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'role' not in session or session['role'] != 'admin':
@@ -159,7 +164,20 @@ def admin_dashboard():
     conges_par_mois_data = cur.fetchall()
     mois_labels = [row[0] for row in conges_par_mois_data]
     conges_par_mois = [row[1] for row in conges_par_mois_data]
-
+    # Nombre de personnes sur site aujourd'hui
+    today = datetime.now().strftime('%Y-%m-%d')
+    cur.execute("""
+        SELECT COUNT(*) FROM utilisateurs u
+        WHERE email NOT IN ("admin@gmail.com", "admin") AND u.id NOT IN (
+            SELECT t.id_employe FROM teletravail t WHERE t.date_teletravail = ?
+        ) 
+    """, (today,))
+    personnes_sur_site = cur.fetchone()[0]
+        # Nombre de personnes en télétravail aujourd'hui
+    cur.execute("""
+        SELECT COUNT(*) FROM teletravail WHERE date_teletravail = ?
+    """, (today,))
+    personnes_teletravail = cur.fetchone()[0]
         # Congés actifs par jour
     cur.execute("""
         SELECT date_debut, COUNT(*) 
@@ -201,9 +219,10 @@ def admin_dashboard():
         departement_labels=departement_labels,
         employes_par_departement=employes_par_departement,
         notifications=notifications,
-        nombre_notifications_non_lues=nombre_notifications_non_lues
+        nombre_notifications_non_lues=nombre_notifications_non_lues,        
+        personnes_sur_site=personnes_sur_site,
+        personnes_teletravail=personnes_teletravail,
     )
-
 ##############################################ADMIN#########################################
 @app.route("/afficher_employers")
 def afficher_employés():
@@ -211,7 +230,17 @@ def afficher_employés():
         return redirect(url_for('login'))
     user_id = session['id']
     employees = voir_employes()
-    return render_template("afficher_employés.html", employees=employees, role=session.get('role'))
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
+    return render_template(
+        "afficher_employés.html", 
+        employees=employees, 
+        role=session.get('role'),
+        notifications=notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues
+        )
 
 def email_existe(email):
     """Vérifie si un email existe déjà dans la table utilisateurs."""
@@ -285,9 +314,17 @@ def ajouter_employe_page():
                 solde_congé, salaire, role, file_name_only, sexualite, telephone, adresse, 
                 ville, code_postal, pays, nationalite, numero_securite_sociale, date_embauche, type_contrat
             )
-            return redirect(url_for('afficher_employés'))
 
-    return render_template("ajouter_employe.html", erreur=erreur)
+
+            return redirect(url_for('afficher_employés'))
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
+    return render_template("ajouter_employe.html", 
+                        erreur=erreur,
+                        notifications=notifications,
+                        nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 
 @app.route("/afficher_demandes_congé")
@@ -347,7 +384,7 @@ def répondre_congés(id):
             sujet = "Demande de congé refusée"
             contenu = f"Bonjour,\n\nVotre demande de congé a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
 
-        envoyer_email(sujet, employe_email, contenu)
+        #envoyer_email(sujet, employe_email, contenu)
         creer_notification(employe_email, contenu, "Congé")
         return redirect(url_for('afficher_demandes_congé'))
         
@@ -379,11 +416,102 @@ def voir_mes_infos():
     
     return render_template("voir_mes_infos.html", resultats=resultats, role=session.get('role'), notifications=notifications, nombre_notifications_non_lues=nombre_notifications_non_lues)
 
+@app.route('/api/recuperer_evenements')
+def recuperer_evenements():
+    if 'email' not in session:
+        return jsonify([])
 
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    email = session['email']
+    cur.execute("""
+        SELECT id FROM utilisateurs WHERE email = ? 
+    """, (email,))
+    id_employe = cur.fetchone()[0]
+
+    # Récupérer les congés
+    cur.execute("""
+        SELECT date_debut, date_fin, description FROM demandes_congé WHERE id_utilisateurs = ? AND statut = 'accepte'
+    """, (id_employe,))
+    conges = cur.fetchall()
+
+    # Récupérer les arrêts maladie
+    cur.execute("""
+        SELECT date_debut, date_fin, description FROM demandes_arrêt WHERE employe_email = ?
+    """, (email,))
+    arrets = cur.fetchall()
+
+    # Récupérer les réunions acceptées
+    cur.execute("""
+        SELECT m.date_time, m.title 
+        FROM meetings m
+        JOIN meeting_attendance ma ON m.id = ma.meeting_id
+        WHERE (ma.employee_id = (SELECT id FROM utilisateurs WHERE email = ?)OR m.created_by = ?) AND ma.status = 'Accepted'
+    """, (email,id_employe))
+    reunions = cur.fetchall()
+
+    # Récupérer les jours de télétravail
+    cur.execute("""
+        SELECT date_teletravail FROM teletravail WHERE id_employe = (SELECT id FROM utilisateurs WHERE email = ?)
+    """, (email,))
+    teletravail = cur.fetchall()
+
+    # Formater les événements pour FullCalendar
+    evenements = []
+
+    # Ajouter les congés
+    for conge in conges:
+        evenements.append({
+            'title': 'Congé',
+            'start': conge[0],
+            'end': conge[1],
+            'description': conge[2],
+            'color': '#1e6c4d'  # Vert foncé
+        })
+
+    # Ajouter les arrêts maladie
+    for arret in arrets:
+        evenements.append({
+            'title': 'Arrêt Maladie',
+            'start': arret[0],
+            'end': arret[1],
+            'description': arret[2],
+            'color': '#ac6430'  # Orange
+        })
+
+    # Ajouter les réunions acceptées avec l'heure
+    for reunion in reunions:
+        date_time = reunion[0]
+        
+        # Vérifier si date_time est un objet datetime, sinon le convertir
+        if isinstance(date_time, str):
+            date_time = datetime.fromisoformat(date_time)
+
+        # Extraire l'heure au format HH:MM
+        heure_reunion = date_time.strftime('%H:%M')
+        evenements.append({
+            'title': 'Réunion : ' + reunion[1],
+            'start': reunion[0],
+            'description': f"Heure : {heure_reunion}",
+            'color': '#ae0d38'  # Rouge
+        })
+    # Ajouter les jours de télétravail
+    for jour in teletravail:
+        evenements.append({
+            'title': 'Télétravail',
+            'start': jour[0],
+            'color': '#0083f6'  # Jaune clair
+        })
+
+    connexion.close()
+    return jsonify(evenements)
 
 @app.route("/soumettre_demande_conge", methods=["GET", "POST"])
 def soumettre_demande_conge():
-    
+    if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
     # Connexion à la base de données
     connexion = connect_db()
     cur = connexion.cursor()
@@ -403,11 +531,22 @@ def soumettre_demande_conge():
         raison = request.form['raison']
         date_debut = request.form['date_debut']
         date_fin = request.form['date_fin']
-
-        # Validation de la date de début côté serveur
         today = datetime.today().date()
         date_debut = datetime.strptime(date_debut, "%Y-%m-%d").date()
-        
+                # Vérification des chevauchements
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "demandes_congé"):
+            flash("Vous avez déjà un congé sur cette période.", "danger")
+            return redirect(url_for('soumettre_demande_conge'))
+
+        # Vérification des chevauchements avec des arrêts maladie
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "demandes_arrêt"):
+            flash("Vous ne pouvez pas soumettre un congé qui se chevauche avec un arrêt maladie.", "danger")
+            return redirect(url_for('soumettre_demande_conge'))
+
+        # Vérification des chevauchements avec le télétravail
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "teletravail"):
+            flash("Vous ne pouvez pas soumettre un congé qui se chevauche avec un jour de télétravail.", "danger")
+            return redirect(url_for('soumettre_demande_conge'))
         if date_debut < today:
             flash("La date de début ne peut pas être avant la date actuelle.", "error")
             connexion.close()
@@ -445,7 +584,7 @@ def soumettre_demande_conge():
         employe_email = session['email']
         sujet = "Confirmation de dépôt de demande de congé"
         contenu = f"Bonjour,\n\nVotre demande de congé du {date_debut} au {date_fin} a été soumise avec succès.\n\nCordialement,\nL'équipe RH"
-        envoyer_email(sujet, employe_email, contenu)
+        #envoyer_email(sujet, employe_email, contenu)
         contenu=f"Une demande de congé de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Congé")
         # Mise à jour du solde de congé
@@ -465,8 +604,8 @@ def soumettre_demande_conge():
 @app.route("/mes_demandes_conges")
 def mes_demandes_conges():
     if 'email' not in session:
-        return redirect(url_for('login'))  # Rediriger si non connecté
-    
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
     id = session['id']
     connexion = connect_db()
     cur = connexion.cursor()
@@ -900,9 +1039,20 @@ def manager_dashboard():
     employees = curseur.fetchall()
 
     connexion.close()
-
+    notifications = récupérer_notifications(session['email'])
+    print(session['email'])
+    print(notifications)
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(session['email'])
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues(session['email'])
     # Passez les données au modèle HTML
-    return render_template('manager_menu.html', employees=employees,role= session['role'])
+    return render_template(
+        'manager_menu.html',
+        employees=employees,
+        role= session['role'],
+        notifications=notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues
+        )
 
 def récupérer_congés_acceptes():
     """
@@ -917,19 +1067,11 @@ def récupérer_congés_acceptes():
     connexion.close()
     return demandes
 
-def générer_couleur():
-    """
-    Générer une couleur pastel aléatoire adaptée à un fond blanc.
-    """
-    r = randint(0, 200)
-    g = randint(0, 200)
-    b = randint(0, 200)
-    return f'rgb({r}, {g}, {b})'
 
 @app.route("/calendrier_congés")
 def calendrier_congés():
     """
-    Afficher le calendrier des congés acceptés.
+    Afficher le calendrier des congés acceptés avec une couleur unique par employé.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
         return redirect(url_for('login'))
@@ -938,7 +1080,6 @@ def calendrier_congés():
     cur = connexion.cursor()
 
     if session['role'] == 'admin':
-        # Récupérer tous les congés acceptés
         cur.execute("""
             SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
             FROM demandes_congé dc
@@ -946,7 +1087,6 @@ def calendrier_congés():
             WHERE dc.statut = 'accepte'
         """)
     elif session['role'] == 'manager':
-        # Récupérer les congés acceptés des employés supervisés par ce manager
         manager_id = session['id']
         cur.execute("""
             SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
@@ -961,15 +1101,23 @@ def calendrier_congés():
 
     # Construire le dictionnaire des congés par jour
     conges_par_jour = {}
+    couleurs_employes = {}
+
     for conge in conges_acceptes:
         id_utilisateur, date_debut, date_fin, description, email = conge
-        couleur = générer_couleur()  # Couleur personnalisée pour chaque employé
+
+        # Générer une couleur unique par employé
+        if email not in couleurs_employes:
+            couleurs_employes[email] = generer_couleur_employe(email)
+        couleur = couleurs_employes[email]
+
         employe = {
             'id_utilisateur': id_utilisateur,
             'description': description,
             'statut': 'accepte',
             'color': couleur
         }
+
         date_debut = datetime.strptime(date_debut, '%Y-%m-%d')
         date_fin = datetime.strptime(date_fin, '%Y-%m-%d')
         for single_date in (date_debut + timedelta(n) for n in range((date_fin - date_debut).days + 1)):
@@ -978,7 +1126,6 @@ def calendrier_congés():
             conges_par_jour[single_date].append(employe)
 
     return render_template("calendrier_congés.html", conges_par_jour=conges_par_jour, role=session['role'])
-
 
 @app.route('/soumettre_demande_arrêt', methods=['GET', 'POST'])
 def soumettre_demande_arrêt():
@@ -989,10 +1136,14 @@ def soumettre_demande_arrêt():
 
     if request.method == 'POST':
         # Récupérez l'email depuis la session
+
         employe_email = session['email']
         type_maladie = request.form['type_maladie']
         description = request.form['description']
-        
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""SELECT id FROM utilisateurs WHERE email = ?""", (employe_email,))
+        id=cur.fetchone()[0]
         # Validation de la date de début côté serveur
         today = datetime.today().date()
         # Convertir les dates de chaîne en objet datetime
@@ -1003,7 +1154,20 @@ def soumettre_demande_arrêt():
         if date_debut < today:
             flash("La date de début ne peut pas être avant la date actuelle.", "error")
             return render_template('soumettre_demande_arrêt.html')
+        # Vérification des chevauchements
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "demandes_arrêt"):
+            flash("Vous avez déjà un arrêt maladie sur cette période.", "danger")
+            return redirect(url_for('soumettre_demande_arrêt'))
 
+        # Vérification des chevauchements avec des congés
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "demandes_congé"):
+            flash("Vous ne pouvez pas soumettre un arrêt maladie qui se chevauche avec un congé.", "danger")
+            return redirect(url_for('soumettre_demande_arrêt'))
+
+        # Vérification des chevauchements avec le télétravail
+        if verifier_chevauchement_dates(id, date_debut, date_fin, "teletravail"):
+            flash("Vous ne pouvez pas soumettre un arrêt maladie qui se chevauche avec un jour de télétravail.", "danger")
+            return redirect(url_for('soumettre_demande_arrêt'))
         # Traitement du fichier joint
         file = request.files['piece_jointe']
         if file and allowed_file(file.filename):
@@ -1033,7 +1197,7 @@ def soumettre_demande_arrêt():
         # 📧 Envoi d'un email de confirmation
         sujet = "Confirmation de dépôt d'arrêt maladie"
         contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie pour {type_maladie} a été déposée avec succès.\n\nCordialement,\nL'équipe RH"
-        envoyer_email(sujet, employe_email, contenu)
+        #envoyer_email(sujet, employe_email, contenu)
         contenu=f"Une demande d'arrêt de {employe_email} à été deposer"
         creer_notification("admin@gmail.com", contenu, "Arret")
         return redirect(url_for('mes_demandes_d_arrêts'))
@@ -1104,7 +1268,7 @@ def afficher_demandes_arrêts():
             connexion.close()
 
             # 📧 Envoi de l'email
-            envoyer_email(sujet, employe_email, contenu)
+            #envoyer_email(sujet, employe_email, contenu)
             creer_notification(employe_email, contenu, "Arrét")
         except KeyError:
             flash("Une erreur s'est produite : l'ID est manquant.", "danger")
@@ -1123,7 +1287,7 @@ def supprimer_demande_arrêts(id):
     """
     Supprimer une demande d'arrêt. L'administrateur ou le manager peut supprimer les demandes.
     """
-    if 'role' not in session or (session['role'] != 'admin' and session['role'] != 'manager'):
+    if 'role' not in session:
         return redirect(url_for('login'))
 
     # Connexion à la base de données
@@ -1151,7 +1315,10 @@ def supprimer_demande_arrêts(id):
 
     # Retourner une redirection vers la page des demandes d'arrêt
     flash("La demande d'arrêt a été supprimée avec succès.", "success")
-    return redirect(url_for('afficher_demandes_arrêts'))
+    if session['role'] == 'admin'or session['role'] == 'manager':
+        return redirect(url_for('afficher_demandes_arrêts'))
+    else:
+        return redirect(url_for('mes_demandes_d_arrêts'))
 
 def envoyer_email(sujet, destinataire, contenu):
     message = Message(
@@ -1344,7 +1511,7 @@ def deposer_document(id_employe):
         destinataire = cur.fetchone()[0]
         sujet="Dépot de document"
         contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
-        envoyer_email(sujet, destinataire, contenu)
+        #envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
 
     return render_template('deposer_document.html', employe=employe)
@@ -1352,8 +1519,8 @@ def deposer_document(id_employe):
 @app.route('/coffre_fort', methods=['GET', 'POST'])
 def coffre_fort():
     if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
 
@@ -1433,7 +1600,7 @@ def server_error(e):
     return render_template('500.html'), 500"""
 
 def creer_notification(email, message, type_notification):
-    connexion = connect_db()
+    connexion =connect_db()
     cur = connexion.cursor()
 
     date_creation = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -1538,7 +1705,6 @@ def supprimer_notification(id):
         connexion.close()
         return jsonify({'success': True})
     except Exception as e:
-        print(f"Erreur : {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/soumettre_demande_prime', methods=['GET', 'POST'])
@@ -1587,10 +1753,10 @@ def soumettre_demande_prime():
             contenu = f"Bonjour,\n\nUne demande de prime a été soumise par votre manager {nom_manager} {prenom_manager} pour vous.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
 
             # 📧 Envoi de l'e-mail
-            envoyer_email(sujet, "employe_email", contenu)
+            #envoyer_email(sujet, "employe_email", contenu)
             contenu = f"Bonjour,\n\nUne demande de prime a été soumise par vous pour l'employé {nom_employe} {prenom_employe}.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
 
-            envoyer_email(sujet, "employe_email", contenu)
+            #envoyer_email(sujet, "manager_email", contenu)
 
             #Création de la notification
             creer_notification("admin@gmail.com", contenu, "Prime")
@@ -1687,7 +1853,7 @@ def traiter_demande_prime(id):
     connexion.close()
 
     # 📧 Envoi de l'email et création de la notification
-    envoyer_email(sujet, manager_email, contenu)
+    #envoyer_email(sujet, manager_email, contenu)
     creer_notification(manager_email, contenu, "Prime")
 
     flash("Demande de prime traitée avec succès.", "success")
@@ -1734,9 +1900,9 @@ def meetings_scheduler():
 
         # Insert the new meeting
         cur.execute("""
-            INSERT INTO meetings (title, date_time, status)
-            VALUES (?, ?, 'Scheduled')
-        """, (title, date_time))
+            INSERT INTO meetings (title, date_time, status,created_by)
+            VALUES (?, ?, 'Scheduled',?)
+        """, (title, date_time,session['id']))
         meeting_id = cur.lastrowid
 
         # Insert invited employees
@@ -1745,9 +1911,16 @@ def meetings_scheduler():
                 INSERT INTO meeting_attendance (meeting_id, employee_id, status)
                 VALUES (?, ?, 'Pending')
             """, (meeting_id, employee_id))
-
-        connexion.commit()
-        connexion.close()
+            cur.execute("""SELECT email FROM utilisateurs WHERE id =?""",(employee_id,))
+            employee_email=cur.fetchone()[0]
+            connexion.commit()
+            connexion.close()
+            sujet = "Invitation à une réunion"
+            contenu = f"Bonjour,\n\nVotre manager vous à invité à une réunion\n Veuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
+            #envoyer_email(sujet ,employee_email, contenu)
+            creer_notification(employee_email,contenu,"Invitation")
+            connexion = connect_db()
+            cur = connexion.cursor()
         flash("L'invitation pour la réunion a été envoyer !", 'success')
         return redirect(url_for('meetings_scheduler'))
 
@@ -1774,7 +1947,8 @@ def meetings_scheduler():
 # Route for employees to view and respond to meeting invitations
 @app.route('/meeting_invitations', methods=['GET', 'POST'])
 def meeting_invitations():
-    if 'role' not in session or session['role'] != 'employe':
+    if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
     employee_id = session['id']
@@ -1792,7 +1966,17 @@ def meeting_invitations():
         """, (response, meeting_id, employee_id))
         connexion.commit()
         flash('Ta réponse a été enregistrer !', 'success')
-
+        cur.execute("""
+            SELECT u.email 
+            FROM managers m
+            JOIN utilisateurs u ON m.id_manager = u.id
+            WHERE m.id_supervise = ?
+        """, (employee_id,))
+        manager_email = cur.fetchone()[0]
+        sujet = "Répone à l'invitation à la réunion"
+        contenu = f"Bonjour,\n\nL'un de vos employés à répondu à votre invitation.\n\nCordialement,\nL'équipe RH"
+        #envoyer_email(sujet ,manager_email, contenu)
+        creer_notification(manager_email,contenu,"Invitation réunion")
     # Retrieve meeting invitations for the employee
     cur.execute("""
         SELECT m.id, m.title, m.date_time, a.status
@@ -1803,7 +1987,279 @@ def meeting_invitations():
     invitations = cur.fetchall()
 
     connexion.close()
-    return render_template('meeting_invitations.html', invitations=invitations)
+
+    return render_template('invitation_réunion.html', invitations=invitations)
+
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+def envoyer_notifications_teletravail():
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Récupérer tous les employés
+    cur.execute("SELECT id, email FROM utilisateurs WHERE role = 'employe'")
+    employes = cur.fetchall()
+
+    for employe in employes:
+        email = employe['email']
+        contenu = "Bonjour,\n\nVeuillez choisir vos jours de télétravail pour la semaine prochaine.\n\nCordialement,\nL'équipe RH."
+        sujet = "Choix des jours de télétravail"
+        
+        # Envoi de l'email
+        envoyer_email(sujet, email, contenu)
+        
+        # Création de la notification
+        creer_notification(email, "Veuillez choisir vos jours de télétravail pour la semaine prochaine.", "Télétravail")
+    
+    connexion.close()
+
+# Initialisation du scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=envoyer_notifications_teletravail, trigger="cron", day_of_week="mon", hour=8)
+scheduler.start()
+
+@app.route('/choisir_teletravail', methods=['GET', 'POST'])
+def choisir_teletravail():
+    if 'role' not in session or session['role'] == 'admin':
+        return redirect(url_for('login'))
+
+    id_employe = session['id']
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Récupérer le nombre maximum de jours de télétravail autorisés pour cet employé
+    cur.execute("SELECT teletravail_max FROM utilisateurs WHERE id = ?", (id_employe,))
+    jours_max_teletravail = cur.fetchone()[0]
+
+    if request.method == 'POST':
+        jours_choisis = request.form.getlist('jours_teletravail')
+
+        # Vérification : le nombre de jours choisis doit être égal au nombre maximum autorisé
+        if len(jours_choisis) != jours_max_teletravail:
+            flash(f"Vous devez choisir exactement {jours_max_teletravail} jour(s) de télétravail.", "danger")
+            return redirect(url_for('choisir_teletravail'))
+
+        # Supprimer les anciennes sélections
+        cur.execute("DELETE FROM teletravail WHERE id_employe = ?", (id_employe,))
+
+        # Insérer les nouvelles sélections
+        for jour in jours_choisis:
+            if verifier_chevauchement_dates(id_employe, jour, jour, "demandes_congé"):
+                flash("Vous ne pouvez pas choisir un jour de télétravail qui se chevauche avec un congé.", "danger")
+                return redirect(url_for('choisir_teletravail'))
+
+            if verifier_chevauchement_dates(id_employe, jour, jour, "demandes_arrêt"):
+                flash("Vous ne pouvez pas choisir un jour de télétravail qui se chevauche avec un arrêt maladie.", "danger")
+                return redirect(url_for('choisir_teletravail'))
+            cur.execute("INSERT INTO teletravail (id_employe, date_teletravail) VALUES (?, ?)", (id_employe, jour))
+
+        connexion.commit()
+        connexion.close()
+
+        flash("Vos jours de télétravail ont été soumis avec succès.", "success")
+        return redirect(url_for('voir_mes_infos'))
+
+    connexion.close()
+    return render_template('choisir_teletravail.html', jours_max_teletravail=jours_max_teletravail)
+
+
+from hashlib import md5
+
+def generer_couleur_employe(email):
+    """
+    Génère une couleur pastel unique et distincte basée sur l'email de l'employé.
+    """
+    # Crée un hash à partir de l'email
+    hash_email = md5(email.encode()).hexdigest()
+    
+    # Convertir le hash en un nombre entier et calculer une teinte (Hue) entre 0 et 360
+    hue = int(hash_email[:8], 16) % 360
+
+    # Fixer la saturation à 70% et la luminosité à 80% pour un effet pastel
+    return f'hsl({hue}, 30%, 50%)'
+
+@app.route('/calendrier_teletravail')
+def calendrier_teletravail():
+    """
+    Afficher le calendrier des télétravails planifiés avec une couleur unique par employé.
+    """
+    if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    if session['role'] == 'admin':
+        cur.execute("""
+            SELECT t.id_employe, t.date_teletravail, u.nom, u.prenom, u.email 
+            FROM teletravail t
+            JOIN utilisateurs u ON t.id_employe = u.id
+        """)
+    else:
+        manager_id = session['id']
+        cur.execute("""
+            SELECT t.id_employe, t.date_teletravail, u.nom, u.prenom, u.email 
+            FROM teletravail t
+            JOIN utilisateurs u ON t.id_employe = u.id
+            JOIN managers m ON m.id_supervise = t.id_employe
+            WHERE m.id_manager = ?
+        """, (manager_id,))
+
+    teletravail_data = cur.fetchall()
+    connexion.close()
+
+    teletravail_par_jour = {}
+    couleurs_employes = {}
+
+    for teletravail in teletravail_data:
+        id_employe, date_teletravail, nom, prenom, email = teletravail
+        if email not in couleurs_employes:
+            couleurs_employes[email] = generer_couleur_employe(email)
+        
+        employe = {
+            'id_employe': id_employe,
+            'nom': nom,
+            'prenom': prenom,
+            'email': email,
+            'color': couleurs_employes[email]
+        }
+
+        date = datetime.strptime(date_teletravail, '%Y-%m-%d')
+        if date not in teletravail_par_jour:
+            teletravail_par_jour[date] = []
+        teletravail_par_jour[date].append(employe)
+
+    return render_template("calendrier_teletravail.html", teletravail_par_jour=teletravail_par_jour, role=session['role'])
+@app.route('/mettre_a_jour_teletravail/<string:employe_id>', methods=['POST'])
+def mettre_a_jour_teletravail(employe_id):
+    jours_max_teletravail = request.form.get('jours_max_teletravail')
+    
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        UPDATE utilisateurs
+        SET teletravail_max = ?
+        WHERE id = ?
+    """, (jours_max_teletravail, employe_id))
+    print(jours_max_teletravail)
+    cur.execute("""SELECT teletravail_max FROM utilisateurs WHERE id = ? """,(employe_id,))
+    print(cur.fetchone()[0])
+    connexion.commit()
+    connexion.close()
+    
+    flash("Nombre de jours de télétravail mis à jour avec succès.", "success")
+    return redirect(url_for('manager_dashboard'))
+
+def verifier_chevauchement_dates(id_employe, date_debut, date_fin, table):
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    # Définir les colonnes spécifiques en fonction de la table
+    if table == "demandes_congé":
+        colonne_id = "id_utilisateurs"
+        colonne_date_debut = "date_debut"
+        colonne_date_fin = "date_fin"
+    elif table == "demandes_arrêt":
+        colonne_id = "employe_email"
+        colonne_date_debut = "date_debut"
+        colonne_date_fin = "date_fin"
+    elif table == "teletravail":
+        colonne_id = "id_employe"
+        colonne_date_debut = "date_teletravail"
+        colonne_date_fin = "date_teletravail"
+    else:
+        raise ValueError("Table inconnue.")
+
+    # Vérification des chevauchements
+    query = f"""
+        SELECT {colonne_date_debut}, {colonne_date_fin}
+        FROM {table}
+        WHERE {colonne_id} = ? AND (
+            (? BETWEEN {colonne_date_debut} AND {colonne_date_fin}) OR
+            (? BETWEEN {colonne_date_debut} AND {colonne_date_fin}) OR
+            ({colonne_date_debut} BETWEEN ? AND ?) OR
+            ({colonne_date_fin} BETWEEN ? AND ?)
+        )
+    """
+
+    cur.execute(query, (id_employe, date_debut, date_fin, date_debut, date_fin, date_debut, date_fin))
+    chevauchement = cur.fetchone() is not None
+    connexion.close()
+    
+    return chevauchement
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        # Récupérer les données du formulaire
+        nom = request.form.get('nom')
+        prenom = request.form.get('prenom')
+        email = request.form.get('email')
+        telephone=request.form.get('telephone')
+        sujet = request.form.get('sujet')
+        message = request.form.get('message')
+        id_utilisateur = request.form.get('id')  # ID (immatricule) pour les utilisateurs non connectés
+        connexion = connect_db()
+        cur = connexion.cursor()
+        # Si l'utilisateur est connecté, récupérer son ID depuis la session
+        if 'id' in session:
+            id_utilisateur = session['id']
+            email=session['email']
+            cur.execute("""SELECT nom , prenom ,telephone FROM utilisateurs WHERE id = ? """ , (id_utilisateur,))
+            nom,prenom,telephone=cur.fetchone()
+        # Insérer la demande dans la base de données
+        cur.execute("""
+            INSERT INTO demandes_contact (id_utilisateur, nom, prenom, email, sujet, message,telephone)
+            VALUES (?, ?, ?, ?, ?, ?,?)
+        """, (id_utilisateur, nom, prenom, email, sujet, message,telephone))
+
+        connexion.commit()
+        connexion.close()
+        contenu = "Bonjour,\n\nVous venez de recevoir une demande de contact.\n\nCordialement,"
+        sujet = f"Demande de contact"
+
+        creer_notification(admin_mail, contenu, sujet)
+    
+        flash("Votre demande a été envoyée avec succès.", "success")
+        return redirect(url_for('contact'))
+
+    return render_template('contact.html')
+
+
+
+@app.route('/admin_demandes_contact')
+def admin_demandes_contact():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT dc.id_utilisateur , dc.id, dc.nom, dc.prenom, dc.email, dc.sujet, dc.message, dc.date_creation,dc.telephone, u.id AS utilisateur_id, u.nom AS utilisateur_nom, u.prenom AS utilisateur_prenom , u.telephone AS utilisateur_telephone
+        FROM demandes_contact dc
+        LEFT JOIN utilisateurs u ON dc.id_utilisateur = u.id
+        ORDER BY dc.date_creation DESC
+    """)
+    demandes = [dict(row) for row in cur.fetchall()]
+    connexion.close()
+
+    return render_template('admin_demandes_contact.html', demandes=demandes)
+
+@app.route('/supprimer_demande_contact/<int:id>', methods=['POST'])
+def supprimer_demande_contact(id):
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('login'))
+    
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("DELETE FROM demandes_contact WHERE id = ?", (id,))
+    connexion.commit()
+    connexion.close()
+
+    flash("La demande de contact a été supprimée avec succès.", "success")
+    return redirect(url_for('admin_demandes_contact'))
+
 @app.template_filter('format_datetime')
 def format_datetime(value, format='%d-%m-%Y %H:%M'):
     if isinstance(value, datetime):
