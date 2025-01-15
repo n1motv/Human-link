@@ -62,9 +62,6 @@ def verification_creation_table_conges():
     connexion.close()
     return table_exists
 
-
-
-
 def cree_table_conges():
     if verification_creation_table_conges():
         connexion = connect_db()
@@ -114,7 +111,8 @@ def cree_table_meetings():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             date_time DATETIME NOT NULL,
-            status TEXT DEFAULT 'Scheduled'
+            status TEXT DEFAULT 'Scheduled',
+            created_by TEXT
         )
     """)
     connexion.commit()
@@ -147,6 +145,7 @@ def cree_table_meeting_attendance():
             status TEXT DEFAULT 'Pending',
             FOREIGN KEY (meeting_id) REFERENCES meetings(id),
             FOREIGN KEY (employee_id) REFERENCES utilisateurs(id)
+
         )
     """)
     connexion.commit()
@@ -307,5 +306,60 @@ def cree_table_arrets_maladie():
         print("Table des demandes_arrêt créée avec succès.")
 
 
+def verification_creation_table_teletravail():
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("""
+        SELECT name FROM sqlite_master WHERE type='table' AND name='teletravail';
+    """)
+    table_exists = cur.fetchone() is not None
+    connexion.close()
+    return table_exists
 
+def cree_table_teletravail():
+    if verification_creation_table_teletravail():
+        connexion = connect_db()
+        cur = connexion.cursor()
+        print("Table des teletravail déjà créée.")
+        return
+    else:
+        
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("""
+            CREATE TABLE teletravail (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_employe INTEGER NOT NULL,
+                date_teletravail DATE NOT NULL,
+                statut TEXT DEFAULT 'en attente',
+                FOREIGN KEY (id_employe) REFERENCES utilisateurs(id)
+            )
+        """)
+        cur.execute("""ALTER TABLE utilisateurs ADD COLUMN teletravail_max INTEGER DEFAULT 0;
+        """)
 
+        connexion.commit()
+        connexion.close()
+        print("Table du télétravail créée avec succès.")
+
+def cree_table_demandes_contact():
+    connexion = connect_db()
+    cur = connexion.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS demandes_contact (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_utilisateur TEXT,
+            nom TEXT,
+            prenom TEXT,
+            telephone TEXT,
+            email TEXT NOT NULL,
+            sujet TEXT NOT NULL,
+            message TEXT NOT NULL,
+            date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (id_utilisateur) REFERENCES utilisateurs(id)
+        )
+    """)
+    connexion.commit()
+    connexion.close()
+    print("Table des demandes de contact créée avec succès.")

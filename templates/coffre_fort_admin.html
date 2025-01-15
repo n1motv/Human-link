@@ -22,7 +22,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
-                            <i class="bi bi-person"></i> Tableau de Bord
+                            <i class="bi bi-person"></i> Voir les employés
                         </a>
                     </li>
                     <li class="nav-item">
@@ -30,11 +30,17 @@
                             <i class="bi bi-person-plus-fill"></i> Ajouter un Employé
                         </a>
                     </li>
+
                     <li class="nav-item dropdown ">
                         <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}">
+                                    <i class="bi bi-people-fill"></i> Affecter des Employés
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
                                     <i class="bi bi-calendar-check"></i> Calendrier Congés
@@ -48,6 +54,16 @@
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}">
+                                    <i class="bi bi-piggy-bank"></i> Demandes de prime
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}">
+                                    <i class="bi bi-calendar-check"></i> Calendrier télétravail
                                 </a>
                             </li>
                             <li class="nav-item">

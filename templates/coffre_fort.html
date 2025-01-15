@@ -11,6 +11,7 @@
 <body>
     <!-- Barre de navigation -->
     {% if role == 'admin' %}
+    <!-- Barre de navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
@@ -22,23 +23,24 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
-                            <i class="bi bi-person-plus-fill"></i> Ajouter un employé
+                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
+                            <i class="bi bi-person"></i> Voir les employés
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
-                            <i class="bi bi-person"></i> Tableau de Bord
+                        <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
+                            <i class="bi bi-person-plus-fill"></i> Ajouter un Employé
                         </a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
+
+                    <li class="nav-item dropdown ">
+                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li class="nav-item" >
-                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}" >
-                                    <i class="bi bi-envelope-fill"></i> Demandes de congés
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}">
+                                    <i class="bi bi-people-fill"></i> Affecter des Employés
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -46,14 +48,24 @@
                                     <i class="bi bi-calendar-check"></i> Calendrier Congés
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}">
-                                    <i class="bi bi-people-fill"></i> Affecter des Employés
+                            <li class="nav-item" >
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}" >
+                                    <i class="bi bi-envelope-fill"></i> Demandes de congés
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
                                     <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}">
+                                    <i class="bi bi-piggy-bank"></i> Demandes de prime
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}">
+                                    <i class="bi bi-calendar-check"></i> Calendrier télétravail
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -79,28 +91,24 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('voir_mes_infos') }}">
-                            <i class="bi bi-eye"></i> Voir mes infos
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_arrêt') }}">
                             <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_conge') }}">
+                            <i class="bi bi-calendar-plus"></i> Soumettre une demande de congé
+                        </a>
+                    </li>  
                     <li class="nav-item dropdown ">
                         <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_conge') }}">
-                                    <i class="bi bi-calendar-plus"></i> Soumettre une demande de congé
-                                </a>
-                            </li>       
+     
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('mes_demandes_d_arrêts') }}">
-                                    <i class="bi bi-file-earmark-text"></i> Voir les arrêts
+                                    <i class="bi bi-file-earmark-text"></i> Voir mes demandes arrêts
                                 </a>
                             </li>
                             <!-- Voir mes demandes de congé -->
@@ -116,6 +124,7 @@
                                     <i class="bi bi-gear"></i> Modifier mes infos
                                 </a>
                             </li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meeting_invitations') }}"><i class="bi bi-calendar-event"></i> Invitation réunion</a></li>
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('logout') }}">
                                     <i class="bi bi-box-arrow-right"></i> Se déconnecter

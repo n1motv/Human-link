@@ -54,15 +54,25 @@
                         Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                           
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
+                                    <i class="bi bi-calendar-check"></i> Calendrier Congés
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}">
+                                    <i class="bi bi-send"></i> Planification de réunion
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}">
                                     <i class="bi bi-envelope-fill"></i> Soumettre demande prime
                                 </a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
-                                    <i class="bi bi-calendar-check"></i> Calendrier Congés
+                                <a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}">
+                                    <i class="bi bi-calendar-check"></i> Calendrier télétravail
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -76,10 +86,46 @@
             </div>
         </div>
     </nav>
+    <!-- Icône flottante de notifications -->
+    <div id="notification-icon" onclick="toggleNotificationPanel()">
+        <i class="bi bi-bell-fill"></i>
+        {% if nombre_notifications_non_lues > 0 %}
+            <span class="badge" id ="badgePerso">{{ nombre_notifications_non_lues }}</span>
+        {% endif %}
+    </div>
 
+    <!-- Panneau des notifications -->
+    <div id="notification-panel">
+        <div class="notification-header">Notifications</div>
+        <div class="notification-list">
+            {% for notification in notifications %}
+                <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p>{{ notification.message }}</p>
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="supprimerNotification({{ notification.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <small>{{ notification.created_at | format_datetime }}</small>
+                </div>
+            {% endfor %}
+            {% if notifications|length == 0 %}
+                <div class="notification-item text-center" id="aucuneNotif" >Aucune notification</div>
+            {% endif %}
+        </div>
+    </div>
     <div id="main-body">
         <main class="py-5">
             <div class="container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="alert alert-danger" role="alert">
+                        {% for category, message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
                 <div class="row g-4" id="employeeList">
                     {% for emp in employees %}
                     <div class="col-md-6 col-lg-3 employee-card" data-name="{{ emp.nom }} {{ emp.prenom }}">
@@ -93,13 +139,27 @@
                                     <strong>Email :</strong> {{ emp.email }}<br>
                                     <strong>Demande de congés :</strong> 
                                     {% if emp.conge_demande %}
-                                    <span class="badge text-dark d-flex align-items-center justify-content-center" style="width: 15%; height: 8%;">
+                                    <span class="badge text-dark d-flex align-items-center justify-content-center" style="width: 15%; height: 8%;" id ="badgePerso">
                                         <i class="bi bi-bell" style="font-size: 1.5rem;"></i>
                                     </span>                                    
                                         <span class="text-dark">Demande en attente</span>
                                     {% else %}
                                         Aucun
                                     {% endif %}
+                                    <!-- Sélection des jours de télétravail -->
+                                    <form method="POST" action="{{ url_for('mettre_a_jour_teletravail', employe_id=emp.id) }}">
+                                        <div class="mb-3">
+                                            <label for="maxTeletravail{{ emp.id }}" class="form-label">Jours max de télétravail :</label>
+                                            <select class="form-select" id="maxTeletravail{{ emp.id }}" name="jours_max_teletravail">
+                                                {% for i in range(0, 5) %}
+                                                <option value="{{ i }}" {% if emp.teletravail_max == i %}selected{% endif %}>{{ i }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-save"></i> Enregistrer
+                                        </button>
+                                    </form>
                                 </p>
                             </div>
                         </div>
@@ -116,20 +176,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script>
-        function searchEmployee() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const employeeCards = document.querySelectorAll('.employee-card');
-
-            employeeCards.forEach(card => {
-                const name = card.getAttribute('data-name').toLowerCase();
-                if (name.includes(searchInput)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-    </script>
+    <script src="../static/script.js"></script>
 </body>
 </html>
