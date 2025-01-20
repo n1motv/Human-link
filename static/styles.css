@@ -32,7 +32,6 @@ a{
 }
 
 #main-logo:hover {
-    content: url("../static/logo/logo-normal.png");
     transform: scale(1.1);
     opacity: 0.9;
 }
@@ -71,11 +70,7 @@ nav li {
 
 .dropdown-menu-dark .dropdown-item {
     color: #fff;
-    transition: background-color 0.3s;
-}
-
-.dropdown-menu-dark .dropdown-item:hover {
-    background-color: #72b59a;
+    transition: 0.3s;
 }
 .btn-custom-search {
     border-color: #72b59a;
@@ -186,7 +181,6 @@ footer {
 }
 .org-chart {
     margin-top: 10px;
-    width: fit-content;
     background-color: 'none';
     border-radius: 8px;
     padding: 20px;
@@ -470,4 +464,99 @@ body.flou::before {
 
 body.flou {
     overflow: hidden;
+}
+
+
+
+
+
+/* Style général pour le tableau */
+#meetingsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 1rem;
+    text-align: left;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* En-tête du tableau */
+#meetingsTable thead th {
+    background-color: #333;
+    color: #fff;
+    padding: 12px 15px;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: none;
+}
+
+/* Lignes du tableau */
+#meetingsTable tbody tr {
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s ease;
+}
+
+#meetingsTable tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Cellules du tableau */
+#meetingsTable tbody td {
+    padding: 12px 15px;
+    color: #333;
+}
+
+/* Pagination et barre de recherche */
+.dataTables_wrapper .dataTables_filter input {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #333;
+    color: #fff;
+
+}
+
+/* Bouton actif de pagination */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #333;
+    color: #fff;
+    border: none;
+}
+
+/* Message et informations en bas du tableau */
+.dataTables_wrapper .dataTables_info {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }

@@ -1,0 +1,66 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Les demandes de primes{% endblock %}
+
+{% block content1 %}
+                    <li class="nav-item">
+                        <form class="d-flex mx-2" style="width: 280px">
+                            <input class="form-control me-2" type="search" id="searchInput" placeholder="Rechercher une demande" aria-label="Rechercher">
+                            <button class="btn btn-custom-search" type="button" onclick="searchDemande()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </form>
+                    </li>
+{% endblock %}
+
+{% block content2 %} 
+            <h1 class="text-center text-white mb-4">Demandes de Primes</h1>
+            {% if demandes %}
+            <div class="row justify-content-center">
+                {% for demande in demandes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card demande-card" onclick="agrandirCarte(this)">
+                        <div class="card-body">
+                            <h5 class="text-center">Demande du manager <h5 class="card-title text-center">{{ demande.manager_nom }} {{ demande.manager_prenom }}</h5></h5>
+                            <p class="card-text">
+                                <strong>Employé :</strong> {{ demande.employe_nom }} {{ demande.employe_prenom }}<br>
+                                <strong>Montant :</strong> {{ demande.montant }} (€)<br>
+                                <strong>Motif :</strong> {{ demande.motif }}<br>
+                                <strong>Statut :</strong> {{ demande.statut }}<br>
+                                <p class="card-text d-flex justify-content-between align-items-center ">
+                                    <span>
+                                        <strong>Motif de refus :</strong> {{ demande['motif_refus'] if demande['motif_refus'] else "N/A" }}
+                                    </span>
+                                </p>
+                                
+                            </p>
+                            <div class="d-flex flex-column">
+                                {% if demande['statut'] == 'accepte' or demande['statut'] == 'refuse' %}
+                                <span class="text-muted mb-2">Statut finalisé</span>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('traiter_demande_prime', id=demande[0]) }}" class="mb-2">
+                                    <button type="submit" name="statut" value="accepte" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
+                                    <button type="submit" name="statut" value="refuse" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
+                                    <textarea name="motif_refus" placeholder="Motif du refus" class="form-control mt-2" rows="3" style="width: 100%;"></textarea>
+                                </form>
+                                {% endif %}
+                                <form method="POST" action="{{ url_for('supprimer_demande_prime', id=demande[0]) }}" onsubmit="confirmerSuppression(event)" class="">
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                                    </div>                                
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Image et message si aucune demande -->
+            <div class="text-center mt-5">
+                <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
+                <h4 class="text-white mt-4">Aucune demande de primes pour le moment.</h4>
+            </div>
+            {% endif %}
+{% endblock %}

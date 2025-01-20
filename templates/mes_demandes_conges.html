@@ -97,9 +97,9 @@
                     {% endif %}
                     <!-- Bouton de suppression -->
                     <form method="POST" action="{{ url_for('supprimer_demande_conge', id=demande[0]) }}" onsubmit="confirmerSuppression(event)">
-                        <button type="submit" class="btn btn-danger btn-sm w-100 mt-3">
-                            <i class="bi bi-trash"></i> Supprimer
-                        </button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                        </div>
                     </form>
                 </div>
             </div>

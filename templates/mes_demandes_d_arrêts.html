@@ -83,7 +83,7 @@
     <div id="error-message" class="alert alert-warning d-none text-center">Aucune demande trouvée pour cet e-mail.</div>
 
     {% if arrets %}
-    <div class="row g-4">
+    <div class="row g-4 justify-content-center">
         {% for arret in arrets | reverse %}
         <div class="col-md-6 col-lg-4 arret-card">
             <div class="card bg-light text-dark shadow border-0">
@@ -110,9 +110,9 @@
                     {% endif %}
                     <!-- Bouton de suppression -->
                     <form method="POST" action="{{ url_for('supprimer_demande_arrêts', id=arret[0]) }}" onsubmit="confirmerSuppression(event)">
-                        <button type="submit" class="btn btn-danger btn-sm w-100 mt-3">
-                            <i class="bi bi-trash"></i> Supprimer
-                        </button>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                        </div>
                     </form>
                 </div>
             </div>

@@ -35,8 +35,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="departement" class="form-label">Département :</label>
-                            <input type="text" name="departement" class="form-control" required>
-                        </div>
+                            <select id="departement" name="departement" class="form-select" required>
+                                <option value="">Sélectionner un département</option>
+                            </select>
+                        </div>  
                         <div class="mb-3">
                             <label for="telephone" class="form-label">Téléphone :</label>
                             <input type="text" name="telephone" class="form-control" required>
@@ -120,8 +122,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary" style="width: 20%;">Ajouter</button>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-send"></i> Ajouter l'employé
+                    </button>
                 </div>
             </form>
         </div>
@@ -202,88 +207,6 @@
         });
         
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const nationalites = ["Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
-            "Argentine", "Arménienne", "Australienne", "Autrichienne", "Azerbaïdjanaise", "Bahreïnie", "Bangladaise", 
-            "Belge", "Béninoise", "Bhoutanaise", "Biélorusse", "Birmane", "Bolivienne", "Bosnienne", "Botswanaise", 
-            "Brésilienne", "Bruneienne", "Bulgare", "Burkinabè", "Burundaise", "Cambodgienne", "Camerounaise", "Canadienne",
-            "Cap-verdienne", "Centrafricaine", "Chilienne", "Chinoise", "Chypriote", "Colombienne", "Comorienne", 
-            "Congolaise", "Costaricaine", "Croate", "Cubaine", "Danoise", "Djiboutienne", "Dominicaine", "Égyptienne",
-            "Émiratie", "Équatorienne", "Érythréenne", "Espagnole", "Estonienne", "Éthiopienne", "Fidjienne", 
-            "Finlandaise", "Française", "Gabonaise", "Gambienne", "Géorgienne", "Ghanéenne", "Grecque", "Guatémaltèque",
-                "Guinéenne", "Haïtienne", "Hondurienne", "Hongroise", "Indienne", "Indonésienne", "Iranienne", "Irakienne", 
-                "Irlandaise", "Islandaise", "Israélienne", "Italienne", "Ivoirienne", "Jamaïcaine", "Japonaise", 
-                "Jordanienne", "Kazakhstanaise", "Kényane", "Kirghize", "Laotienne", "Libanaise", "Libérienne", "Libyenne", 
-                "Lituanienne", "Luxembourgeoise", "Malaisienne", "Malienne", "Maltaise", "Marocaine", "Mauricienne", "Mexicaine", 
-                "Monégasque", "Mozambicaine", "Namibienne", "Néerlandaise", "Népalaise", "Nigériane", "Nigérienne", "Norvégienne", 
-                "Pakistanaise", "Palestinienne", "Panaméenne", "Paraguayenne", "Péruvienne", "Philippine", "Polonaise", "Portugaise", 
-                "Qatarienne", "Roumaine", "Russe", "Rwandaise", "Salvadorienne", "Sénégalaise", "Serbe", "Singapourienne", "Slovaque", "Slovène", 
-                "Somalienne", "Soudanaise", "Sri-lankaise", "Suédoise", "Suisse", "Syrienne", "Tadjike", "Tanzanienne", "Thaïlandaise", "Togolaise", 
-                "Tunisienne", "Turque", "Ukrainienne", "Uruguayenne", "Vénézuélienne", "Vietnamienne", "Yéménite", "Zambienne", "Zimbabwéenne"
-        ];
-
-            const selectNationalite = document.getElementById('nationalite');
-            
-            nationalites.forEach(nationalite => {
-                const option = document.createElement('option');
-                option.value = nationalite;
-                option.textContent = nationalite;
-                selectNationalite.appendChild(option);
-            });
-        });
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Remplir la liste des pays
-        const selectPays = document.getElementById('pays');
-        fetch('https://restcountries.com/v3.1/all')
-            .then(response => response.json())
-            .then(data => {
-                // Trier les pays par ordre alphabétique
-                const sortedCountries = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-                selectPays.innerHTML = '<option value="">Sélectionner un pays</option>';
-                sortedCountries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.name.common;
-                    option.textContent = country.name.common;
-                    selectPays.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Erreur lors du chargement des pays:', error);
-                selectPays.innerHTML = '<option value="">Erreur de chargement</option>';
-            });
-
-        // Remplir automatiquement la ville à partir du code postal
-        const codePostalInput = document.getElementById('code_postal');
-        const villeInput = document.getElementById('ville');
-
-        codePostalInput.addEventListener('input', function () {
-            const codePostal = codePostalInput.value.trim();
-
-            // Vérifie que le code postal est valide (5 chiffres)
-            if (/^\d{5}$/.test(codePostal)) {
-                fetch(`https://api.zippopotam.us/fr/${codePostal}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Code postal introuvable');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        villeInput.value = data.places[0]['place name'];
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors du chargement de la ville:', error);
-                        villeInput.value = '';
-                    });
-            } else {
-                villeInput.value = '';  // Réinitialise si le code postal est incomplet
-            }
-        });
-    });
-</script>
 {% endblock %}
 
 

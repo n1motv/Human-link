@@ -11,58 +11,42 @@
 </head>
 <body>
     {% if role =='admin' %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark ">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
-                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
+                <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}">
-                            <i class="bi bi-person"></i> Voir les employés
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}">
-                            <i class="bi bi-person-plus-fill"></i> Ajouter un employé
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}">
-                            <i class="bi bi-people-fill"></i> Affecter des Employés
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown ">
-                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Plus
+                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
+                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
+                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
+                    <li class="nav-item dropdown d-none d-lg-block">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}">
-                                    <i class="bi bi-envelope-fill"></i> Demandes de congés
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}">
-                                    <i class="bi bi-file-earmark-text"></i> Demandes d'arrêts
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
-                                    <i class="bi bi-calendar-check"></i> Calendrier Congés
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('logout') }}">
-                                    <i class="bi bi-box-arrow-right"></i> Se déconnecter
-                                </a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                 </ul>
             </div>
         </div>
@@ -79,43 +63,54 @@
             </button>
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}">
-                            <i class="bi bi-envelope-fill"></i> Demandes de congés
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
                     <li class="nav-item dropdown ">
                         <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}">
-                                    <i class="bi bi-send"></i> Planification de réunion
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}">
-                                    <i class="bi bi-envelope-fill"></i> Soumettre demande prime
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}">
-                                    <i class="bi bi-calendar-check"></i> Calendrier Congés
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link mx-2" href="{{ url_for('logout') }}">
-                                    <i class="bi bi-box-arrow-right"></i> Se déconnecter
-                                </a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                 </ul>
             </div>
         </div>
     </nav>
     {% endif %}
+     <!-- Panneau des notifications -->
+     <div id="notification-icon" onclick="toggleNotificationPanel()">
+        <i class="bi bi-bell-fill"></i>
+        {% if nombre_notifications_non_lues > 0 %}
+            <span class="badge">{{ nombre_notifications_non_lues }}</span>
+        {% endif %}
+    </div>
+    <div id="notification-panel">
+        <div class="notification-header">Notifications</div>
+        <div class="notification-list">
+            {% for notification in notifications %}
+                <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p>{{ notification.message }}</p>
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="supprimerNotification({{ notification.id }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <small>{{ notification.created_at | format_datetime }}</small>
+                </div>
+            {% endfor %}
+            {% if notifications|length == 0 %}
+                <div class="notification-item text-center">Aucune notification</div>
+            {% endif %}
+        </div>
+    </div>
     <div id="main-body">
         <main class="py-5">
             <div class="container">
@@ -150,43 +145,44 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.js"></script>
+    <script src="../static/script.js"></script>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar2');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        initialView: 'dayGridMonth',
-        buttonText: {
-            today: 'Aujourd’hui',
-            month: 'Mois',
-            week: 'Semaine',
-            day: 'Jour'
-        },
-        events: [
-            {% for date, teletravails in teletravail_par_jour.items() %}
-                {% for teletravail in teletravails %}
-                    {
-                        title: '{{ teletravail.nom }} {{ teletravail.prenom }}',
-                        start: '{{ date.strftime("%Y-%m-%d") }}',
-                        description: 'Télétravail',
-                        color: '{{ teletravail.color }}'
-                    },
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar2');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            initialView: 'dayGridMonth',
+            buttonText: {
+                today: 'Aujourd’hui',
+                month: 'Mois',
+                week: 'Semaine',
+                day: 'Jour'
+            },
+            events: [
+                {% for date, teletravails in teletravail_par_jour.items() %}
+                    {% for teletravail in teletravails %}
+                        {
+                            title: '{{ teletravail.nom }} {{ teletravail.prenom }}',
+                            start: '{{ date.strftime("%Y-%m-%d") }}',
+                            description: 'Télétravail',
+                            color: '{{ teletravail.color }}'
+                        },
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
-        ],
-        eventClick: function(info) {
-            alert('Télétravail de : ' + info.event.title + '\nInfos supplémentaires : ' + info.event.extendedProps.description);
-        },
-        editable: false,
-        droppable: false
+            ],
+            eventClick: function(info) {
+                alert('Télétravail de : ' + info.event.title + '\nInfos supplémentaires : ' + info.event.extendedProps.description);
+            },
+            editable: false,
+            droppable: false
+        });
+        calendar.render();
     });
-    calendar.render();
-});
 
     </script>
 </body>

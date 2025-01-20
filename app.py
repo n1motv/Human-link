@@ -335,13 +335,32 @@ def afficher_demandes_congé():
     print(session['role'])
     if 'role' not in session:
         return redirect(url_for('login'))
-    manager_email = session['email']
+
     if session['role'] == 'admin' :
         demandes = get_all_demandes_conges()
-        return render_template("admin_congés.html", demandes=demandes)
+        notifications = récupérer_notifications("admin@gmail.com")
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues("admin@gmail.com")
+
+        return render_template(
+            "admin_congés.html",
+            demandes=demandes,        
+            notifications= notifications,
+            nombre_notifications_non_lues=nombre_notifications_non_lues)
+
     elif session['role'] == 'manager' :
-        demandes = get_demandes_conges_manager(manager_email)    
-        return render_template("voir_demandes_conges_manager.html", demandes=demandes)
+        manager_email = session['email']
+        demandes = get_demandes_conges_manager(manager_email)
+        notifications = récupérer_notifications(manager_email)
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues(manager_email)    
+        return render_template(
+            "manager_congés.html", 
+            demandes=demandes,        
+            notifications= notifications,
+            nombre_notifications_non_lues=nombre_notifications_non_lues)
     else:
         return redirect(url_for('login'))
 def get_demande_by_id(id_demande):
@@ -642,7 +661,7 @@ def supprimer_demande_conge(id):
     """
     Supprimer une demande de congé. L'administrateur ou le manager peut supprimer les demandes.
     """
-    if 'role' not in session or (session['role'] != 'admin' and session['role'] != 'manager'):
+    if 'role' not in session :
         return redirect(url_for('login'))
     
     # Connexion à la base de données
@@ -670,7 +689,12 @@ def supprimer_demande_conge(id):
     connexion.commit()
     connexion.close()
 
-    return redirect(url_for('afficher_demandes_congé') if session['role'] == 'admin' else url_for('demandes_conges_manager'))
+    if session['role'] == 'admin' :
+        return redirect(url_for('afficher_demandes_congé'))
+    elif session['role'] == 'manager':
+        return redirect(url_for('demandes_conges_manager'))
+    else:
+        return redirect(url_for('mes_demandes_conges'))
 
 @app.route("/supprimer_demande_conge_manager/<int:id>", methods=["POST"])
 def supprimer_demande_conge_manager(id):
@@ -701,6 +725,7 @@ def mettre_a_jour_employe(id):
         ("prenom", request.form['prenom']),
         ("date_naissance", request.form['date_naissance']),
         ("poste", request.form['poste']),
+        ("departement", request.form['departement']),
         ("email", request.form['email']),
         ("salaire", request.form['salaire']),
         ("solde_congé", request.form['solde_congé']),
@@ -822,13 +847,18 @@ def assigner_manager():
     assignations = curseur.fetchall()
 
     connexion.close()
-
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
     return render_template(
         'assigner_manager.html',
         managers=managers,
         employes=employes,
         assignations=assignations,
-        directeur_id=directeur_id
+        directeur_id=directeur_id,
+        notifications= notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues
     )
 
 @app.route('/api/récupérer_user_infos', methods=['GET'])
@@ -1028,7 +1058,7 @@ def manager_dashboard():
 
     # Récupérez les employés supervisés par ce manager
     curseur.execute("""
-        SELECT u.id, u.nom, u.prenom, u.date_naissance, u.poste, u.departement, u.email, u.photo,
+        SELECT u.id, u.nom, u.prenom, u.date_naissance, u.poste, u.departement, u.email, u.photo, u.teletravail_max,
                (CASE WHEN EXISTS (
                    SELECT 1 FROM demandes_congé WHERE demandes_congé.id_utilisateurs = u.id AND demandes_congé.statut = 'en attente'
                ) THEN 1 ELSE 0 END) AS conge_demande
@@ -1040,8 +1070,6 @@ def manager_dashboard():
 
     connexion.close()
     notifications = récupérer_notifications(session['email'])
-    print(session['email'])
-    print(notifications)
     nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(session['email'])
     # Marquer les notifications comme lues après les avoir affichées
     marquer_notifications_comme_lues(session['email'])
@@ -1080,6 +1108,10 @@ def calendrier_congés():
     cur = connexion.cursor()
 
     if session['role'] == 'admin':
+        notifications = récupérer_notifications("admin@gmail.com")
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues("admin@gmail.com")
         cur.execute("""
             SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
             FROM demandes_congé dc
@@ -1088,6 +1120,12 @@ def calendrier_congés():
         """)
     elif session['role'] == 'manager':
         manager_id = session['id']
+        cur.execute("""SELECT email FROM utilisateurs WHERE id=?""",(manager_id,))
+        manager_email=cur.fetchone()[0]
+        notifications = récupérer_notifications(manager_email)
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues(manager_email)
         cur.execute("""
             SELECT dc.id_utilisateurs, dc.date_debut, dc.date_fin, dc.description, u.email 
             FROM demandes_congé dc
@@ -1124,8 +1162,13 @@ def calendrier_congés():
             if single_date not in conges_par_jour:
                 conges_par_jour[single_date] = []
             conges_par_jour[single_date].append(employe)
-
-    return render_template("calendrier_congés.html", conges_par_jour=conges_par_jour, role=session['role'])
+    return render_template(
+        "calendrier_congés.html",
+        conges_par_jour=conges_par_jour,
+        role=session['role'],
+        notifications = notifications,
+        nombre_notifications_non_lues =nombre_notifications_non_lues            
+        )
 
 @app.route('/soumettre_demande_arrêt', methods=['GET', 'POST'])
 def soumettre_demande_arrêt():
@@ -1233,52 +1276,55 @@ def afficher_demandes_arrêts():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        try:
-            id = request.form['id']
-            statut = request.form['statut']
-            motif_refus = request.form.get('motif_refus', None)
+        id = request.form['id']
+        statut = request.form['statut']
+        motif_refus = request.form.get('motif_refus', None)
 
-            connexion = connect_db()
-            cur = connexion.cursor()
-            cur.execute("SELECT employe_email FROM demandes_arrêt WHERE id = ?", (id,))
-            employe_email = cur.fetchone()[0]
+        connexion = connect_db()
+        cur = connexion.cursor()
+        cur.execute("SELECT employe_email FROM demandes_arrêt WHERE id = ?", (id,))
+        employe_email = cur.fetchone()[0]
 
-            if statut == 'refuse':
-                cur.execute("""
-                    UPDATE demandes_arrêt
-                    SET statut = ?, motif_refus = ?
-                    WHERE id = ?
-                """, (statut, motif_refus, id))
+        if statut == 'refuse':
+            cur.execute("""
+                UPDATE demandes_arrêt
+                SET statut = ?, motif_refus = ?
+                WHERE id = ?
+            """, (statut, motif_refus, id))
 
-                # 📧 Envoi d'un email de refus
-                sujet = "Refus de votre demande d'arrêt maladie"
-                contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
-            else:
-                cur.execute("""
-                    UPDATE demandes_arrêt
-                    SET statut = ?, motif_refus = NULL
-                    WHERE id = ?
-                """, (statut, id))
+            # 📧 Envoi d'un email de refus
+            sujet = "Refus de votre demande d'arrêt maladie"
+            contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
+        else:
+            cur.execute("""
+                UPDATE demandes_arrêt
+                SET statut = ?, motif_refus = NULL
+                WHERE id = ?
+            """, (statut, id))
 
-                # 📧 Envoi d'un email d'acceptation
-                sujet = "Acceptation de votre demande d'arrêt maladie"
-                contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
+            # 📧 Envoi d'un email d'acceptation
+            sujet = "Acceptation de votre demande d'arrêt maladie"
+            contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
 
-            connexion.commit()
-            connexion.close()
+        connexion.commit()
+        connexion.close()
+        creer_notification(employe_email, contenu, "Arrét")
 
-            # 📧 Envoi de l'email
-            #envoyer_email(sujet, employe_email, contenu)
-            creer_notification(employe_email, contenu, "Arrét")
-        except KeyError:
-            flash("Une erreur s'est produite : l'ID est manquant.", "danger")
 
+
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    marquer_notifications_comme_lues("admin@gmail.com")
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("SELECT * FROM demandes_arrêt")
     arrets = cur.fetchall()
     connexion.close()
-    return render_template('admin_arrêts.html', arrets=arrets)
+    return render_template(
+        'admin_arrêts.html', 
+        arrets=arrets,
+        notifications= notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 
 
@@ -1362,7 +1408,7 @@ def reset_password():
         contenu = f"Bonjour,\n\nPour réinitialiser votre mot de passe, cliquez sur le lien suivant : {lien}"
         envoyer_email("Réinitialisation de mot de passe", email, contenu)
         flash("Un email de réinitialisation a été envoyé.")
-        return redirect(url_for('reset_password.html'))
+        return redirect(url_for('reset_password'))
 
     return render_template('reset_password.html')
 
@@ -1513,8 +1559,15 @@ def deposer_document(id_employe):
         contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
         #envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
-
-    return render_template('deposer_document.html', employe=employe)
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
+    return render_template(
+        'deposer_document.html', 
+        employe=employe,
+        notifications=notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 @app.route('/coffre_fort', methods=['GET', 'POST'])
 def coffre_fort():
@@ -1528,6 +1581,8 @@ def coffre_fort():
     if session.get('role') == 'admin':
         if request.method == 'POST':
             employe_id = request.form['employe_id']
+            cur.execute("SELECT email FROM utilisateurs WHERE id = ?", (employe_id,))
+            employe_email=cur.fetchone()[0]
             cur.execute("SELECT nom, prenom FROM utilisateurs WHERE id = ?", (employe_id,))
             employe = cur.fetchone()
 
@@ -1540,7 +1595,10 @@ def coffre_fort():
                 bulletins = os.listdir(chemin_bulletins) if os.path.exists(chemin_bulletins) else []
                 contrats = os.listdir(chemin_contrats) if os.path.exists(chemin_contrats) else []
                 autres = os.listdir(chemin_autres) if os.path.exists(chemin_autres) else []
-
+                notifications = récupérer_notifications("admin@gmail.com")
+                nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+                # Marquer les notifications comme lues après les avoir affichées
+                marquer_notifications_comme_lues("admin@gmail.com")
                 return render_template(
                     'coffre_fort.html', 
                     bulletins=bulletins, 
@@ -1549,7 +1607,9 @@ def coffre_fort():
                     nom=nom, 
                     prenom=prenom, 
                     employe_id=employe_id,
-                    role=session.get('role')
+                    role=session.get('role'),
+                    notifications=notifications,
+                    nombre_notifications_non_lues=nombre_notifications_non_lues
                 )
             else:
                 flash("Employé introuvable.", "danger")
@@ -1558,7 +1618,16 @@ def coffre_fort():
         # Charger la liste des employés
         cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE id != 0")
         employes = cur.fetchall()
-        return render_template('coffre_fort_admin.html', employes=employes)
+        notifications = récupérer_notifications("admin@gmail.com")
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues("admin@gmail.com")
+
+        return render_template(
+            'coffre_fort_admin.html', 
+            employes=employes,
+            notifications=notifications,
+            nombre_notifications_non_lues=nombre_notifications_non_lues)
 
     # Si l'utilisateur est un employé
     else:
@@ -1578,7 +1647,10 @@ def coffre_fort():
         bulletins = os.listdir(chemin_bulletins) if os.path.exists(chemin_bulletins) else []
         contrats = os.listdir(chemin_contrats) if os.path.exists(chemin_contrats) else []
         autres = os.listdir(chemin_autres) if os.path.exists(chemin_autres) else []
-
+        notifications = récupérer_notifications(email)
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(email)
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues(email)
         return render_template(
             'coffre_fort.html', 
             bulletins=bulletins, 
@@ -1588,6 +1660,8 @@ def coffre_fort():
             prenom=prenom, 
             employe_id=employe_id,
             role=session.get('role'),
+            notifications=notifications,
+            nombre_notifications_non_lues=nombre_notifications_non_lues
         )
 
 
@@ -1760,7 +1834,7 @@ def soumettre_demande_prime():
 
             #Création de la notification
             creer_notification("admin@gmail.com", contenu, "Prime")
-
+    
         flash("Demande de prime soumise avec succès.", "success")
         return redirect(url_for('manager_dashboard'))
 
@@ -1774,9 +1848,18 @@ def soumettre_demande_prime():
         WHERE m.id_manager = ?
     """, (id_manager,))
     employes = cur.fetchall()
-    connexion.close()
 
-    return render_template('soumettre_demande_prime.html', employes=employes)
+    cur.execute("""SELECT email FROM utilisateurs WHERE id=?""",(id_manager,))
+    manager_email=cur.fetchone()[0]
+    connexion.close()
+    notifications = récupérer_notifications(manager_email)
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
+    return render_template(
+        'soumettre_demande_prime.html',
+        employes=employes,
+        notifications = notifications,
+        nombre_notifications_non_lues =nombre_notifications_non_lues
+        )
 
 
 @app.route('/afficher_demandes_prime')
@@ -1796,8 +1879,15 @@ def afficher_demandes_prime():
     """)
     demandes = cur.fetchall()
     connexion.close()
-
-    return render_template('voir_demandes_prime.html', demandes=demandes)
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
+    return render_template(
+        'admin_primes.html', 
+        demandes=demandes,
+        notifications=notifications,
+        nombre_notifications_non_lues=nombre_notifications_non_lues)
 
 @app.route('/traiter_demande_prime/<int:id>', methods=['POST'])
 def traiter_demande_prime(id):
@@ -1939,9 +2029,18 @@ def meetings_scheduler():
         ORDER BY m.date_time DESC
     """)
     meetings = cur.fetchall()
-
+    manager_id = session['id']
+    cur.execute("""SELECT email FROM utilisateurs WHERE id=?""",(manager_id,))
+    manager_email=cur.fetchone()[0]
+    notifications = récupérer_notifications(manager_email)
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
     connexion.close()
-    return render_template('meetings_scheduler.html', employees=employees, meetings=meetings)
+    return render_template(
+                        'manager_réunion.html', 
+                        employees=employees, 
+                        meetings=meetings,
+                        notifications = notifications,
+                        nombre_notifications_non_lues =nombre_notifications_non_lues )
 
 
 # Route for employees to view and respond to meeting invitations
@@ -2091,6 +2190,10 @@ def calendrier_teletravail():
     cur = connexion.cursor()
 
     if session['role'] == 'admin':
+        notifications = récupérer_notifications("admin@gmail.com")
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+        # Marquer les notifications comme lues après les avoir affichées
+        marquer_notifications_comme_lues("admin@gmail.com")
         cur.execute("""
             SELECT t.id_employe, t.date_teletravail, u.nom, u.prenom, u.email 
             FROM teletravail t
@@ -2098,6 +2201,10 @@ def calendrier_teletravail():
         """)
     else:
         manager_id = session['id']
+        cur.execute("""SELECT email FROM utilisateurs WHERE id=?""",(manager_id,))
+        manager_email=cur.fetchone()[0]
+        notifications = récupérer_notifications(manager_email)
+        nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
         cur.execute("""
             SELECT t.id_employe, t.date_teletravail, u.nom, u.prenom, u.email 
             FROM teletravail t
@@ -2130,7 +2237,13 @@ def calendrier_teletravail():
             teletravail_par_jour[date] = []
         teletravail_par_jour[date].append(employe)
 
-    return render_template("calendrier_teletravail.html", teletravail_par_jour=teletravail_par_jour, role=session['role'])
+    return render_template(
+        "calendrier_teletravail.html", 
+        teletravail_par_jour=teletravail_par_jour, 
+        role=session['role'],
+        notifications = notifications,
+        nombre_notifications_non_lues =nombre_notifications_non_lues 
+        )
 @app.route('/mettre_a_jour_teletravail/<string:employe_id>', methods=['POST'])
 def mettre_a_jour_teletravail(employe_id):
     jours_max_teletravail = request.form.get('jours_max_teletravail')
@@ -2243,8 +2356,16 @@ def admin_demandes_contact():
     """)
     demandes = [dict(row) for row in cur.fetchall()]
     connexion.close()
-
-    return render_template('admin_demandes_contact.html', demandes=demandes)
+    notifications = récupérer_notifications("admin@gmail.com")
+    nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues("admin@gmail.com")
+    # Marquer les notifications comme lues après les avoir affichées
+    marquer_notifications_comme_lues("admin@gmail.com")
+    return render_template(
+        'admin_demandes_contact.html', 
+        demandes=demandes,
+        notifications = notifications,
+        nombre_notifications_non_lues =nombre_notifications_non_lues  
+        )
 
 @app.route('/supprimer_demande_contact/<int:id>', methods=['POST'])
 def supprimer_demande_contact(id):
@@ -2269,7 +2390,7 @@ def format_datetime(value, format='%d-%m-%Y %H:%M'):
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return render_template('loading.html', redirect_url=url_for('login'))
 
 
 initialiser_base_de_donnees()

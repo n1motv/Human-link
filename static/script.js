@@ -47,7 +47,6 @@ function highlightEmployeeDays(email) {
 
 document.addEventListener('DOMContentLoaded', function () {
     var notificationsDropdown = document.getElementById('notificationsDropdown');
-
     notificationsDropdown.addEventListener('click', function () {
         fetch('/mark_notifications_as_read', {
             method: 'POST',
@@ -66,41 +65,10 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(error => console.error('Erreur:', error));
     });
 });
-function supprimerNotification(id) {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
-        fetch(`/supprimer_notification/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Supprimer la notification de la liste sans recharger la page
-                const notificationElement = document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('li');
-                notificationElement.remove();
-
-                // Mettre à jour le badge de notifications non lues
-                const badge = document.querySelector('#notificationsDropdown .badge');
-                if (badge) {
-                    const count = parseInt(badge.innerText) - 1;
-                    if (count > 0) {
-                        badge.innerText = count;
-                    } else {
-                        badge.remove();
-                    }
-                }
-            }
-        })
-        .catch(error => console.error('Erreur :', error));
-    }
-}
 function toggleNotificationPanel() {
     const panel = document.getElementById('notification-panel');
     panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
 }
-
 function supprimerNotification(id) {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
         fetch(`/supprimer_notification/${id}`, {
@@ -132,15 +100,22 @@ function supprimerNotification(id) {
 function searchEmployee() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const employeeCards = document.querySelectorAll('.employee-card');
-
+    let hasResults = false;
     employeeCards.forEach(card => {
         const name = card.getAttribute('data-name').toLowerCase();
         if (name.includes(searchInput)) {
             card.style.display = '';
         } else {
             card.style.display = 'none';
+            hasResults = true;
         }
     });
+    const errorMessage = document.getElementById('error-message');
+    if (!hasResults) {
+        errorMessage.classList.remove('d-none');
+    } else {
+        errorMessage.classList.add('d-none');
+    }
 }
 
 
@@ -150,7 +125,7 @@ setTimeout(function() {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
+        setTimeout(() => alert.remove(), 1000);
     });
 }, 5000);
 
@@ -176,4 +151,182 @@ document.body.addEventListener('click', function(e) {
             document.body.classList.remove('flou');
         }
     }
+});
+
+function confirmerSuppression(event) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.")) {
+        event.preventDefault();
+    }
+}
+function searchDemande() {
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const arrets = document.querySelectorAll('.demande-card');
+    let hasResults = false;
+
+    arrets.forEach(card => {
+        const email = card.querySelector('.card-title').textContent.toLowerCase();
+        if (email.includes(searchInput)) {
+            card.style.display = '';
+            hasResults = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const errorMessage = document.getElementById('error-message');
+    if (!hasResults) {
+        errorMessage.classList.remove('d-none');
+    } else {
+        errorMessage.classList.add('d-none');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const alertBox = document.querySelector('.alert');
+
+    if (alertBox) {
+        // Affiche l'alerte pendant 5 secondes
+        setTimeout(() => {
+            alertBox.style.transition = 'opacity 0.5s ease';
+            alertBox.style.opacity = '0';
+
+            // Supprime l'élément du DOM après la transition
+            setTimeout(() => {
+                alertBox.remove();
+            }, 500);
+        }, 5000);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const nationalites = ["Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
+    "Argentine", "Arménienne", "Australienne", "Autrichienne", "Azerbaïdjanaise", "Bahreïnie", "Bangladaise", 
+    "Belge", "Béninoise", "Bhoutanaise", "Biélorusse", "Birmane", "Bolivienne", "Bosnienne", "Botswanaise", 
+    "Brésilienne", "Bruneienne", "Bulgare", "Burkinabè", "Burundaise", "Cambodgienne", "Camerounaise", "Canadienne",
+    "Cap-verdienne", "Centrafricaine", "Chilienne", "Chinoise", "Chypriote", "Colombienne", "Comorienne", 
+    "Congolaise", "Costaricaine", "Croate", "Cubaine", "Danoise", "Djiboutienne", "Dominicaine", "Égyptienne",
+    "Émiratie", "Équatorienne", "Érythréenne", "Espagnole", "Estonienne", "Éthiopienne", "Fidjienne", 
+    "Finlandaise", "Française", "Gabonaise", "Gambienne", "Géorgienne", "Ghanéenne", "Grecque", "Guatémaltèque",
+        "Guinéenne", "Haïtienne", "Hondurienne", "Hongroise", "Indienne", "Indonésienne", "Iranienne", "Irakienne", 
+        "Irlandaise", "Islandaise", "Israélienne", "Italienne", "Ivoirienne", "Jamaïcaine", "Japonaise", 
+        "Jordanienne", "Kazakhstanaise", "Kényane", "Kirghize", "Laotienne", "Libanaise", "Libérienne", "Libyenne", 
+        "Lituanienne", "Luxembourgeoise", "Malaisienne", "Malienne", "Maltaise", "Marocaine", "Mauricienne", "Mexicaine", 
+        "Monégasque", "Mozambicaine", "Namibienne", "Néerlandaise", "Népalaise", "Nigériane", "Nigérienne", "Norvégienne", 
+        "Pakistanaise", "Palestinienne", "Panaméenne", "Paraguayenne", "Péruvienne", "Philippine", "Polonaise", "Portugaise", 
+        "Qatarienne", "Roumaine", "Russe", "Rwandaise", "Salvadorienne", "Sénégalaise", "Serbe", "Singapourienne", "Slovaque", "Slovène", 
+        "Somalienne", "Soudanaise", "Sri-lankaise", "Suédoise", "Suisse", "Syrienne", "Tadjike", "Tanzanienne", "Thaïlandaise", "Togolaise", 
+        "Tunisienne", "Turque", "Ukrainienne", "Uruguayenne", "Vénézuélienne", "Vietnamienne", "Yéménite", "Zambienne", "Zimbabwéenne"
+];
+
+    const selectNationalite = document.getElementById('nationalite');
+    
+    nationalites.forEach(nationalite => {
+        const option = document.createElement('option');
+        option.value = nationalite;
+        option.textContent = nationalite;
+        selectNationalite.appendChild(option);
+    });
+});
+document.addEventListener('DOMContentLoaded', function () {
+    const departements = [    "Ressources Humaines","Finance","Comptabilité","Marketing","Ventes",
+        "Service Client","Production","Recherche et Développement","Logistique","Informatique","Qualité",
+        "Achats","Juridiques","Communication","Direction Générale"];
+
+    const selectdepartement = document.getElementById('departement');
+    
+    departements.forEach(departement => {
+        const option = document.createElement('option');
+        option.value = departement;
+        option.textContent = departement;
+        selectdepartement.appendChild(option);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Remplir la liste des pays
+    const selectPays = document.getElementById('pays');
+    fetch('https://restcountries.com/v3.1/all')
+        .then(response => response.json())
+        .then(data => {
+            // Trier les pays par ordre alphabétique
+            const sortedCountries = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            selectPays.innerHTML = '<option value="">Sélectionner un pays</option>';
+            sortedCountries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.name.common;
+                option.textContent = country.name.common;
+                selectPays.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des pays:', error);
+            selectPays.innerHTML = '<option value="">Erreur de chargement</option>';
+        });
+
+    // Remplir automatiquement la ville à partir du code postal
+    const codePostalInput = document.getElementById('code_postal');
+    const villeInput = document.getElementById('ville');
+
+    codePostalInput.addEventListener('input', function () {
+        const codePostal = codePostalInput.value.trim();
+
+        // Vérifie que le code postal est valide (5 chiffres)
+        if (/^\d{5}$/.test(codePostal)) {
+            fetch(`https://api.zippopotam.us/fr/${codePostal}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Code postal introuvable');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    villeInput.value = data.places[0]['place name'];
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement de la ville:', error);
+                    villeInput.value = '';
+                });
+        } else {
+            villeInput.value = '';  // Réinitialise si le code postal est incomplet
+        }
+    });
+});
+function envoyerEmailReinitialisation(email) {
+    if (confirm(`Voulez-vous vraiment envoyer un email de réinitialisation de mot de passe à ${email} ?`)) {
+        fetch(`/envoyer_email_reinitialisation?email=${encodeURIComponent(email)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Email de réinitialisation envoyé avec succès.');
+                } else {
+                    alert('Erreur lors de l\'envoi de l\'email.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur :', error);
+                alert('Une erreur est survenue.');
+            });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    $('#meetingsTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.5/i18n/fr-FR.json'
+        },
+        responsive: true,
+        initComplete: function () {
+            // Déplace la barre de recherche à droite de "Afficher X éléments"
+            const lengthControl = document.querySelector('.dataTables_length');
+            const filterControl = document.querySelector('.dataTables_filter');
+            const wrapper = document.querySelector('.dataTables_wrapper');
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            wrapper.insertBefore(header, wrapper.firstChild);
+            header.appendChild(lengthControl);
+            header.appendChild(filterControl);
+        }
+    });
 });
