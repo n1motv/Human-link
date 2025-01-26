@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="../static/styles.css">
     <style>
 
-
 .card {
     border-radius: 15px;
     transition: transform 0.3s, box-shadow 0.3s;
@@ -59,6 +58,7 @@
 input:focus {
     animation: pulse 0.4s infinite;
 }
+
 
 @keyframes pulse {
     0% {
@@ -173,13 +173,16 @@ input:focus {
                                         {{ form.mot_de_passe(class="form-control") }}
                                     </div>
                                 </div>
-
+                                
                                 <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div>
-                                        <input type="checkbox" id="remember-me">
-                                        <label for="remember-me" class="form-label">Se souvenir de moi</label>
-                                    </div>
-                                    <a href="{{ url_for('reset_password') }}" class="text-decoration-none" id="oublie">Mot de passe oublié ?</a>
+                                    <a href="{{ url_for('contact') }}" class="text-decoration-none text-primary d-flex align-items-center">
+                                        <i class="bi bi-chat-left-dots me-2" style="font-size: 1.2rem;"></i>
+                                        <span class="fw-semibold">Besoin d'aide ?</span>
+                                    </a>
+                                    <a href="{{ url_for('reset_password') }}" class="text-decoration-none text-primary d-flex align-items-center">
+                                        <i class="bi bi-key-fill me-2" style="font-size: 1.2rem;"></i>
+                                        <span class="fw-semibold">Mot de passe oublié ?</span>
+                                    </a>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-2">

@@ -5,9 +5,9 @@
 {% block content2 %}
             <h1 class="text-center text-white mb-4">Soumettre une demande de prime</h1>
 
-            <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
+            <div class="card border-0 rounded-4 fw-bold text-white">
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ url_for('soumettre_demande_prime') }}">
+                    <form method="POST" action="{{ url_for('soumettre_demande_prime') }}" class=" fw-bold">
                         <div class="mb-3">
                             <label for="id_employe" class="form-label">Employé supervisé</label>
                             <select name="id_employe" id="id_employe" class="form-select" required>
@@ -24,7 +24,7 @@
 
                         <div class="mb-3">
                             <label for="motif" class="form-label">Motif</label>
-                            <textarea name="motif" id="motif" class="form-control" required></textarea>
+                            <textarea name="motif" id="motif" class="form-control" required placeholder="Veuillez décrire le motif de cette demande !"></textarea>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">

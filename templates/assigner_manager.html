@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-center mt-4">
-                        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        <button type="submit" class="btn btn-success">Mettre à jour</button>
                     </div>
                 </form>
             </div>
@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center mt-4">
-                    <button type="submit" class="btn btn-primary">Assigner</button>
+                    <button type="submit" class="btn btn-success">Assigner</button>
                 </div>
             </form>
 
@@ -69,7 +69,7 @@
                     {% set supervised_items = assignations | selectattr("manager_id", "equalto", manager[0]) | list %}
                     {% if supervised_items or manager.is_director %}
                     <div class="m-3" style="width: 300px;">
-                        <div class="card">
+                        <div class="card bg-light">
                             <div class="card-header bg-dark text-white text-center">
                                 {{ manager[1] }} {% if manager.is_director %}(Directeur){% endif %}
                             </div>
@@ -95,7 +95,7 @@
                     {% endif %}
                 {% endfor %}
             </div>
-            </div>    
+            <br>
             <h1 class="text-center text-white mb-4">Organigramme des Employés et Managers</h1>
             <div class="org-chart-container">
                 <div id="orgChart" class="org-chart"></div>
@@ -125,12 +125,7 @@
 
             refreshOrgChart();
 
-            $('form[action="{{ url_for('assigner_manager') }}"]').on('submit', function(event) {
-                event.preventDefault();
-                $.post($(this).attr('action'), $(this).serialize(), function() {
-                    location.reload();
-                });
-            });
+
         });
         document.getElementById('manager').addEventListener('change', function () {
             const selectedManager = this.value;
