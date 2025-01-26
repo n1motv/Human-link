@@ -1,11 +1,11 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Les demandes d'arrêts'{% endblock %}
+{% block title %}Les demandes d'arrêts{% endblock %}
 
 {% block content1 %}
     <li class="nav-item">
-        <form class="d-flex mx-2">
-            <input class="form-control me-2" type="search" id="searchInput" placeholder="Rechercher une demande" aria-label="Rechercher">
+        <form class="d-flex mx-2" id="searchBox">
+            <input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par email employé" aria-label="Rechercher">
             <button class="btn btn-custom-search" type="button" onclick="searchDemande()">
                 <i class="bi bi-search"></i>
             </button>
@@ -13,61 +13,74 @@
     </li>
 {% endblock %}
 
-{% block content2 %} 
+{% block content2 %}
     <h1 class="text-center text-white mb-4">Demandes d'Arrêts</h1>
-    <div id="error-message" class="alert alert-warning d-none text-center">Aucune demande trouvée pour cet e-mail.</div>
-    
     {% if arrets %}
-    <div class="row justify-content-center" >
+    <div class="text-center mt-5 d-none" id="error-message">
+        <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
+        <h4 class="text-white mt-4">Aucune demande d'arrêt pour cet employé.</h4>
+    </div>
+    <div class="row justify-content-center" id="demande-list">
         {% for arret in arrets | reverse %}
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-lg-4 demande-card-wrapper">
             <div class="card demande-card" onclick="agrandirCarte(this)">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <input type="checkbox" class="checkbox-item mx-3" value="{{ arret[0] }}">
+                    <h5 class="card-title text-center fw-bold mb-0">Arrêt de {{ arret[1] }}</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Arrêt de {{ arret[1] }}</h5>
                     <p class="card-text">
-                        <strong>ID :</strong> {{ arret[0] }}<br>
-                        <strong>Type :</strong> {{ arret[2] }}<br>
-                        <strong>Date début :</strong> {{ arret[3] }}<br>
-                        <strong>Date fin :</strong> {{ arret[4] }}<br>
-                        <strong>Description :</strong> {{ arret[5] }}<br>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><strong>Statut :</strong> {{ arret[6] }}</span>
-                            {% if arret[8] %}
-                                <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank" class="btn btn-link btn-sm">
-                                    <i class="bi bi-paperclip" style="font-size: 1.5rem;"></i>
-                                </a>
-                            {% else %}
-                                <span class="text-muted" style="font-size: 0.875rem;">Pas de pièce jointe</span>
-                            {% endif %}
-                        </div>
-                        <strong>Motif de refus :</strong> {{ arret[7] if arret[7] else "N/A" }}
+                        <p><strong>ID :</strong> {{ arret[0] }}</p>
+                        <p><strong>Type :</strong> {{ arret[2] }}</p>
+                        <p><strong>Date début :</strong> {{ arret[3] }}</p>
+                        <p><strong>Date fin :</strong> {{ arret[4] }}</p>
+                        <p><strong>Description :</strong> {{ arret[5] }}</p>
+                        <p><strong>Statut :</strong> {{ arret[6] }}</p>
+                        <span>
+                            <strong>Motif de refus :</strong> {{ arret[7] if arret[7] else "N/A" }}
+                        </span>
+                        {% if arret[8] %}
+                            <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank" class="btn btn-link btn-sm">
+                                <i class="bi bi-paperclip" style="font-size: 1.5rem;"></i>
+                            </a>
+                        {% else %}
+                            <span class="badge text-dark d-flex align-items-center justify-content-center" id="badgePerso">Pas de pièce jointe</span>
+                        {% endif %}
                     </p>
                     <div class="d-flex flex-column">
                         {% if arret[6] == 'en attente' %}
                         <form method="POST" action="{{ url_for('afficher_demandes_arrêts') }}" class="mb-2">
                             <input type="hidden" name="id" value="{{ arret[0] }}">
-                            <button type="submit" name="statut" value="accepte" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
-                            <button type="submit" name="statut" value="refuse" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
+                            <input type="hidden" name="statut">
+                            <button type="button" onclick="handleAction(this, 'accepte')" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
+                            <button type="button" onclick="handleAction(this, 'refuse')" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
                             <textarea name="motif_refus" placeholder="Motif du refus" class="form-control mt-2" rows="3" style="width: 100%;"></textarea>
-                        </form>                                
+                        </form>                        
                         {% endif %}
-                        <form method="POST" action="{{ url_for('supprimer_demande_arrêts', id=arret[0]) }}" onsubmit="confirmerSuppression(event)" class="">
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+
+    <!-- Boutons flottants pour suppression multiple -->
+    <div class="floating-buttons">
+        <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_arrêt')" title="Supprimer les arrêts sélectionnés">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+        <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
+            <i class="fas fa-check-double"></i>
+        </button>
+        <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
+            <i class="fas fa-ban"></i>
+        </button>
+    </div>
+    
     {% else %}
-        <!-- Image et message si aucune demande -->
         <div class="text-center mt-5">
             <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
             <h4 class="text-white mt-4">Aucune demande d'arrêt pour le moment.</h4>
         </div>
     {% endif %}
 {% endblock %}
-

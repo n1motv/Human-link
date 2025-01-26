@@ -79,22 +79,30 @@
     <div id="error-message" class="alert alert-warning d-none text-center">Aucune demande trouvée.</div>
 
     {% if demandes %}
-    <div class="row g-4">
+    <div class="row justify-content-center">
         {% for demande in demandes | reverse %}
-        <div class="col-md-6 col-lg-4 demande-card">
-            <div class="card bg-light text-dark shadow border-0">
+        <div class="col-md-6 col-lg-4 demande-card-wrapper">
+            <div class="card demande-card" onclick="agrandirCarte(this)">
                 <div class="card-body">
                     <p class="card-text">
                         <strong>ID :</strong> {{ demande[0] }}<br>
-                        <strong>Raison :</strong> {{ demande[1] }}<br>
-                        <strong>Date Début :</strong> {{ demande[2] }}<br>
-                        <strong>Date Fin :</strong> {{ demande[3] }}<br>
-                        <strong>Infos Supplémentaires :</strong> {{ demande[4] }}
+                        <strong>Raison :</strong> {{ demande[2] }}<br>
+                        <strong>Date de début :</strong> {{ demande[3] }}<br>
+                        <strong>Date de fin :</strong> {{ demande[4] }}<br>
+                        <strong>Statut :</strong> {{ demande[7] }}<br>
+                        <p class="card-text d-flex justify-content-between align-items-center">
+                            <span>
+                                <strong>Motif de refus :</strong> {{ demande[9] if demande[9] else "N/A" }}
+                            </span>
+                            {% if demande.pièce_jointe %}
+                            <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank" class="btn btn-link btn-sm">
+                                <i class="bi bi-paperclip" style="font-size: 1.5rem;"></i>
+                            </a>
+                            {% else %}
+                            <span class="badge text-dark d-flex align-items-center justify-content-center"  id ="badgePerso">Pas de pièce jointe</span>
+                            {% endif %}
+                        </p>
                     </p>
-                    <p><strong>Statut :</strong> {{ demande[5] }}</p>
-                    {% if demande[6] %}
-                    <p><strong>Motif de Refus :</strong> {{ demande[6] }}</p>
-                    {% endif %}
                     <!-- Bouton de suppression -->
                     <form method="POST" action="{{ url_for('supprimer_demande_conge', id=demande[0]) }}" onsubmit="confirmerSuppression(event)">
                         <div class="d-grid">

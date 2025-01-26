@@ -79,7 +79,13 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-dark text-white text-center">
                     <h1 class="mb-0">Choisissez vos jours de télétravail pour la semaine prochaine</h1>
-                    <p class="text-center">Vous devez choisir exactement {{ jours_max_teletravail }} jour(s) de télétravail.</p>
+                    <p class="text-center">
+                        {% if is_director %}
+                            Vous pouvez choisir un nombre illimité de jours de télétravail.
+                        {% else %}
+                            Vous devez choisir exactement {{ jours_max_teletravail }} jour(s) de télétravail.
+                        {% endif %}
+                    </p>                    
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('choisir_teletravail') }}">

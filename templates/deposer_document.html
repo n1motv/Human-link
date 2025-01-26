@@ -2,62 +2,104 @@
 {% block title %}Déposer un Document{% endblock %}
 
 {% block content2 %}
-                <h1 class="text-center text-white mb-4">Déposer un Document pour : {{ employe[0] }} {{ employe[1] }}</h1>
-                <div class="card shadow-lg p-4">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="type_document" class="form-label">Type de Document</label>
-                            <select class="form-select" name="type_document" id="type_document" required onchange="toggleFields()">
-                                <option value="bulletin">Bulletin de Salaire</option>
-                                <option value="contrat">Contrat de Travail</option>
-                                <option value="autre">Autre Document</option>
-                            </select>
-                        </div>
+<h1 class="text-center text-white mb-4">Déposer un Document pour : {{ employe[0] }} {{ employe[1] }}</h1>
+<div class="card text-white p-4 fw-bold">
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="type_document" class="form-label">Type de Document</label>
+            <select class="form-select" name="type_document" id="type_document" required onchange="toggleFields()">
+                <option value="bulletin">Bulletin de Salaire</option>
+                <option value="contrat">Contrat de Travail</option>
+                <option value="autre">Autre Document</option>
+            </select>
+        </div>
 
-                        <div id="mois_annee_fields">
-                            <div class="mb-3">
-                                <label for="mois" class="form-label">Mois</label>
-                                <input type="text" class="form-control" name="mois" placeholder="Ex: Janvier">
-                            </div>
-                            <div class="mb-3">
-                                <label for="annee" class="form-label">Année</label>
-                                <input type="text" class="form-control" name="annee" placeholder="Ex: 2024">
-                            </div>
-                        </div>
+        <div id="mois_annee_fields">
+            <!-- Liste déroulante pour les mois -->
+            <div class="mb-3">
+                <label for="mois" class="form-label">Mois</label>
+                <select class="form-select" name="mois" id="mois" required>
+                    <option value="Janvier">Janvier</option>
+                    <option value="Février">Février</option>
+                    <option value="Mars">Mars</option>
+                    <option value="Avril">Avril</option>
+                    <option value="Mai">Mai</option>
+                    <option value="Juin">Juin</option>
+                    <option value="Juillet">Juillet</option>
+                    <option value="Août">Août</option>
+                    <option value="Septembre">Septembre</option>
+                    <option value="Octobre">Octobre</option>
+                    <option value="Novembre">Novembre</option>
+                    <option value="Décembre">Décembre</option>
+                </select>
+            </div>
 
-                        <div id="nom_document_field" class="d-none">
-                            <div class="mb-3">
-                                <label for="nom_document" class="form-label">Nom du Document</label>
-                                <input type="text" class="form-control" name="nom_document" placeholder="Ex: Attestation, Justificatif">
-                            </div>
-                        </div>
+            <!-- Liste déroulante pour les années -->
+            <div class="mb-3">
+                <label for="annee" class="form-label">Année</label>
+                <select class="form-select" name="annee" id="annee" required>
+                    <!-- Les options seront ajoutées dynamiquement avec JavaScript -->
+                </select>
+            </div>
+        </div>
 
-                        <div class="mb-3">
-                            <label for="fichier" class="form-label">Fichier</label>
-                            <input type="file" class="form-control" name="fichier" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-upload"></i> Déposer
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <div id="nom_document_field" class="d-none">
+            <div class="mb-3">
+                <label for="nom_document" class="form-label">Nom du Document</label>
+                <input type="text" class="form-control" name="nom_document" placeholder="Ex: Attestation, Justificatif">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="fichier" class="form-label">Fichier</label>
+            <input type="file" class="form-control" name="fichier" required>
+        </div>
+        <div class="d-grid">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-upload"></i> Déposer
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}
-{% block content3 %}  
-    <script>
-        function toggleFields() {
-            const typeDocument = document.getElementById('type_document').value;
-            const moisAnneeFields = document.getElementById('mois_annee_fields');
-            const nomDocumentField = document.getElementById('nom_document_field');
 
-            if (typeDocument === 'autre') {
-                moisAnneeFields.classList.add('d-none');
-                nomDocumentField.classList.remove('d-none');
-            } else {
-                moisAnneeFields.classList.remove('d-none');
-                nomDocumentField.classList.add('d-none');
+{% block content3 %}  
+<script>
+    // Générer la liste des années de 1900 à 2100 et définir l'année et le mois courants
+    document.addEventListener("DOMContentLoaded", function () {
+        const anneeSelect = document.getElementById('annee');
+        const moisSelect = document.getElementById('mois');
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth(); // Index 0 pour Janvier
+
+        // Générer les années
+        for (let year = 1900; year <= 2100; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentYear) {
+                option.selected = true; // Année actuelle sélectionnée par défaut
             }
+            anneeSelect.appendChild(option);
         }
-    </script>
+
+        // Sélectionner le mois courant
+        moisSelect.selectedIndex = currentMonth;
+    });
+
+    function toggleFields() {
+        const typeDocument = document.getElementById('type_document').value;
+        const moisAnneeFields = document.getElementById('mois_annee_fields');
+        const nomDocumentField = document.getElementById('nom_document_field');
+
+        if (typeDocument === 'autre') {
+            moisAnneeFields.classList.add('d-none');
+            nomDocumentField.classList.remove('d-none');
+        } else {
+            moisAnneeFields.classList.remove('d-none');
+            nomDocumentField.classList.add('d-none');
+        }
+    }
+</script>
 {% endblock %}

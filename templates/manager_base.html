@@ -9,10 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/css/jquery.orgchart.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a href="{{ url_for('manager_dashboard') }}">
                 <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
@@ -50,12 +52,14 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                 </ul>
             </div>
@@ -89,18 +93,28 @@
             {% endif %}
         </div>
     </div>
-    <div id="main-body">
-        <main class="py-5">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    {% for category, message in messages %}
+                    Swal.fire({
+                        icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
+                        title: '{{ category|capitalize }}',
+                        text: '{{ message }}',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-custom-popup'
+                        }
+                    });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+    <div id="main-body" >
+        <main class="py-5" >
             <div class="container">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="alert alert-danger" role="alert">
-                        {% for category, message in messages %}
-                            {{ message }}
-                        {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
                 {% block content2 %}{% endblock %}
             </div>
         </main>
@@ -109,8 +123,9 @@
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
             </div>
         </footer>
-    </div>
+    <div>
     <script src="../static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/js/jquery.orgchart.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>

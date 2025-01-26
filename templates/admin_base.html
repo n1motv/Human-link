@@ -10,10 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/css/jquery.orgchart.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark ">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
@@ -35,7 +38,7 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
@@ -45,7 +48,7 @@
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
@@ -80,20 +83,30 @@
             {% endif %}
         </div>
     </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    {% for category, message in messages %}
+                    Swal.fire({
+                        icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
+                        title: '{{ category|capitalize }}',
+                        text: '{{ message }}',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-custom-popup'
+                        }
+                    });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+
     <div id="main-body" >
         <main class="py-5" >
             <div class="container">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {% for category, message in messages %}
-                            {{ message }}
-                        {% endfor %}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>                
-                    {% endif %}
-            {% endwith %}
-            {% block content2 %}{% endblock %}
+                {% block content2 %}{% endblock %}
             </div>
         </main>
         {% block content4 %}{% endblock %}
@@ -104,6 +117,7 @@
         </footer>
     <div>
     <script src="../static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/js/jquery.orgchart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>

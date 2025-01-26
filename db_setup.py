@@ -64,8 +64,6 @@ def verification_creation_table_conges():
 
 def cree_table_conges():
     if verification_creation_table_conges():
-        connexion = connect_db()
-        cur = connexion.cursor()
         print("Table des congés déjà créée.")
         return
     else:
@@ -81,6 +79,8 @@ def cree_table_conges():
                 date_fin DATE,
                 description TEXT,
                 statut TEXT DEFAULT 'en attente',
+                statut_manager TEXT DEFAULT 'en attente',
+                statut_admin TEXT DEFAULT 'en attente',
                 motif_refus TEXT,
                 pièce_jointe TEXT
             )
@@ -329,14 +329,14 @@ def cree_table_teletravail():
         cur.execute("""
             CREATE TABLE teletravail (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_employe INTEGER NOT NULL,
+                id_employe TEXT NOT NULL,
                 date_teletravail DATE NOT NULL,
                 statut TEXT DEFAULT 'en attente',
                 FOREIGN KEY (id_employe) REFERENCES utilisateurs(id)
             )
         """)
-        cur.execute("""ALTER TABLE utilisateurs ADD COLUMN teletravail_max INTEGER DEFAULT 0;
-        """)
+        #cur.execute("""ALTER TABLE utilisateurs ADD COLUMN teletravail_max INTEGER DEFAULT 0;
+        #""")
 
         connexion.commit()
         connexion.close()

@@ -101,36 +101,46 @@ function searchEmployee() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
     const employeeCards = document.querySelectorAll('.employee-card');
     let hasResults = false;
+
     employeeCards.forEach(card => {
         const name = card.getAttribute('data-name').toLowerCase();
         if (name.includes(searchInput)) {
             card.style.display = '';
+            hasResults = true;
         } else {
             card.style.display = 'none';
-            hasResults = true;
         }
     });
-    const errorMessage = document.getElementById('error-message');
+
     if (!hasResults) {
-        errorMessage.classList.remove('d-none');
-    } else {
-        errorMessage.classList.add('d-none');
+        // Afficher l'alerte SweetAlert si aucun résultat trouvé
+        Swal.fire({
+            icon: 'info',
+            title: 'Aucun résultat',
+            text: 'Aucun employé trouvé pour la recherche effectuée.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal2-custom-popup'
+            }
+        }).then(() => {
+            // Actualiser la page après la fermeture de l'alerte
+            location.reload();
+        });
     }
 }
 
 
 
-// Faire disparaître les messages flash après 5 secondes
-setTimeout(function() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 1000);
-    });
-}, 5000);
-
 function agrandirCarte(card) {
     // Vérifiez si une carte est déjà agrandie
+    if (
+        event.target.tagName === 'BUTTON' || // Bouton
+        event.target.tagName === 'A' ||      // Lien
+        event.target.tagName === 'INPUT' ||      // Lien
+        event.target.closest('.no-zoom')     // Éléments avec classe `no-zoom`
+    ) {
+        return; // Ne rien faire si un bouton ou un lien est cliqué
+    }
     const carteAgrandie = document.querySelector('.demande-card.agrandie');
     if (carteAgrandie) {
         carteAgrandie.classList.remove('agrandie');
@@ -153,19 +163,15 @@ document.body.addEventListener('click', function(e) {
     }
 });
 
-function confirmerSuppression(event) {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.")) {
-        event.preventDefault();
-    }
-}
+
 function searchDemande() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
-    const arrets = document.querySelectorAll('.demande-card');
+    const demandes = document.querySelectorAll('.demande-card');
     let hasResults = false;
 
-    arrets.forEach(card => {
-        const email = card.querySelector('.card-title').textContent.toLowerCase();
-        if (email.includes(searchInput)) {
+    demandes.forEach(card => {
+        const immatricule = card.querySelector('.card-title').textContent.toLowerCase();
+        if (immatricule.includes(searchInput)) {
             card.style.display = '';
             hasResults = true;
         } else {
@@ -173,30 +179,23 @@ function searchDemande() {
         }
     });
 
-    const errorMessage = document.getElementById('error-message');
     if (!hasResults) {
-        errorMessage.classList.remove('d-none');
-    } else {
-        errorMessage.classList.add('d-none');
+        // Afficher l'alerte SweetAlert si aucun résultat trouvé
+        Swal.fire({
+            icon: 'info',
+            title: 'Aucun résultat',
+            text: 'Aucune demande trouvée pour l\'employé recherché.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal2-custom-popup'
+            }
+            }).then(() => {
+                // Actualiser la page après la fermeture de l'alerte
+                location.reload();
+        });
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const alertBox = document.querySelector('.alert');
-
-    if (alertBox) {
-        // Affiche l'alerte pendant 5 secondes
-        setTimeout(() => {
-            alertBox.style.transition = 'opacity 0.5s ease';
-            alertBox.style.opacity = '0';
-
-            // Supprime l'élément du DOM après la transition
-            setTimeout(() => {
-                alertBox.remove();
-            }, 500);
-        }, 5000);
-    }
-});
 
 document.addEventListener('DOMContentLoaded', function () {
     const nationalites = ["Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
@@ -291,22 +290,30 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
 function envoyerEmailReinitialisation(email) {
-    if (confirm(`Voulez-vous vraiment envoyer un email de réinitialisation de mot de passe à ${email} ?`)) {
-        fetch(`/envoyer_email_reinitialisation?email=${encodeURIComponent(email)}`)
+    fetch(`/envoyer_email_reinitialisation?email=${encodeURIComponent(email)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Email de réinitialisation envoyé avec succès.');
+                    Swal.fire({
+                        icon: 'success', // Icône pour le succès
+                        title: 'Succès',
+                        text: 'Email de réinitialisation envoyé avec succès.',
+                        confirmButtonText: 'OK'
+                    });
+                    
                 } else {
                     alert('Erreur lors de l\'envoi de l\'email.');
+                    Swal.fire({
+                        icon: 'error', // Icône pour le succès
+                        title: 'Erreur',
+                        text: 'Erreur lors de l\'envoi de l\'email.',
+                        confirmButtonText: 'OK'
+                    });
+                    
                 }
             })
-            .catch(error => {
-                console.error('Erreur :', error);
-                alert('Une erreur est survenue.');
-            });
-    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -330,3 +337,212 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+function confirmerSuppression(event) {
+    event.preventDefault(); // Empêche l'action par défaut pour attendre la confirmation
+    Swal.fire({
+        title: 'Êtes-vous sûr ?',
+        text: "Cette action est irréversible.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Si l'utilisateur confirme, soumettez le formulaire
+            event.target.closest('form').submit();
+        }
+    });
+}
+
+function confirmAction(event, message = "Êtes-vous sûr de vouloir effectuer cette action ?") {
+    event.preventDefault(); // Empêche l'action par défaut pour attendre la confirmation
+    Swal.fire({
+        title: 'Confirmation',
+        text: "{{message}}",
+        icon: 'question',
+        html: true,
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Oui, continuer',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Si l'utilisateur confirme, soumettez le formulaire
+            event.target.closest('form').submit();
+        }
+    });
+}
+
+function confirmAction(title, message, button, actionType) {
+    Swal.fire({
+        title: title,
+        text: message,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: actionType === 'cancel' ? '#6c757d' : actionType === 'reset' ? '#007bff' : '#28a745',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Oui',
+        cancelButtonText: 'Non',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (actionType === 'reset') {
+                // Call the password reset function
+                const email = button.getAttribute('data-email'); // Add data-email if needed
+                envoyerEmailReinitialisation(email);
+            } else if (actionType === 'submit') {
+                // Submit the form
+                const form = button.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        }
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const alerts = document.querySelectorAll('.alert'); // Sélectionne toutes les alertes Flash
+
+    alerts.forEach(alert => {
+        const type = alert.classList.contains('alert-success')
+            ? 'success'
+            : alert.classList.contains('alert-danger')
+            ? 'error'
+            : alert.classList.contains('alert-warning')
+            ? 'warning'
+            : 'info';
+
+        Swal.fire({
+            icon: type, // Utilise le type détecté : success, error, warning, info
+            title: type === 'success' ? 'Succès' : 'Attention',
+            text: alert.textContent.trim(), // Texte du message
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal2-custom-popup', // Personnalisation facultative
+            },
+        });
+
+        // Supprime le message Flash après affichage
+        alert.remove();
+    });
+});
+
+function handleAction(button, status) {
+    const form = button.closest('form');
+    const statutInput = form.querySelector('[name="statut"]');
+    const motifTextarea = form.querySelector('textarea[name="motif_refus"]');
+
+    // Set the status (accept or refuse)
+    statutInput.value = status;
+
+    // Check if a reason is required for refusal
+    if (status === 'refuse') {
+        const motif = motifTextarea?.value.trim(); // Optional chaining in case the textarea is missing
+        if (!motif) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Motif requis',
+                text: 'Veuillez fournir un motif pour refuser la demande.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+    }
+
+    // Display SweetAlert2 confirmation
+    const actionText = status === 'accepte' ? 'accepter' : 'refuser';
+    Swal.fire({
+        title: 'Confirmation',
+        text: `Êtes-vous sûr de vouloir ${actionText} cette demande ?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: status === 'accepte' ? '#28a745' : '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Oui, continuer',
+        cancelButtonText: 'Annuler',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Submit the form after confirmation
+            form.submit();
+        }
+    });
+}
+
+
+function selectAll() {
+    document.querySelectorAll('.checkbox-item').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function deselectAll() {
+    document.querySelectorAll('.checkbox-item').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+function deleteSelectedItems(table) {
+    const selectedIds = Array.from(document.querySelectorAll('.checkbox-item:checked'))
+        .map(checkbox => checkbox.value);
+
+    if (selectedIds.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Aucun élément sélectionné',
+            text: 'Veuillez sélectionner au moins un élément à supprimer.'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Confirmation',
+        text: `Êtes-vous sûr de vouloir supprimer les éléments sélectionnés ?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch(`/supprimer_elements/${table}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: data.message
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Une erreur est survenue lors de la suppression.'
+                    });
+                });
+        }
+    });
+}
+
+

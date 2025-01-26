@@ -4,7 +4,7 @@
 
 {% block content1 %}
                     <li class="nav-item">
-                        <form class="d-flex mx-2">
+                        <form class="d-flex mx-2" id ="searchBox">
                             <input class="form-control me-2" type="search" id="searchInput" placeholder="Rechercher un employé" aria-label="Rechercher">
                             <button class="btn btn-custom-search" type="button" onclick="searchEmployee()">
                                 <i class="bi bi-search"></i>
@@ -17,20 +17,20 @@
                 <div class="row g-4 justify-content-center" id="employeeList">
                     {% for emp in employees %}
                     <div class="col-md-6 col-lg-3 employee-card" data-name="{{ emp.nom }} {{ emp.prenom }}">
-                        <div class="card shadow-sm border-0">
-                            <img src="../static/uploads/photo_profile/{{ emp.photo or 'default.jpg' }}" class="card-img-top " alt="Photo de l'employé">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ emp.nom }} {{ emp.prenom }}</h5>
+                        <div class="card border-0" id="cardPersonaliser">
+                            <img src="../static/uploads/photo_profile/{{ emp.photo or 'default.jpg' }}" class="card-img-top id-pic" alt="Photo de l'employé">
+                            <div class="card-body text-dark">
+                                <h4 class="card-title text-center fw-bold">{{ emp.nom }} {{ emp.prenom }}</h4>
                                 <p class="card-text">
                                     <strong>Poste :</strong> {{ emp.poste }}<br>
                                     <strong>Département :</strong> {{ emp.departement }}<br>
                                     <strong>Email :</strong> {{ emp.email }}<br>
                                     <strong>Demande de congés :</strong> 
                                     {% if emp.conge_demande %}
-                                    <span class="badge text-dark d-flex align-items-center justify-content-center" style="width: 15%; height: 8%;" id ="badgePerso">
-                                        <i class="bi bi-bell" style="font-size: 1.5rem;"></i>
+                                    <span class="badge text-dark d-flex align-items-center justify-content-center" style="width: 15%; height: 8%; border-radius: 100%; right: 0%;" id ="badgePerso">
+                                        <i class="bi bi-bell" style="font-size: 1.5rem;color: white;"></i>
                                     </span>                                    
-                                        <span class="text-dark">Demande en attente</span>
+                                        <span >Demande en attente</span>
                                     {% else %}
                                         Aucun
                                     {% endif %}

@@ -3,45 +3,46 @@
 {% block title %}Les demandes de réunion{% endblock %}
 
 {% block content2 %}
-            <h1 class="text-center text-white mb-4">Schedule a Meeting</h1>
-            <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
+            <h1 class="text-center text-white mb-4">Créer une Invitation de Réunion</h1>
+            <div class="card border-0 rounded-4 fw-bold text-white">
                 <div class="card-body p-4">                
-                    <form method="POST">
+                    <form method="POST" class="fw-bold">
                         <div class="mb-3">
-                            <label for="title" class="form-label">Meeting Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
+                            <label for="title" class="form-label">Titre de la Réunion</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="Entrez le titre" required>
                         </div>
                         <div class="mb-3">
-                            <label for="date_time" class="form-label">Date & Time</label>
+                            <label for="date_time" class="form-label">Date & Heure</label>
                             <input type="datetime-local" class="form-control" id="date_time" name="date_time" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="employees" class="form-label">Invite Employees</label>
-                            <select class="form-select" id="employees" name="employees" multiple required>
-                                {% for emp in employees %}
+                        <div class="mb-3" >
+                            <label for="employees" class="form-label">Inviter des Employés</label>
+                            <select class="custom-select" id="employees" name="employees" size="{{ employees|length }}" required>                                {% for emp in employees %}
                                 <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
                                 {% endfor %}
                             </select>
+                            <small class="form-text text-white">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs employés.</small>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-send"></i> Envoyer l'invitation
+                                <i class="bi bi-send"></i> Envoyer l'Invitation
                             </button>
-                        </div>                    
-                    </form>
+                        </div>
+                    </form>                    
                 </div>
             </div>
             <hr>
 
            <!-- Scheduled Meetings -->
             <h1 class="mt-5 text-white text-center mb-4">Réunions Planifiées</h1>
-            <div class="card bg-white text-dark shadow-lg border-0 rounded-4">
+            <div class="card bg-white text-dark shadow-lg border-0 rounded-4 fw-bold">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="meetingsTable" class="table align-middle bg-white">
+
                             <thead class="bg-light">
                                 <tr>
-                                    <th>Titre</th>
+                                    <th class="text-center">Titre</th>
                                     <th>Date & Heure</th>
                                     <th>Employés Invités</th>
                                     <th>Acceptés</th>
@@ -51,7 +52,7 @@
                             <tbody>
                                 {% for meeting in meetings | reverse %}
                                 <tr>
-                                    <td>{{ meeting[1] }}</td>
+                                    <td ><input type="checkbox" class="checkbox-item mx-3" value="{{ meeting[0] }}">  {{ meeting[1] }}</td>
                                     <td>{{ meeting[2] }}</td>
                                     <td>{{ meeting[3] }}</td>
                                     <td>{{ meeting[4] }}</td>
@@ -63,4 +64,19 @@
                     </div>
                 </div>
             </div>
+
+        <!-- Boutons flottants pour suppression multiple -->
+        <div class="floating-buttons">
+            <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('meetings')" title="Supprimer les Réunions sélectionnés">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+            <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
+                <i class="fas fa-check-double"></i>
+            </button>
+            <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
+                <i class="fas fa-ban"></i>
+            </button>
+        </div>
 {% endblock %}
+
+

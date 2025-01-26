@@ -8,10 +8,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
     {% if role =='admin' %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark ">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
@@ -32,7 +33,7 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
@@ -42,7 +43,7 @@
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
@@ -53,7 +54,7 @@
     </nav>
     {% endif %}
     {% if role =='manager' %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a href="{{ url_for('manager_dashboard') }}">
                 <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
@@ -73,12 +74,14 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                 </ul>
             </div>
@@ -116,17 +119,27 @@
         <div class="container">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="alert alert-danger" role="alert">
-                    {% for category, message in messages %}
-                        {{ message }}
-                    {% endfor %}
-                    </div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            {% for category, message in messages %}
+                            Swal.fire({
+                                icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
+                                title: '{{ category|capitalize }}',
+                                text: '{{ message }}',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'swal2-custom-popup'
+                                }
+                            });
+                            {% endfor %}
+                        });
+                    </script>
                 {% endif %}
             {% endwith %}
             <h1 class="text-center text-white mb-4">
                 Calendrier des Congés
                 {% if role == 'admin' %}
-                    <small class=" text-white">(Vue Admin)</small>
+                    <small class=" text-white">(Vue Rh)</small>
                 {% elif role == 'manager' %}
                     <small class=" text-white">(Vue Manager)</small>
                 {% endif %}
@@ -135,12 +148,14 @@
         </div>
     </main>
 
-    <footer class="mt-auto">
-        <div class="container text-center ">
-            <p >&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
+    <footer class="py-3">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
         </div>
     </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.js"></script>
@@ -177,13 +192,24 @@
                     {% endfor %}
                 ],
                 eventClick: function(info) {
-                    alert('Congé de : ' + info.event.title + '\nStatut: ' + info.event.extendedProps.statut + '\nInfos supplémentaires: ' + info.event.extendedProps.description);
+                    // Utilisation de SweetAlert pour afficher les détails
+                    Swal.fire({
+                        title: 'Détails du Congé',
+                        html: `
+                            <p><strong>Employé :</strong> ${info.event.title}</p>
+                            <p><strong>Statut :</strong> ${info.event.extendedProps.statut}</p>
+                            <p><strong>Description :</strong> ${info.event.extendedProps.description}</p>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Fermer'
+                    });
                 },
                 editable: true,
                 droppable: true
             });
             calendar.render();
         });
+
     </script>
 </body>
 </html>

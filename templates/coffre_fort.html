@@ -11,7 +11,7 @@
 <body>
     <!-- Barre de navigation -->
     {% if role == 'admin' %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark ">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
@@ -51,7 +51,7 @@
             </div>
         </div>
     </nav>
-    {% elif role =='employe' %}
+    {% elif role =='employe' or role =='manager' %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a href="{{ url_for('voir_mes_infos') }}">
@@ -138,7 +138,7 @@
 
     <div id="main-body">
     <!-- Contenu principal -->
-    <div class="container py-5">
+    <div class="container py-5 ">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="alert alert-danger" role="alert">
@@ -151,16 +151,15 @@
         <h1 class="text-center text-white mb-4">Coffre-Fort</h1>
         <!-- Carte pour chaque section -->
         
-        <div class="card mb-4 shadow-lg">
+        <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
             <div class="card-header bg-success text-white">
                 <i class="bi bi-file-earmark-text-fill"></i> Bulletins de Salaire
             </div>
-            <div class="card-body">
                 {% if bulletins %}
                 <ul class="list-group">
                     {% for bulletin in bulletins | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/bulletins/' ~ nom ~ prenom ~ '/' ~ bulletin) }}" target="_blank">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('static', filename='coffre_fort/bulletins/' ~ nom ~ prenom ~ '/' ~ bulletin) }}" target="_blank">
                                 {{ bulletin }}
                             </a>
                             <span class="badge bg-success rounded-pill">Bulletin</span>
@@ -168,21 +167,19 @@
                     {% endfor %}
                 </ul>
                 {% else %}
-                <h4 class="text-dark text-center ">Aucun document pour le moment.</h4>
+                <h4 class=" text-center " style="margin: 20px;">Aucun document pour le moment.</h4>
                 {% endif %}
-            </div>
         </div>
 
-        <div class="card mb-4 shadow-lg">
+        <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
             <div class="card-header bg-primary text-white">
                 <i class="bi bi-file-earmark"></i> Contrats de Travail
             </div>
-            <div class="card-body">
                 {% if contrats %}
                 <ul class="list-group">
                     {% for contrat in contrats | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/contrats/' ~ nom ~ prenom ~ '/' ~ contrat) }}" target="_blank">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" >
+                        <a href="{{ url_for('static', filename='coffre_fort/contrats/' ~ nom ~ prenom ~ '/' ~ contrat) }}" target="_blank">
                                 {{ contrat }}
                             </a>
                             <span class="badge bg-primary rounded-pill">Contrat</span>
@@ -190,36 +187,33 @@
                     {% endfor %}
                 </ul>
                 {% else %}
-                <h4 class="text-dark text-center ">Aucun document pour le moment.</h4>
+                <h4 class="text-center " style="margin: 20px;">Aucun document pour le moment.</h4>
                 {% endif %}
-            </div>
         </div>
 
-        <div class="card mb-4 shadow-lg">
+        <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
             <div class="card-header bg-secondary text-white">
                 <i class="bi bi-folder-fill"></i> Autres Documents
             </div>
-            <div class="card-body">
                 {% if autres %}
-                <ul class="list-group">
+                <ul class="list-group" >
                     {% for autre in autres | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/autres/' ~ nom ~ prenom ~ '/' ~ autre) }}" target="_blank">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" >
+                        <a href="{{ url_for('static', filename='coffre_fort/autres/' ~ nom ~ prenom ~ '/' ~ autre) }}" target="_blank">
                                 {{ autre }}
-                            </a>
-                            <span class="badge bg-secondary rounded-pill">Document</span>
-                        </li>
+                        </a>
+                        <span class="badge bg-secondary rounded-pill">Document</span>
+                    </li>
                     {% endfor %}
                 </ul>
                 {% else %}
-                <h4 class="text-dark text-center ">Aucun document pour le moment.</h4>
+                <h4 class=" text-center " style="margin: 20px;">Aucun document pour le moment.</h4>
                 {% endif %}
-            </div>
         </div>
 
         <!-- Bouton pour dépôt de document (admin uniquement) -->
         {% if session['role'] == 'admin' %}
-        <div class="d-grid">
+        <div class="d-grid " style="margin-top: 20px;">
             <a href="{{ url_for('deposer_document', id_employe=employe_id) }}" class="btn btn-success btn-lg">
                 <i class="bi bi-upload"></i> Déposer un Document
             </a>
