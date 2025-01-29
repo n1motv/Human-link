@@ -1,0 +1,163 @@
+{% extends "admin_base.html" %}
+
+<!--
+  assigner_manager.html
+  Page permettant à l'administrateur de :
+  - Définir un directeur parmi les managers
+  - Assigner des employés ou des managers à un manager
+  - Supprimer des assignations existantes
+  - Visualiser l'organigramme de l'entreprise
+-->
+
+{% block title %}Affecter Employés aux Managers{% endblock %}
+
+{% block content2 %}
+    <!-- Titre principal de la page -->
+    <h1 class="text-center text-white mb-4">Affecter des Employés aux Managers</h1>
+
+    <!-- Formulaire pour désigner un directeur -->
+    <div class="d-flex justify-content-center mb-4 fw-bold">
+        <form action="{{ url_for('designer_directeur') }}" method="POST" class="w-50">
+            <div class="row g-3">
+                <!-- Sélection d'un manager à promouvoir au rang de directeur -->
+                <div class="col-md-12">
+                    <label for="directeur" class="form-label text-white">Directeur :</label>
+                    <select name="manager" id="directeur" class="form-select" required>
+                        <option value="">-- Sélectionnez un Manager --</option>
+                        {% for manager in managers %}
+                            <option value="{{ manager[0] }}">{{ manager[1] }} ({{ manager[2] }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+                <button type="submit" class="btn btn-success">Mettre à jour</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Section pour assigner des supervisions -->
+    <h3 class="text-white mb-4">Assignations de Supervision</h3>
+    <form action="{{ url_for('assigner_manager') }}" method="POST" class="mb-4">
+        <div class="row g-3">
+            <!-- Sélection du manager qui va superviser -->
+            <div class="col-md-6">
+                <label for="manager" class="form-label text-white">Manager :</label>
+                <select name="manager" id="manager" class="form-select" required>
+                    <option value="">-- Sélectionnez un Manager --</option>
+                    {% for manager in managers %}
+                        <option value="{{ manager[0] }}">{{ manager[1] }} ({{ manager[2] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sélection de la personne supervisée (employé ou manager, sauf directeur) -->
+            <div class="col-md-6">
+                <label for="supervise" class="form-label text-white">Supervisé :</label>
+                <select name="supervise" id="supervise" class="form-select" required>
+                    <option value="">-- Sélectionnez un Employé --</option>
+                    {% for employe in employes %}
+                        <option value="{{ employe[0] }}">{{ employe[1] }} ({{ employe[2] }})</option>
+                    {% endfor %}
+                    {% for manager in managers %}
+                        {% if manager[0] != directeur_id and manager[0] != request.form.get('manager') %}
+                            <option value="{{ manager[0] }}">{{ manager[1] }} (Manager)</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center mt-4">
+            <button type="submit" class="btn btn-success">Assigner</button>
+        </div>
+    </form>
+    {% if employes %}
+    <!-- Liste des assignations actuelles -->
+    <h3 class="text-white mb-4">Liste des Assignations Actuelles</h3>
+    <div class="d-flex flex-wrap justify-content-center">
+        {% for manager in managers %}
+            {% set supervised_items = assignations | selectattr("manager_id", "equalto", manager[0]) | list %}
+            {% if supervised_items or manager.is_director %}
+            <div class="m-3" style="width: 300px;">
+                <div class="card bg-light">
+                    <div class="card-header bg-dark text-white text-center">
+                        {{ manager[1] }} {% if manager.is_director %}(Directeur){% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if supervised_items %}
+                            <h5 class="card-title text-center">Supervise :</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for item in supervised_items %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ item.supervise_nom }}
+                                    <!-- Formulaire pour supprimer l'assignation -->
+                                    <form action="{{ url_for('supprimer_assignation', manager_id=manager[0], supervise_id=item.supervise_id) }}" method="POST">
+                                        <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">Aucune supervision.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <br>
+
+    <!-- Organigramme sous forme d'arbre -->
+    <h1 class="text-center text-white mb-4">Organigramme des Employés et Managers</h1>
+    <div class="org-chart-container">
+        <div id="orgChart" class="org-chart"></div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block content3 %}
+    <script>
+        /* 
+            Script pour afficher l'organigramme.
+            Récupère les données via l'endpoint /api/récupérer_orgchart
+            et les injecte dans orgchart (plugin JS).
+        */
+        $(document).ready(function () {
+            function refreshOrgChart() {
+                $.get('/api/récupérer_orgchart', function (data) {
+                    $('#orgChart').empty().orgchart({
+                        data: data,
+                        nodeContent: 'title',
+                        pan: true,
+                        zoom: true,
+                        verticalDepth: 1,
+                        toggleSiblingsResp: true,
+                    });
+                    // Style personnalisé : enlever les carreaux de fond
+                    $('.orgchart').css({
+                        'background-image': 'none',
+                        'background-color': 'none',
+                    });
+                });
+            }
+            refreshOrgChart();
+        });
+
+        // Masquer du menu déroulant la sélection du manager lui-même et du directeur
+        document.getElementById('manager').addEventListener('change', function () {
+            const selectedManager = this.value;
+            const superviseSelect = document.getElementById('supervise');
+
+            Array.from(superviseSelect.options).forEach(option => {
+                if (option.value === selectedManager || option.value === '{{ directeur_id }}') {
+                    // Masquer l'option correspondant au manager lui-même ou au directeur
+                    option.style.display = 'none';
+                } else {
+                    option.style.display = 'block';
+                }
+            });
+        });
+    </script>
+{% endblock %}

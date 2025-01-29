@@ -1,13 +1,22 @@
+<!-- Ligne suivante : indique que ce template hérite de manager_base.html -->
 {% extends "manager_base.html" %}
 
+<!-- Ligne suivante : bloc title, définit le titre de la page -->
 {% block title %}Soumettre une Demandes de prime{% endblock %}
 
+<!-- Ligne suivante : bloc content2, corps principal du contenu -->
 {% block content2 %}
+            <!-- Ligne suivante : titre principal sur la page -->
             <h1 class="text-center text-white mb-4">Soumettre une demande de prime</h1>
-
+            
+            <!-- Ligne suivante : carte contenant le formulaire de demande de prime -->
             <div class="card border-0 rounded-4 fw-bold text-white">
                 <div class="card-body p-4">
+                    
+                    <!-- Ligne suivante : formulaire, méthode POST, renvoyé vers soumettre_demande_prime -->
                     <form method="POST" action="{{ url_for('soumettre_demande_prime') }}" class=" fw-bold">
+                        
+                        <!-- Ligne suivante : liste déroulante pour choisir l'employé supervisé -->
                         <div class="mb-3">
                             <label for="id_employe" class="form-label">Employé supervisé</label>
                             <select name="id_employe" id="id_employe" class="form-select" required>
@@ -17,20 +26,25 @@
                             </select>
                         </div>
 
+                        <!-- Ligne suivante : champ pour saisir le montant de la prime -->
                         <div class="mb-3">
                             <label for="montant" class="form-label">Montant de la prime (€)</label>
                             <input type="number" name="montant" id="montant" class="form-control" required>
                         </div>
 
+                        <!-- Ligne suivante : zone de texte pour décrire le motif de la prime -->
                         <div class="mb-3">
                             <label for="motif" class="form-label">Motif</label>
                             <textarea name="motif" id="motif" class="form-control" required placeholder="Veuillez décrire le motif de cette demande !"></textarea>
                         </div>
+
+                        <!-- Ligne suivante : bouton de soumission du formulaire -->
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-send"></i> Soumettre
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, validators
 
+# Définition de la classe LoginForm, héritant de FlaskForm
 class LoginForm(FlaskForm):
     email = StringField(
         'Email',
