@@ -1,78 +1,76 @@
+<!-- Template manager_congés.html 
+     Permet au Manager de consulter et gérer les demandes de congés. 
+     On peut rechercher par ID d'employé, accepter/refuser les demandes, 
+     ou en supprimer plusieurs à la fois. 
+-->
 {% extends "manager_base.html" %}
 
+<!-- Titre : "Les demandes de congés" -->
 {% block title %}Les demandes de congés{% endblock %}
 
-{% block content1 %}
-<li class="nav-item">
-    <form class="d-flex mx-2" id ="searchBox">
-        <input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par id employé" aria-label="Rechercher">
-        <button class="btn btn-custom-search" type="button" onclick="searchDemande()">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-</li>
-{% endblock %}
+<!-- Barre de recherche pour filtrer par ID employé -->
+{% block content1 %}<li class="nav-item"><form class="d-flex mx-2" id ="searchBox"><input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par id employé" aria-label="Rechercher"><button class="btn btn-custom-search" type="button" onclick="searchDemande()"><i class="bi bi-search"></i></button></form></li>{% endblock %}
 
-{% block content2 %} 
-            <h1 class="text-center text-white mb-4">Demandes de Congés</h1>
-            {% if demandes %}
-            <div class="row justify-content-center">
-                {% for demande in demandes | reverse %}
-                <div class="col-md-6 col-lg-4 demande-card-wrapper">
-                    <div class="card demande-card" onclick="agrandirCarte(this)">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <input type="checkbox" class="checkbox-item mx-3" value="{{ demande[0] }}">
-                            <h5 class="card-title text-center fw-bold">Demande de {{ demande[1] }}</h5>                            
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">
-                                <strong>ID :</strong> {{ demande[0] }}<br>
-                                <strong>Raison :</strong> {{ demande[2] }}<br>
-                                <strong>Date de début :</strong> {{ demande[3] }}<br>
-                                <strong>Date de fin :</strong> {{ demande[4] }}<br>
-                                <strong>Statut :</strong> {{ demande[7] }}<br>
-                                <span>
-                                    <strong>Motif de refus :</strong> {{ demande[9] if demande[9] else "N/A" }}
-                                </span>
-                                {% if demande.pièce_jointe %}
-                                <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank" class="btn btn-link btn-sm">
-                                    <i class="bi bi-paperclip" style="font-size: 1.5rem;"></i>
-                                </a>
-                                {% else %}
-                                <span class="badge text-dark d-flex align-items-center justify-content-center"  id ="badgePerso">Pas de pièce jointe</span>
-                                {% endif %}
-                            </p>
-                            <div class="d-flex flex-column">
-                                {% if demande[7] != 'accepte' and demande[7] != 'refuse' %}
-                                <form method="POST" action="{{ url_for('répondre_congés', id=demande[0]) }}" class="mb-2">
-                                    <input type="hidden" name="statut">
-                                    <button type="button" onclick="handleAction(this, 'accepte')" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
-                                    <button type="button" onclick="handleAction(this, 'refuse')" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
-                                    <textarea name="motif_refus" placeholder="Motif du refus" class="form-control mt-2" rows="3" style="width: 100%;"></textarea>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
+{% block content2 %}
+<!-- Titre principal -->
+<h1 class="text-center text-white mb-4">Demandes de Congés</h1>
+<!-- Vérification : s'il existe des demandes -->
+{% if demandes %}
+<div class="row justify-content-center">
+    {% for demande in demandes | reverse %}
+    <!-- Chaque demande est affichée dans une "carte" -->
+    <div class="col-md-6 col-lg-4 demande-card-wrapper">
+        <div class="card demande-card" onclick="agrandirCarte(this)">
+            <!-- En-tête de la carte : case à cocher + titre indiquant l'employé -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <input type="checkbox" class="checkbox-item mx-3" value="{{ demande[0] }}">
+                <h5 class="card-title text-center fw-bold">Demande de {{ demande[1] }}</h5>
+            </div>
+            <!-- Corps de la carte : détails de la demande -->
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>ID :</strong> {{ demande[0] }}<br>
+                    <strong>Raison :</strong> {{ demande[2] }}<br>
+                    <strong>Date de début :</strong> {{ demande[3] }}<br>
+                    <strong>Date de fin :</strong> {{ demande[4] }}<br>
+                    <strong>Statut :</strong> {{ demande[7] }}<br>
+                    <!-- Bloc motif de refus + pièce jointe -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>Motif de refus :</strong> {{ demande[9] if demande[9] else "N/A" }}</span>
+                        {% if demande.pièce_jointe %}
+                        <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank" class="btn btn-link btn-sm"><i class="bi bi-paperclip" style="font-size: 2rem;margin-left: 110px;"></i></a>
+                        {% else %}
+                        <span class="badge text-dark d-flex align-items-center justify-content-center" id ="badgePerso">Pas de pièce jointe</span>
+                        {% endif %}
                     </div>
+                </p>
+                <div class="d-flex flex-column">
+                    <!-- Boutons d'action si la demande n'est pas encore acceptée ni refusée -->
+                    {% if demande[7] != 'accepte' and demande[7] != 'refuse' %}
+                    <form method="POST" action="{{ url_for('répondre_congés', id=demande[0]) }}" class="mb-2">
+                        <input type="hidden" name="statut">
+                        <button type="button" onclick="handleAction(this, 'accepte')" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
+                        <button type="button" onclick="handleAction(this, 'refuse')" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
+                        <textarea name="motif_refus" placeholder="Motif du refus" class="form-control mt-2" rows="3" style="width: 100%;"></textarea>
+                    </form>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            <!-- Boutons flottants pour suppression multiple -->
-            <div class="floating-buttons">
-                <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_congé')" title="Supprimer les congés sélectionnés">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-                <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
-                    <i class="fas fa-check-double"></i>
-                </button>
-                <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
-                    <i class="fas fa-ban"></i>
-                </button>
-            </div>
-            {% else %}
-            <div class="text-center mt-5">
-                <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
-                <h4 class="text-white mt-4">Aucune demande de congé pour le moment.</h4>
-            </div>
-            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Boutons flottants pour la suppression multiple et la sélection/désélection -->
+<div class="floating-buttons">
+    <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_congé')" title="Supprimer les congés sélectionnés"><i class="fas fa-trash-alt"></i></button>
+    <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner"><i class="fas fa-check-double"></i></button>
+    <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner"><i class="fas fa-ban"></i></button>
+</div>
+{% else %}
+<!-- Message si aucune demande n'existe -->
+<div class="text-center mt-5">
+    <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
+    <h4 class="text-white mt-4">Aucune demande de congé pour le moment.</h4>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,50 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Définition des métadonnées -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Titre de la page (utilise un bloc Flask pour être remplacé si nécessaire) -->
     <title>{% block title %}Titre par défaut{% endblock %}</title>
+
+    <!-- Intégration de Bootstrap (CSS) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Icônes Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
+    <!-- Chart.js pour les graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Cropper.js pour recadrer les images -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+
+    <!-- OrgChart pour l'organigramme -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/css/jquery.orgchart.min.css">
+
+    <!-- Feuille de style personnalisée (styles.css) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Bibliothèque d'icônes Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- SweetAlert2 CSS -->
+
+    <!-- SweetAlert2 pour les alertes (CSS) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- Barre de navigation principale -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
+            <!-- Logo principal qui redirige vers le dashboard admin -->
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
             </a>
+
+            <!-- Bouton toggle pour les petits écrans -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Liens de navigation -->
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <!-- Lien vers la page des employés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
+                    
+                    <!-- Lien pour ajouter un employé -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
+                    
+                    <!-- Lien vers le calendrier des congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
+                    
+                    <!-- Bloc personnalisable (content1) -->
                     {% block content1 %}{% endblock %}
+                    
+                    <!-- Menu déroulant "Plus" (apparaît sur grands écrans) -->
                     <li class="nav-item dropdown d-none d-lg-block">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <!-- Liens supplémentaires -->
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i> Déposer documents</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
+
+                    <!-- Affichage des mêmes options en dehors du menu déroulant pour petits écrans (d-lg-none) -->
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
@@ -57,13 +92,16 @@
             </div>
         </div>
     </nav>
-    <!-- Panneau des notifications -->
+
+    <!-- Icône flottante pour les notifications -->
     <div id="notification-icon" onclick="toggleNotificationPanel()">
         <i class="bi bi-bell-fill"></i>
         {% if nombre_notifications_non_lues > 0 %}
             <span class="badge">{{ nombre_notifications_non_lues }}</span>
         {% endif %}
     </div>
+
+    <!-- Panneau des notifications -->
     <div id="notification-panel">
         <div class="notification-header">Notifications</div>
         <div class="notification-list">
@@ -83,6 +121,8 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Gestion des messages flash (SweetAlert) -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <script>
@@ -103,26 +143,46 @@
         {% endif %}
     {% endwith %}
 
-    <div id="main-body" >
-        <main class="py-5" >
+    <!-- Conteneur principal (main-body) -->
+    <div id="main-body">
+        <main class="py-5">
             <div class="container">
+                <!-- Contenu principal injecté ici (content2) -->
                 {% block content2 %}{% endblock %}
             </div>
         </main>
+
+        <!-- Section de contenu supplémentaire (content4) -->
         {% block content4 %}{% endblock %}
+
+        <!-- Pied de page -->
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
             </div>
         </footer>
-    <div>
+    </div>
+
+    <!-- Scripts JavaScript -->
+    <!-- script.js personnalisé -->
     <script src="../static/script.js"></script>
+
+    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+
+    <!-- OrgChart JS -->
     <script src="https://cdn.jsdelivr.net/npm/orgchart@2.1.0/dist/js/jquery.orgchart.min.js"></script>
+
+    <!-- Cropper.js pour recadrer les images -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <!-- Bootstrap JS (bundle) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Section de scripts supplémentaires (content3) -->
     {% block content3 %}{% endblock %}
 </body>
 </html>
-

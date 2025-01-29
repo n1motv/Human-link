@@ -1,0 +1,36 @@
+{% extends "employé_base.html" %}
+
+<!--
+    employé_télétravail.html
+    Permet à l'employé de choisir ses jours de télétravail pour la semaine prochaine.
+-->
+
+{% block title %}Soumettre une demande de télétravail{% endblock %}
+
+{% block content2 %}
+<h1 class="text-center text-white mb-4">Choisissez vos jours de télétravail pour la semaine prochaine</h1>
+
+<!-- Carte contenant le formulaire pour sélectionner les jours de télétravail -->
+<div class="card border-0 rounded-4 fw-bold text-white shadow-lg">
+    <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('choisir_teletravail') }}">
+            <!-- Conteneur principal du calendrier de la semaine -->
+            <div class="week-calendar-container mb-4">
+                <div class="week-calendar" id="teletravail-days">
+                    <!-- Les jours de la semaine prochaine seront insérés dynamiquement ici -->
+                </div>
+            </div>
+
+            <!-- Bouton de soumission du formulaire -->
+            <div class="d-grid">
+                <button 
+                    type="submit" 
+                    class="btn btn-success px-5 py-2 shadow"
+                >
+                    <i class="bi bi-send-fill"></i> Soumettre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

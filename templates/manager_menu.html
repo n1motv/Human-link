@@ -1,57 +1,135 @@
+<!-- manager_menu.html
+     Ce template représente le tableau de bord d'un Manager.
+     Il affiche les employés supervisés par ce manager, 
+     permet de consulter leurs informations de base, 
+     d'indiquer s'il y a une demande de congé en attente, 
+     et de configurer le nombre maximum de jours de télétravail pour chacun.
+-->
+
 {% extends "manager_base.html" %}
 
+<!-- Bloc pour le titre de la page -->
 {% block title %}Tableau de bord Manager{% endblock %}
 
+<!-- Bloc "content1" : permet d'ajouter une barre de recherche dans la navbar -->
 {% block content1 %}
-                    <li class="nav-item">
-                        <form class="d-flex mx-2" id ="searchBox">
-                            <input class="form-control me-2" type="search" id="searchInput" placeholder="Rechercher un employé" aria-label="Rechercher">
-                            <button class="btn btn-custom-search" type="button" onclick="searchEmployee()">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </form>
-                    </li>
-{% endblock %}    
+    <li class="nav-item">
+        <form class="d-flex mx-2" id ="searchBox">
+            <input 
+                class="form-control me-2" 
+                type="search" 
+                id="searchInput" 
+                placeholder="Rechercher un employé" 
+                aria-label="Rechercher"
+            >
+            <button 
+                class="btn btn-custom-search" 
+                type="button" 
+                onclick="searchEmployee()"
+            >
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </li>
+{% endblock %}
+
+<!-- Bloc "content2" : le contenu principal de la page (liste des employés) -->
 {% block content2 %}
-                <h1 class="text-center text-white mb-4">Employés supervisés</h1>
-                <div class="row g-4 justify-content-center" id="employeeList">
-                    {% for emp in employees %}
-                    <div class="col-md-6 col-lg-3 employee-card" data-name="{{ emp.nom }} {{ emp.prenom }}">
-                        <div class="card border-0" id="cardPersonaliser">
-                            <img src="../static/uploads/photo_profile/{{ emp.photo or 'default.jpg' }}" class="card-img-top id-pic" alt="Photo de l'employé">
-                            <div class="card-body text-dark">
-                                <h4 class="card-title text-center fw-bold">{{ emp.nom }} {{ emp.prenom }}</h4>
-                                <p class="card-text">
-                                    <strong>Poste :</strong> {{ emp.poste }}<br>
-                                    <strong>Département :</strong> {{ emp.departement }}<br>
-                                    <strong>Email :</strong> {{ emp.email }}<br>
-                                    <strong>Demande de congés :</strong> 
-                                    {% if emp.conge_demande %}
-                                    <span class="badge text-dark d-flex align-items-center justify-content-center" style="width: 15%; height: 8%; border-radius: 100%; right: 0%;" id ="badgePerso">
-                                        <i class="bi bi-bell" style="font-size: 1.5rem;color: white;"></i>
-                                    </span>                                    
-                                        <span >Demande en attente</span>
-                                    {% else %}
-                                        Aucun
-                                    {% endif %}
-                                    <!-- Sélection des jours de télétravail -->
-                                    <form method="POST" action="{{ url_for('mettre_a_jour_teletravail', employe_id=emp.id) }}">
-                                        <div class="mb-3">
-                                            <label for="maxTeletravail{{ emp.id }}" class="form-label">Jours max de télétravail :</label>
-                                            <select class="form-select" id="maxTeletravail{{ emp.id }}" name="jours_max_teletravail" value="{{ emp.teletravail_max }}">
-                                                {% for i in range(0, 5) %}
-                                                <option value="{{ i }}" {% if emp.teletravail_max == i %}selected{% endif %}>{{ i }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary w-100">
-                                            <i class="bi bi-save"></i> Enregistrer
-                                        </button>
-                                    </form>
-                                </p>
+    <!-- Titre principal -->
+    <h1 class="text-center text-white mb-4">Employés supervisés</h1>
+
+    <!-- Vérification si la liste des employés existe et n'est pas vide -->
+    {% if employees %}
+    <div class="row g-4 justify-content-center" id="employeeList">
+        {% for emp in employees %}
+        <!-- Chaque employé est présenté sous forme de carte -->
+        <div 
+            class="col-md-6 col-lg-3 employee-card" 
+            data-name="{{ emp.nom }} {{ emp.prenom }}"
+        >
+            <div 
+                class="card border-0" 
+                id="cardPersonaliser"
+            >
+                <!-- Photo de l'employé (ou "default.jpg" si pas de photo) -->
+                <img 
+                    src="../static/uploads/photo_profile/{{ emp.photo or 'default.jpg' }}" 
+                    class="card-img-top id-pic" 
+                    alt="Photo de l'employé"
+                >
+                <div class="card-body text-dark">
+                    <!-- Informations de base de l'employé -->
+                    <h4 class="card-title text-center fw-bold">
+                        {{ emp.nom }} {{ emp.prenom }}
+                    </h4>
+                    <p class="card-text">
+                        <strong>Poste :</strong> {{ emp.poste }}<br>
+                        <strong>Département :</strong> {{ emp.departement }}<br>
+                        <strong>Email :</strong> {{ emp.email }}<br>
+
+                        <!-- Indication d'une demande de congé en attente -->
+                        <strong>Demande de congés :</strong>
+                        {% if emp.conge_demande %}
+                            <span 
+                                class="badge text-dark d-flex align-items-center justify-content-center" 
+                                style="width: 15%; height: 8%; border-radius: 100%; right: 0%;" 
+                                id="badgePerso"
+                            >
+                                <i 
+                                    class="bi bi-bell" 
+                                    style="font-size: 1.5rem;color: white;"
+                                ></i>
+                            </span>
+                            <span>Demande en attente</span>
+                        {% else %}
+                            Aucun
+                        {% endif %}
+
+                        <!-- Formulaire pour configurer le nombre max de jours de télétravail -->
+                        <form 
+                            method="POST" 
+                            action="{{ url_for('mettre_a_jour_teletravail', employe_id=emp.id) }}"
+                        >
+                            <div class="mb-3">
+                                <label 
+                                    for="maxTeletravail{{ emp.id }}" 
+                                    class="form-label"
+                                >
+                                    Jours max de télétravail :
+                                </label>
+                                <select 
+                                    class="form-select" 
+                                    id="maxTeletravail{{ emp.id }}" 
+                                    name="jours_max_teletravail" 
+                                    value="{{ emp.teletravail_max }}"
+                                >
+                                    {% for i in range(0, 5) %}
+                                    <option 
+                                        value="{{ i }}" 
+                                        {% if emp.teletravail_max == i %}selected{% endif %}
+                                    >
+                                        {{ i }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                            <button type="submit"class="btn btn-primary w-100"><i class="bi bi-save"></i> Enregistrer</button>
+                        </form>
+                    </p>
                 </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Affichage d'une image + message si aucun employé n'est supervisé -->
+    <div class="text-center mt-5">
+        <img 
+            src="{{ url_for('static', filename='img/Fichier2.png') }}" 
+            alt="Aucune demande" 
+            class="no-demand-image"
+        >
+        <h4 class="text-white mt-4">Aucun employé superviser pour le moment.</h4>
+    </div>
+    {% endif %}
 {% endblock %}

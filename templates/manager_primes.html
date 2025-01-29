@@ -1,7 +1,10 @@
+<!-- Ligne suivante : template enfant qui étend manager_base.html -->
 {% extends "manager_base.html" %}
 
+<!-- Ligne suivante : bloc title, définit le titre de la page -->
 {% block title %}Primes Soumises{% endblock %}
 
+<!-- Ligne suivante : bloc content1, contient la barre de recherche -->
 {% block content1 %}
 <li class="nav-item">
     <form class="d-flex mx-2" id="searchBox">
@@ -13,6 +16,7 @@
 </li>
 {% endblock %}
 
+<!-- Ligne suivante : bloc content2, contient l'affichage des primes -->
 {% block content2 %}
 <h1 class="text-center text-white mb-4">Primes Soumises</h1>
 {% if primes %}
@@ -22,7 +26,7 @@
         <div class="card demande-card" onclick="agrandirCarte(this)">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <input type="checkbox" class="checkbox-item mx-3" value="{{ prime[0] }}">
-                <h5 class="card-title text-center fw-bold">Prime pour {{ prime.employe_nom }} {{ prime.employe_prenom }}</h5>
+                <h5 class="card-title text-center fw-bold mx-5">Prime pour {{ prime.employe_nom }} {{ prime.employe_prenom }}</h5>
             </div>
             <div class="card-body">
                 <p class="card-text">
@@ -34,30 +38,28 @@
                     <span class="badge bg-danger text-dark d-flex align-items-center justify-content-center"  id ="badgePerso">Refusé</span>
                     {% else %}
                     <span class="badge bg-warning text-dark d-flex align-items-center justify-content-center"  id ="badgePerso">En attente</span>
-
                     {% endif %}
                     {% if prime.statut == 'refuse' %}
                     <strong>Motif du refus :</strong> {{ prime.motif_refus }}
                     {% endif %}
                 </p>
-
             </div>
         </div>
     </div>
     {% endfor %}
-    </div>
-    <!-- Boutons flottants pour suppression multiple -->
-    <div class="floating-buttons">
-        <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_prime')" title="Supprimer les primes sélectionnés">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-        <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
-            <i class="fas fa-check-double"></i>
-        </button>
-        <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
-            <i class="fas fa-ban"></i>
-        </button>
-    </div>
+</div>
+<!-- Ligne suivante : boutons flottants pour gérer la suppression ou la sélection -->
+<div class="floating-buttons">
+    <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_prime')" title="Supprimer les primes sélectionnés">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+    <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
+        <i class="fas fa-check-double"></i>
+    </button>
+    <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
+        <i class="fas fa-ban"></i>
+    </button>
+</div>
 {% else %}
 <div class="text-center mt-5">
     <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune prime" class="no-demand-image">

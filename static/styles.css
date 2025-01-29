@@ -1,4 +1,8 @@
 /*******************************************Body+Main*****************************************************************/
+/* 
+   Styles de base pour le corps de la page et l'élément main,
+   contrôlent la disposition générale, la police, et certains ajustements pour les liens et titres.
+*/
 body {
     display: flex;
     flex-direction: column;
@@ -10,6 +14,7 @@ main {
     flex: 1;
 }
 
+/* Gestions de l'affichage du texte dans les liens pour éviter les débordements */
 a{
     white-space: nowrap; /* Évite que le texte aille à la ligne */
     overflow: hidden; /* Cache le texte qui dépasse */
@@ -19,6 +24,7 @@ h1{
     font-weight: bold;
 }
 
+/* Configuration du body principal (main-body) avec un dégradé de couleur en fond et texte en blanc */
 #main-body{
     background: linear-gradient(135deg, #4b79a1, #283e51);
     color: #ffffff;
@@ -26,11 +32,15 @@ h1{
     display: flex;
     flex-direction: column;
 }
+
+/* Logo principal, défini la taille et les marges */
 #main-logo{
     width: 150px; 
     margin: 3px;
     margin-left: 20px;
 }
+
+/* Transition du logo au survol */
 #main-logo {
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
@@ -39,6 +49,8 @@ h1{
     transform: scale(1.1);
     opacity: 0.9;
 }
+
+/* Style personnalisé pour un élément avec l'id "oublie" */
 #oublie{
     text-align: center;
     white-space: wrap;
@@ -47,6 +59,10 @@ h1{
 }
 
 /*******************************************Nav*****************************************************************/
+/* 
+   Styles associés à la barre de navigation, aux éléments <nav>, <ul>, <li>, 
+   et aux dropdowns (menu déroulant).
+*/
 nav li {
     width: max-content;
 }
@@ -55,7 +71,7 @@ nav li {
 }
 
 .navbar {
-    background-color: #333;
+    background-color: #000000;
 }
 
 .navbar .nav-link {
@@ -68,7 +84,7 @@ nav li {
 }
 
 .dropdown-menu-dark {
-    background-color: #333;
+    background-color: #000000;
     border: none;
 }
 
@@ -76,9 +92,12 @@ nav li {
     color: #fff;
     transition: 0.3s;
 }
+
+/* Bouton de recherche personnalisé */
 .btn-custom-search {
     border-color: #79c1ff;
     border-radius: 25%;
+    border-width: 5px;
     color: #79c1ff;
     background-color: transparent;
     transition: background-color 0.3s, color 0.3s;
@@ -98,6 +117,7 @@ nav li {
     transform-origin: top right;
 }
 
+/* Boîte de résultats de recherche (cachée par défaut) */
 #search-results {
     display: none;
     display: flex;
@@ -107,11 +127,16 @@ nav li {
     margin-top: 20px;
     width : fit-content;
 }
+
+/* Centre le contenu du navbarNav */
 #navbarNav{
     text-align: center;
 }
-/*******************************************footer*****************************************************************/
 
+/*******************************************footer*****************************************************************/
+/* 
+   Styles de pied de page, avec une bordure supérieure, texte centré et couleurs.
+*/
 footer {
     color: #fff;
     border-top: 3px solid white;
@@ -121,7 +146,10 @@ footer {
 }
 
 /*******************************************Card*****************************************************************/
-
+/* 
+   Styles associés aux cartes (card), 
+   ajustements pour l'affichage, la transparence, etc.
+*/
 .card {
     background: rgba(0, 0, 0, 0.392); /* Légèrement transparent */
     border: white; /* Suppression des bordures */
@@ -147,7 +175,10 @@ footer {
 }
 
 /*******************************************Cropper*****************************************************************/
-
+/*
+   Styles relatifs à l'utilisation de Cropper.js pour le recadrage des images,
+   gère la taille et l'affichage dans la modale.
+*/
 .cropper-container {
     max-width: 100%; /* Empêche le conteneur de dépasser la largeur */
     max-height: 100%; /* Limite la hauteur */
@@ -196,6 +227,9 @@ footer {
 }
 
 /*******************************************Organigramme*****************************************************************/
+/*
+   Styles pour l'organigramme (OrgChart), centré et ajusté aux dimensions.
+*/
 .org-chart-container {
     display: flex;
     justify-content: center;
@@ -212,7 +246,11 @@ footer {
 .hidden {
      display: none
 }
+
 /*******************************************Calendrier*****************************************************************/
+/* 
+   Styles pour le calendrier (Calendar), ajustement des boutons, couleurs et structure.
+*/
 #calendar2 {
     max-width: 1000px;
     margin: 20px auto;
@@ -229,12 +267,20 @@ footer {
     line-height: 1.5;
     height: fit-content;
 }
+
+/* Couleur des liens du calendrier */
 a {
     color: #000427;
     text-decoration: underline;
 }
+
+/* Style du titre de l'événement */
+.fc-event-title-container{
+    cursor: pointer;
+}
 .fc-event-title{
     text-overflow: ellipsis;
+    cursor: pointer;
 }
 .fc-scrollgrid{
     width: max-content;
@@ -250,7 +296,9 @@ a {
 }
 
 /*******************************************Erreur message*****************************************************************/
-
+/*
+   Style pour l'affichage lorsqu'il n'y a pas de demande (no-demand-image).
+*/
 .no-demand-image {
     max-width: 500px; /* Ajuste la taille maximale de l'image */
     width: 100%; /* L'image occupera 80% de la largeur de la page */
@@ -261,6 +309,10 @@ a {
 
 
 /*******************************************Media query*****************************************************************/
+/* 
+   Adaptations responsive pour différents écrans, 
+   notamment pour le calendrier et les dropdowns.
+*/
 
 /* Réduction des boutons pour les petits écrans */
 @media (max-width: 576px) {
@@ -299,12 +351,13 @@ a {
         margin-right: 8px;
     }
 }
+
 /* Style pour l'icône flottante de notifications */
 #notification-icon {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #333;
+    background-color: #000000;
     color: #fff;
     border-radius: 50%;
     width: 60px;
@@ -340,7 +393,7 @@ a {
     right: 20px;
     width: 300px;
     max-height: 400px;
-    background-color: #333;
+    background-color: #000000;
     color: #000000;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -351,7 +404,7 @@ a {
 
 #notification-panel .notification-header {
     padding: 12px;
-    background-color: #333;
+    background-color: #000000;
     color: #ffffff;
     font-weight: bold;
     text-align: center;
@@ -367,31 +420,32 @@ a {
 #notification-panel .notification-item {
     padding: 10px;
     background-color: #ffffff;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #000000;
 }
 
-
 #notification-panel .btn-outline-danger {
-    border-color: #333;
-    color: #333;
+    border-color: #000000;
+    color: #000000;
 }
 
 #notification-panel .btn-outline-danger:hover {
-    background-color: #333;
+    background-color: #000000;
     color: #ffffff;
 }
 #notification-panel p {
-    color: #000427;
+    color: #000000;
     font-weight: bold;
 }
+
 #notification-icon:hover {
     background-color: #ffffff;
-    color: #333;
+    color: #000000;
 }
 
 a:hover{
     background-color: none;
 }
+
 @media (max-width: 768px) {
     .navbar-nav .nav-item {
         text-align: center;
@@ -427,6 +481,7 @@ a:hover{
     visibility: hidden;
 }
 
+/* Champs de formulaire (form-control, form-select) avec bordure noire */
 .form-control{
     border-color:#000;
 }
@@ -446,12 +501,15 @@ a:hover{
         display: none;
     }
 }
+
+/* Conteneur de cartes de demandes */
 .demandes-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
 }
 
+/* Carte unique pour une demande */
 .demande-card {
     background-color: #f9f9f9;
     padding: 20px;
@@ -461,6 +519,7 @@ a:hover{
     cursor: pointer;
 }
 
+/* Agrandissement de la carte au clic */
 .demande-card.agrandie {
     position: fixed;
     top: 50%;
@@ -486,10 +545,7 @@ body.flou {
 }
 
 
-
-
-
-/* Style général pour le tableau */
+/* Tableau des réunions avec DataTables */
 #meetingsTable {
     width: 100%;
     border-collapse: collapse;
@@ -504,7 +560,7 @@ body.flou {
 
 /* En-tête du tableau */
 #meetingsTable thead th {
-    background-color: #333;
+    background-color: #000000;
     color: #fff;
     padding: 12px 15px;
     text-transform: uppercase;
@@ -525,7 +581,7 @@ body.flou {
 /* Cellules du tableau */
 #meetingsTable tbody td {
     padding: 12px 15px;
-    color: #333;
+    color: #000000;
 }
 
 /* Pagination et barre de recherche */
@@ -548,21 +604,20 @@ body.flou {
     border: 1px solid #ddd;
     border-radius: 5px;
     background-color: #f9f9f9;
-    color: #333;
+    color: #000000;
     text-decoration: none;
     transition: background-color 0.3s ease, color 0.3s ease;
     cursor: pointer;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background-color: #333;
+    background-color: #000000;
     color: #fff;
-
 }
 
 /* Bouton actif de pagination */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background-color: #333;
+    background-color: #000000;
     color: #fff;
     border: none;
 }
@@ -587,10 +642,9 @@ body.flou {
 }
 
 
-/* Style par défaut */
+/* Style par défaut pour la boîte de recherche */
 #searchBox {
     width: auto; /* Laisse le formulaire ajuster sa largeur */
-
 }
 
 /* Appliquer une largeur de 200px seulement pour les grands écrans */
@@ -625,13 +679,14 @@ body.flou {
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
+/* Style pour la popup de SweetAlert2 */
 .swal2-custom-popup {
     background-color: #333 !important;
     color: #fff !important;
     border-radius: 10px;
 }
 
-
+/* Boutons flottants (par exemple, pour ajouter/retirer des éléments) */
 .floating-buttons {
     position: fixed;
     bottom: 20px;
@@ -657,36 +712,36 @@ body.flou {
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
 }
 
-.custom-select {
+/* Ajustements de style pour les champs de formulaire et options de sélection */
+.form-select {
     display: block;
     width: 100%;
-    padding: 10px;
     font-size: 16px;
     font-family: Arial, sans-serif;
     line-height: 1.5;
-    color: #333;
+    color: #000000;
     background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    border: 1px solid #000000;
     border-radius: 5px;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     height: auto;
 }
 
-.custom-select:focus {
-    border-color: #333;
+.for-select:focus {
+    border-color: #000000;
     outline: none;
-    box-shadow: 0 0 4px #333;
+    box-shadow: 0 0 4px #000000;
 }
 
-.custom-select option {
+.form-select option {
     padding: 8px;
     font-size: 15px;
     background-color: #ffffff;
-    color: #333;
+    color: #000000;
 }
 
 .custom-select option:hover {
-    background-color: #333;
+    background-color: #000000;
     color: #ffffff;
     cursor: pointer;
 }
@@ -694,4 +749,87 @@ body.flou {
 .form-text {
     font-size: 14px;
     color: #6c757d;
+}
+
+/* Style pour le calendrier de la semaine (télétravail) */
+.week-calendar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.week-calendar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Ajustement auto pour mobile et écran large */
+    gap: 15px;
+    width: 100%;
+}
+
+.day-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.day-card:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Checkbox cachée */
+.day-card input[type="checkbox"] {
+    display: none;
+}
+
+/* Style appliqué lorsque la carte est cochée */
+.day-card.checked {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+/* Titres et dates sur les cartes */
+.day-card .day-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 1.1rem;
+}
+
+.day-card .day-date {
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* Responsive pour le calendrier de la semaine */
+@media (max-width: 768px) {
+    .day-card {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+
+    .day-card .day-title {
+        font-size: 1rem;
+    }
+
+    .day-card .day-date {
+        font-size: 0.8rem;
+    }
+
+    .week-calendar {
+        gap: 10px; /* Moins d'espace pour les petits écrans */
+    }
+}
+
+@media (max-width: 576px) {
+    .week-calendar {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* S'adapte encore mieux pour les téléphones */
+    }
+
+    .day-card {
+        padding: 6px;
+    }
 }

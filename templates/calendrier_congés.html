@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <!-- Définition des métadonnées de base -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Titre de la page -->
     <title>Calendrier des Congés</title>
+
+    <!-- Feuilles de style nécessaires (Bootstrap, Bootstrap Icons, FullCalendar, etc.) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.css" rel="stylesheet" />
@@ -11,20 +15,31 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
+    <!-- Navigation affichée si l'utilisateur a le rôle "admin" -->
     {% if role =='admin' %}
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
+            <!-- Logo renvoyant vers le dashboard admin -->
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
             </a>
+
+            <!-- Bouton toggle pour petits écrans -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Liens de navigation -->
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <!-- Lien pour voir les employés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
+                    <!-- Lien pour ajouter un employé -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
+                    <!-- Lien pour accéder au calendrier des congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
+
+                    <!-- Menu déroulant "Plus" visible uniquement sur grands écrans (d-none d-lg-block) -->
                     <li class="nav-item dropdown d-none d-lg-block">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Plus
@@ -40,6 +55,8 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
+
+                    <!-- Même contenu affiché sous forme de liens pour les petits écrans (d-lg-none) -->
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
@@ -53,33 +70,47 @@
         </div>
     </nav>
     {% endif %}
+
+    <!-- Navigation affichée si l'utilisateur a le rôle "manager" -->
     {% if role =='manager' %}
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
+            <!-- Logo renvoyant vers le dashboard manager -->
             <a href="{{ url_for('manager_dashboard') }}">
                 <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
             </a>
+
+            <!-- Bouton toggle pour petits écrans -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Liens de navigation -->
             <div class="collapse navbar-collapse text-center" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <!-- Lien vers les demandes de congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                    <!-- Lien vers le calendrier de congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
-                    <li class="nav-item dropdown ">
-                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Plus
+
+                    <!-- Menu déroulant "Plus" -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Plus
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
+                            <!-- Liens pour la planification de réunion, demande de prime, etc. -->
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('meetings_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope-fill"></i> Soumettre demande prime</a></li>
+
+                    <!-- Liens redondants pour petits écrans -->
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
@@ -88,13 +119,17 @@
         </div>
     </nav>
     {% endif %}
-    <!-- Panneau des notifications -->
+
+    <!-- Icône flottante pour accéder aux notifications -->
     <div id="notification-icon" onclick="toggleNotificationPanel()">
         <i class="bi bi-bell-fill"></i>
+        <!-- Affichage du badge si le nombre de notifications non lues est supérieur à 0 -->
         {% if nombre_notifications_non_lues > 0 %}
             <span class="badge">{{ nombre_notifications_non_lues }}</span>
         {% endif %}
     </div>
+
+    <!-- Panneau des notifications -->
     <div id="notification-panel">
         <div class="notification-header">Notifications</div>
         <div class="notification-list">
@@ -114,55 +149,68 @@
             {% endif %}
         </div>
     </div>
-    <div id="main-body">
-    <main class="py-5">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <script>
-                        document.addEventListener('DOMContentLoaded', () => {
-                            {% for category, message in messages %}
-                            Swal.fire({
-                                icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
-                                title: '{{ category|capitalize }}',
-                                text: '{{ message }}',
-                                confirmButtonText: 'OK',
-                                customClass: {
-                                    popup: 'swal2-custom-popup'
-                                }
-                            });
-                            {% endfor %}
-                        });
-                    </script>
-                {% endif %}
-            {% endwith %}
-            <h1 class="text-center text-white mb-4">
-                Calendrier des Congés
-                {% if role == 'admin' %}
-                    <small class=" text-white">(Vue Rh)</small>
-                {% elif role == 'manager' %}
-                    <small class=" text-white">(Vue Manager)</small>
-                {% endif %}
-            </h1>            
-            <div id="calendar2"></div>
-        </div>
-    </main>
 
-    <footer class="py-3">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-        </div>
-    </footer>
+    <!-- Gestion des messages flash via SweetAlert -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    {% for category, message in messages %}
+                    Swal.fire({
+                        icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
+                        title: '{{ category|capitalize }}',
+                        text: '{{ message }}',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-custom-popup'
+                        }
+                    });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Conteneur principal de la page (avec le calendrier FullCalendar) -->
+    <div id="main-body">
+        <main class="py-5">
+            <div class="container">
+                <!-- Titre principal et indication selon le rôle (admin/manager) -->
+                <h1 class="text-center text-white mb-4">
+                    Calendrier des Congés
+                    {% if role == 'admin' %}
+                        <small class="text-white">(Vue RH)</small>
+                    {% elif role == 'manager' %}
+                        <small class="text-white">(Vue Manager)</small>
+                    {% endif %}
+                </h1>
+                
+                <!-- Conteneur pour le calendrier -->
+                <div id="calendar2"></div>
+            </div>
+        </main>
+
+        <!-- Pied de page -->
+        <footer class="py-3">
+            <div class="container text-center">
+                <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
+            </div>
+        </footer>
     </div>
 
+    <!-- Scripts JS nécessaires -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.js"></script>
     <script src="../static/script.js"></script>
+
+    <!-- Script d'initialisation du calendrier FullCalendar -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar2');
+
+            // Initialisation du calendrier
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 headerToolbar: {
                     left: 'prev,next today',
@@ -180,24 +228,26 @@
                     {% for date, demandes_congé in conges_par_jour.items() %}
                         {% for conge in demandes_congé %}
                             {
-                                title: ' {{ conge.id_utilisateur }}',
-                                start: '{{ date.strftime("%Y-%m-%d") }}',
-                                description: '{{ conge.description }}',
+                                title: '{{ conge.id_utilisateur }}',      // Affichage de l'ID utilisateur
+                                start: '{{ date.strftime("%Y-%m-%d") }}', // Date du congé
                                 extendedProps: {
-                                    statut: '{{ conge.statut }}',
+                                    nom_complet: '{{ conge.nom }} {{ conge.prenom }}',   // Nom et prénom
+                                    email: '{{ conge.email }}',                           // Email
+                                    description: '{{ conge.description }}'               // Description du congé
                                 },
-                                color: '{{ conge.color }}'
+                                color: '{{ conge.color }}' // Couleur associée à l'employé
                             },
                         {% endfor %}
                     {% endfor %}
                 ],
                 eventClick: function(info) {
-                    // Utilisation de SweetAlert pour afficher les détails
+                    // Au clic sur un événement, affiche une boîte de dialogue SweetAlert
                     Swal.fire({
                         title: 'Détails du Congé',
                         html: `
-                            <p><strong>Employé :</strong> ${info.event.title}</p>
-                            <p><strong>Statut :</strong> ${info.event.extendedProps.statut}</p>
+                            <p><strong>ID Employé :</strong> ${info.event.title}</p>
+                            <p><strong>Nom Complet :</strong> ${info.event.extendedProps.nom_complet}</p>
+                            <p><strong>Email :</strong> ${info.event.extendedProps.email}</p>
                             <p><strong>Description :</strong> ${info.event.extendedProps.description}</p>
                         `,
                         icon: 'info',
@@ -207,9 +257,10 @@
                 editable: true,
                 droppable: true
             });
+
+            // Rendre le calendrier visible
             calendar.render();
         });
-
     </script>
 </body>
 </html>

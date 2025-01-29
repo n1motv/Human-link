@@ -1,13 +1,29 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <!--
+        Page de chargement (loading.html)
+        S'affiche brièvement et redirige l'utilisateur après une animation.
+        Paramètre "redirect_url" fourni pour la redirection.
+    -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chargement...</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Fichier de styles personnalisé -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Bootstrap CSS -->
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+        rel="stylesheet" 
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+        crossorigin="anonymous"
+    >
+
     <style>
+        /* Styles de base pour la page */
         body {
-            background-color: #283e51;
             color: white;
             height: 100vh;
             overflow: hidden; /* Empêche le défilement */
@@ -19,11 +35,13 @@
             transition: opacity 0.5s ease; /* Transition pour un fondu */
         }
 
+        /* Style du logo principal */
         #main-logo {
             width: 300px; /* Taille initiale du logo */
             animation: fadeIn 1s ease-in-out; /* Apparition initiale */
         }
 
+        /* Style du spinner (Bootstrap) */
         .spinner-border {
             width: 3.5rem;
             height: 3.5rem;
@@ -31,6 +49,7 @@
             animation: spin 1.2s linear infinite; /* Animation pour une meilleure fluidité */
         }
 
+        /* Style du texte de chargement */
         h1 {
             margin-top: 20px;
             font-size: 1.5rem;
@@ -39,6 +58,7 @@
             animation: fadeIn 1s ease-in-out 0.5s forwards; /* Apparition différée */
         }
 
+        /* Animation de rotation pour le spinner */
         @keyframes spin {
             from {
                 transform: rotate(0deg);
@@ -48,6 +68,7 @@
             }
         }
 
+        /* Animation d'apparition progressive */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -57,45 +78,55 @@
             }
         }
 
+        /* Animation d'agrandissement du logo */
         @keyframes growLogo {
             0% {
                 transform: scale(1);
             }
             100% {
                 transform: scale(10); /* Le logo s'agrandit */
-                opacity: 0; /* Le logo disparaît */
+                opacity: 0;          /* Le logo disparaît */
             }
         }
     </style>
 </head>
-<body>
+<body id="main-body">
+    <!-- Logo principal -->
     <img id="main-logo" src="../static/logo/logo-white.png" alt="Logo">
+
+    <!-- Contenu visible pendant le chargement -->
     <div id="content">
+        <!-- Spinner de chargement -->
         <div class="spinner-border text-light" role="status">
             <span class="visually-hidden">Chargement...</span>
         </div>
+        <!-- Texte informant l'utilisateur -->
         <h1>Veuillez patienter...</h1>
     </div>
+
+    <!-- Script gérant l'animation et la redirection -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const logo = document.getElementById("main-logo");
             const content = document.getElementById("content");
 
-            // Animation avant de quitter la page
+            // Étape 1 : Attendre un délai avant de commencer l'animation finale
             setTimeout(() => {
-                content.style.opacity = "0"; // Les autres éléments disparaissent
+                // Les autres éléments disparaissent en fondu
+                content.style.opacity = "0";
                 content.style.transition = "opacity 0.5s ease";
 
+                // Étape 2 : Lancer l'animation d'agrandissement du logo après un petit délai
                 setTimeout(() => {
-                    // Le logo s'agrandit
                     logo.style.animation = "growLogo 1s ease-in-out forwards";
-                }, 500); // Délai pour attendre la disparition des autres éléments
-            }, 2500); // Temps avant de commencer l'animation finale (en ms)
+                }, 500);
 
-            // Redirection après l'animation
+            }, 2500);
+
+            // Étape 3 : Redirection après l'animation (4 secondes au total)
             setTimeout(() => {
                 window.location.href = "{{ redirect_url }}";
-            }, 4000); // Temps total avant de rediriger (en ms)
+            }, 4000);
         });
     </script>
 </body>

@@ -1,0 +1,37 @@
+{% extends "admin_base.html" %}
+
+<!--
+  admin_coffre_fort.html
+  Permet à l'administrateur de sélectionner un employé pour accéder à son coffre-fort
+  ou pour y déposer des documents.
+-->
+
+{% block title %}Sélection pour dépot documents{% endblock %}
+
+{% block content2 %}
+    <!-- Titre principal -->
+    <h1 class="text-center text-white mb-4">Coffre-Fort - Administrateur</h1>
+
+    <!-- Carte permettant de sélectionner un employé -->
+    <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
+        <div class="card-header bg-dark text-white">
+            <i class="bi bi-folder"></i> Sélectionner un Employé
+        </div>
+        <div class="card-body">
+            <!-- Formulaire pour choisir l'employé -->
+            <form method="POST" action="{{ url_for('coffre_fort') }}">
+                <div class="mb-3">
+                    <label for="employe_id" class="form-label">Employé :</label>
+                    <select name="employe_id" id="employe_id" class="form-select" required>
+                        {% for emp in employes | reverse %}
+                            <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-secondary w-100 mt-3">
+                    <i class="bi bi-search"></i> Voir les Documents
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

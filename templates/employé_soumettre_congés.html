@@ -1,0 +1,106 @@
+{% extends "employé_base.html" %}
+
+<!--
+    employé_soumettre_congés.html
+    Permet à l'employé de soumettre une demande de congé en fournissant :
+    - Raison
+    - Dates de début et de fin
+    - Informations supplémentaires (facultatives)
+    - Une éventuelle pièce jointe
+-->
+
+{% block title %}Soumettre une demande de congés{% endblock %}
+
+{% block content2 %}
+<h1 class="text-center text-white mb-4">Soumettre une Demande de Congé</h1>
+
+<!-- Carte contenant le formulaire de soumission -->
+<div class="card border-0 rounded-4 fw-bold text-white">
+    <div class="card-body p-4">
+
+        <!-- Formulaire de demande de congé -->
+        <form 
+            method="POST" 
+            enctype="multipart/form-data" 
+            onsubmit="validerDateDebut(event)"
+        >
+            <!-- Raison du congé -->
+            <div class="mb-3">
+                <label for="raison" class="form-label">Raison :</label>
+                <textarea 
+                    class="form-control" 
+                    name="raison" 
+                    id="raison" 
+                    rows="3" 
+                    required 
+                    placeholder="Décrivez la raison de votre congé"
+                ></textarea>
+            </div>
+
+            <!-- Date de début du congé -->
+            <div class="mb-3">
+                <label for="date_debut" class="form-label">Date de début :</label>
+                <input 
+                    type="date" 
+                    class="form-control" 
+                    name="date_debut" 
+                    id="date_debut" 
+                    required
+                >
+                <div 
+                    id="date-error-message" 
+                    class="text-danger mt-2" 
+                    style="display: none;"
+                >
+                    La date de début ne peut pas être avant la date actuelle.
+                </div>
+            </div>
+
+            <!-- Date de fin du congé -->
+            <div class="mb-3">
+                <label for="date_fin" class="form-label">Date de fin :</label>
+                <input 
+                    type="date" 
+                    class="form-control" 
+                    name="date_fin" 
+                    id="date_fin" 
+                    required
+                >
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="mb-3">
+                <label for="description" class="form-label">Informations supplémentaires (facultatif) :</label>
+                <textarea 
+                    class="form-control" 
+                    name="description" 
+                    id="description" 
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <!-- Pièce jointe (facultative) -->
+            <div class="mb-3">
+                <label for="piece_jointe" class="form-label">Pièce jointe (facultatif) :</label>
+                <input 
+                    type="file" 
+                    class="form-control" 
+                    name="piece_jointe" 
+                    id="piece_jointe" 
+                    accept="application/pdf,image/*"
+                >
+            </div>
+
+            <!-- Bouton de soumission -->
+            <div class="d-grid">
+                <button 
+                    type="submit" 
+                    class="btn btn-success btn-lg"
+                >
+                    <i class="bi bi-send"></i> Soumettre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

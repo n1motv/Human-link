@@ -1,0 +1,206 @@
+{% extends "employé_base.html" %}
+
+<!--
+    employé_menu.html
+    Cette page affiche pour un employé ses informations personnelles, ainsi qu'un calendrier FullCalendar
+    qui centralise ses événements (congés, arrêts, télétravail, réunions).
+-->
+
+{% block title %}Mes Informations et planning{% endblock %}
+
+{% block content2 %}
+<!-- Titre principal -->
+<h1 class="text-center text-white">Mes Informations et planning</h1>
+
+<div class="row d-flex justify-content-between align-items-start" style="margin: 0; padding: 0px; gap: 0px;">
+    <!-- Colonne contenant la (ou les) carte(s) de profil -->
+    <div class="col-md-4 d-flex flex-wrap" style="gap: 15px;">
+        {% for row in resultats %}
+        <div class="card" id="cardPersonaliser">
+            <!-- Photo de profil -->
+            <img 
+                src="{{ url_for('static', filename='uploads/photo_profile/' + row[8]) }}" 
+                class="card-img-top rounded-top" 
+                alt="Photo de {{ row[0] }}" 
+                style="object-fit: cover;"
+            >
+            <div class="card-body text-dark rounded-bottom" style="font-size: 1.1rem;">
+                <h4 class="card-title text-center fw-bold">Informations Complètes</h4>
+                <!-- Affichage Nom/Prénom + Matricule -->
+                <div class="text-center py-3" id="nomEtprenom" style="margin: 20px;">
+                    <h4 class="mb-0" style="font-weight: bold; margin: 5px;">
+                        Nom: {{ row[0] }} 
+                        Prénom: {{ row[1] }}
+                    </h4>
+                    <p class="mb-0" style="margin: 5px;">
+                        Matricule: {{ row[9] }}
+                    </p>
+                </div>
+
+                <!-- Informations supplémentaires de l'employé -->
+                <p class="card-text mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Sexualité:</strong> {{ row[11] }}<br>
+                            <strong>Poste:</strong> {{ row[3] }}<br>
+                            <strong>Département:</strong> {{ row[4] }}<br>
+                            <strong>Date de naissance:</strong> {{ row[2] }}<br>
+                            <strong>Email:</strong> {{ row[5] }}<br>
+                            <strong>Salaire:</strong> {{ row[7] }} €<br>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Rôle:</strong> {{ row[10] }}<br>
+                            <strong>Téléphone:</strong> {{ row[12] }}<br>
+                            <strong>Nationalité:</strong> {{ row[17] }}<br>
+                            <strong>Numéro S.sociale:</strong> {{ row[18] }}
+                        </div>
+                    </div>
+
+                    <!-- Adresse complète -->
+                    <strong>Adresse complète:</strong> 
+                    {{ row[13] }}, {{ row[14] }}, {{ row[15] }}, {{ row[16] }}.
+                    <br>
+
+                    <!-- Solde congé avec barre de progression -->
+                    <strong>Solde congé:</strong> {{ row[6] }} jours restants
+                    <div class="progress mt-2">
+                        <div 
+                            class="progress-bar" 
+                            role="progressbar" 
+                            style="background-color: #4b79a170; width: {{ (row[6] / 30) * 100 }}%;" 
+                            aria-valuenow="{{ row[6] }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="30"
+                        ></div>
+                    </div>
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Colonne contenant le calendrier FullCalendar -->
+    <div class="col-md-8">
+        <div id="calendar2" style="height: 100%;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content3 %}
+<script>
+    // Script pour marquer les notifications comme lues en cliquant sur "notificationsDropdown"
+    document.addEventListener('DOMContentLoaded', function () {
+        var notificationsDropdown = document.getElementById('notificationsDropdown');
+        notificationsDropdown.addEventListener('click', function () {
+            fetch('/mark_notifications_as_read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprimer le badge des notifications non lues
+                    var badge = notificationsDropdown.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        });
+    });
+
+    // Fonction de suppression d'une notification
+    function supprimerNotification(id) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
+            fetch(`/supprimer_notification/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprime la notification dans la liste
+                    const notifToRemove = document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('.notification-item');
+                    notifToRemove.remove();
+
+                    // Met à jour le badge
+                    const badge = document.querySelector('#notification-icon .badge');
+                    if (badge) {
+                        let count = parseInt(badge.innerText) - 1;
+                        if (count > 0) {
+                            badge.innerText = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Erreur :', error));
+        }
+    }
+
+    // Permet de basculer l'affichage du panneau de notifications
+    function toggleNotificationPanel() {
+        const panel = document.getElementById('notification-panel');
+        panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+    }
+</script>
+
+<script>
+    // Initialisation du calendrier FullCalendar
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar2');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            buttonText: {
+                today: "Aujourd'hui",
+                month: "Mois",
+                week: "Semaine",
+                day: "Jour",
+                list: "Liste"
+            },
+            displayEventTime: false,
+            events: function (info, successCallback, failureCallback) {
+                // Récupération asynchrone des événements depuis /api/recuperer_evenements
+                fetch('/api/recuperer_evenements')
+                    .then(response => response.json())
+                    .then(data => {
+                        const events = [];
+                        data.forEach(event => {
+                            const startDate = new Date(event.start);
+                            const endDate = new Date(event.end ? event.end : event.start);
+
+                            // Boucle pour remplir tous les jours entre start et end
+                            while (startDate <= endDate) {
+                                events.push({
+                                    title: event.title,
+                                    start: new Date(startDate),
+                                    description: event.description,
+                                    color: event.color,
+                                    allDay: true
+                                });
+                                startDate.setDate(startDate.getDate() + 1);
+                            }
+                        });
+                        successCallback(events);
+                    })
+                    .catch(error => failureCallback(error));
+            },
+            eventClick: function (info) {
+                // Simple alerte lors d'un clic sur un événement
+                alert('Événement : ' + info.event.title + '\nDétails : ' + info.event.extendedProps.description);
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}
