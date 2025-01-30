@@ -1082,9 +1082,11 @@ def répondre_congés(id):
                     UPDATE demandes_congé SET statut_manager = 'accepte'
                     WHERE id = ?
                 """, (id,))
+                curseur.execute("SELECT email FROM utilisateurs WHERE id = ?", (id_employe,))
+                email_employe = curseur.fetchone()[0]
                 contenu = f"Une demande de congé de l'employé {id_employe} a été acceptée par le manager et requiert votre approbation."
                 notifications.append((admin_email, contenu, "Congé"))
-                envoyer_email("Réponse demande congé",email_employe,contenu)
+                envoyer_email("Réponse demande congé",admin_email,contenu)
 
             elif statut == 'refuse':
                 curseur.execute("""
