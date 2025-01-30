@@ -16,7 +16,7 @@
 <div class="row">
     <!-- Nombre total d'employés -->
     <div class="col-md-3 mb-4">
-        <div class="card bg-info text-white text-center shadow">
+        <div class="card text-white text-center shadow" style="background-color: #007BFF">
             <div class="card-body">
                 <h5 class="card-title">Employés</h5>
                 <p class="card-text display-4">{{ total_employes }}</p>
@@ -26,7 +26,7 @@
 
     <!-- Nombre total de départements -->
     <div class="col-md-3 mb-4">
-        <div class="card bg-success text-white text-center shadow">
+        <div class="card text-white text-center shadow" style="background-color: #28A745">
             <div class="card-body">
                 <h5 class="card-title">Départements</h5>
                 <p class="card-text display-4">{{ total_departements }}</p>
@@ -36,7 +36,7 @@
 
     <!-- Nombre de congés acceptés -->
     <div class="col-md-3 mb-4">
-        <div class="card bg-warning text-white text-center shadow">
+        <div class="card text-white text-center shadow" style="background-color: #FD7E14">
             <div class="card-body">
                 <h5 class="card-title">Congés Acceptés</h5>
                 <p class="card-text display-4">{{ conges_acceptes }}</p>
@@ -46,7 +46,7 @@
 
     <!-- Salaire moyen -->
     <div class="col-md-3 mb-4">
-        <div class="card bg-danger text-white text-center shadow">
+        <div class="card text-white text-center shadow" style="background-color: #C82333">
             <div class="card-body">
                 <h5 class="card-title">Salaire Moyen</h5>
                 <p class="card-text display-4">{{ salaire_moyen }} €</p>
@@ -73,7 +73,7 @@
 
         <!-- Statistiques du jour (personnes sur site et en télétravail) -->
         <div class="col-lg-6 mb-4" style="width: 100%;">
-            <div class="card bg-light shadow">
+            <div class="card bg-light shadow text-center">
                 <div class="card-body">
                     <h5 class="card-title">Statistiques du Jour</h5>
                     <p><strong>Personnes sur site aujourd'hui :</strong> {{ personnes_sur_site }}</p>

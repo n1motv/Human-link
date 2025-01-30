@@ -52,7 +52,7 @@
                             <strong>Congés :</strong> {{ emp[6] }} jours<br>
                             <strong>Salaire :</strong> {{ emp[7] }} €<br>
                             <strong>Rôle :</strong> {{ emp[9] }}<br>
-                            <strong>Sexualité :</strong> {{ emp[11] }}<br>
+                            <strong>Sexe :</strong> {{ emp[11] }}<br>
                             <strong>Téléphone :</strong> {{ emp[12] }}<br>
                             <strong>Adresse complète :</strong> {{ emp[13] }}, {{ emp[14] }}, {{ emp[15] }}.<br>
                             <strong>Pays :</strong> {{ emp[16] }}<br>
@@ -91,7 +91,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email :</label>
-                                        <input type="email" name="email" class="form-control" placeholder="Entrer un nouveau mail :">
+                                        <input type="email" name="email" class="form-control" value="{{ emp[5] }}">
                                     </div>
                                     <div class="mb-3">
                                         <label for="salaire" class="form-label">Salaire :</label>
@@ -110,7 +110,6 @@
                                         <select name="role" class="form-select">
                                             <option value="employe" {% if emp[9] == 'employe' %}selected{% endif %}>Employé</option>
                                             <option value="manager" {% if emp[9] == 'manager' %}selected{% endif %}>Manager</option>
-                                            <option value="admin" {% if emp[9] == 'admin' %}selected{% endif %}>Admin</option>
                                         </select>
                                     </div>
                                     <!-- Champ pour changer la photo (avec recadrage) -->
@@ -400,130 +399,130 @@
         });
     </script>
 
-    <script>
-    /*
-        Ajouter les nationalités, départements et pays pour chaque employé.
-        Utilisation de JavaScript pour peupler les <select> dynamiquement.
-    */
-    document.addEventListener('DOMContentLoaded', function () {
-        const nationalites = [
-            "Afghane","Albanaise","Algérienne","Allemande","Américaine","Anglaise","Angolaise","Argentine","Arménienne",
-            "Australienne","Autrichienne","Azerbaïdjanaise","Bahreïnie","Bangladaise","Belge","Béninoise","Bhoutanaise",
-            "Biélorusse","Birmane","Bolivienne","Bosnienne","Botswanaise","Brésilienne","Bruneienne","Bulgare","Burkinabè",
-            "Burundaise","Cambodgienne","Camerounaise","Canadienne","Cap-verdienne","Centrafricaine","Chilienne","Chinoise",
-            "Chypriote","Colombienne","Comorienne","Congolaise","Costaricaine","Croate","Cubaine","Danoise","Djiboutienne",
-            "Dominicaine","Égyptienne","Émiratie","Équatorienne","Érythréenne","Espagnole","Estonienne","Éthiopienne",
-            "Fidjienne","Finlandaise","Française","Gabonaise","Gambienne","Géorgienne","Ghanéenne","Grecque","Guatémaltèque",
-            "Guinéenne","Haïtienne","Hondurienne","Hongroise","Indienne","Indonésienne","Iranienne","Irakienne","Irlandaise",
-            "Islandaise","Israélienne","Italienne","Ivoirienne","Jamaïcaine","Japonaise","Jordanienne","Kazakhstanaise",
-            "Kényane","Kirghize","Laotienne","Libanaise","Libérienne","Libyenne","Lituanienne","Luxembourgeoise","Malaisienne",
-            "Malienne","Maltaise","Marocaine","Mauricienne","Mexicaine","Monégasque","Mozambicaine","Namibienne","Néerlandaise",
-            "Népalaise","Nigériane","Nigérienne","Norvégienne","Pakistanaise","Palestinienne","Panaméenne","Paraguayenne",
-            "Péruvienne","Philippine","Polonaise","Portugaise","Qatarienne","Roumaine","Russe","Rwandaise","Salvadorienne",
-            "Sénégalaise","Serbe","Singapourienne","Slovaque","Slovène","Somalienne","Soudanaise","Sri-lankaise","Suédoise",
-            "Suisse","Syrienne","Tadjike","Tanzanienne","Thaïlandaise","Togolaise","Tunisienne","Turque","Ukrainienne",
-            "Uruguayenne","Vénézuélienne","Vietnamienne","Yéménite","Zambienne","Zimbabwéenne"
-        ];
-        const employees = {{ employees | safe }};
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Listes statiques
+    const nationalites = [
+        "Afghane", "Albanaise", "Algérienne", "Allemande", "Américaine", "Anglaise", "Angolaise",
+        "Argentine", "Arménienne", "Australienne", "Autrichienne", "Azerbaïdjanaise", "Bahreïnie",
+        "Bangladaise", "Belge", "Béninoise", "Bhoutanaise", "Biélorusse", "Birmane", "Bolivienne",
+        "Bosnienne", "Botswanaise", "Brésilienne", "Bruneienne", "Bulgare", "Burkinabè", "Burundaise",
+        "Cambodgienne", "Camerounaise", "Canadienne", "Cap-verdienne", "Centrafricaine", "Chilienne",
+        "Chinoise", "Chypriote", "Colombienne", "Comorienne", "Congolaise", "Costaricaine", "Croate",
+        "Cubaine", "Danoise", "Djiboutienne", "Dominicaine", "Égyptienne", "Émiratie", "Équatorienne",
+        "Érythréenne", "Espagnole", "Estonienne", "Éthiopienne", "Fidjienne", "Finlandaise", "Française",
+        "Gabonaise", "Gambienne", "Géorgienne", "Ghanéenne", "Grecque", "Guatémaltèque", "Guinéenne",
+        "Haïtienne", "Hondurienne", "Hongroise", "Indienne", "Indonésienne", "Iranienne", "Irakienne",
+        "Irlandaise", "Islandaise", "Israélienne", "Italienne", "Ivoirienne", "Jamaïcaine", "Japonaise",
+        "Jordanienne", "Kazakhstanaise", "Kényane", "Kirghize", "Laotienne", "Libanaise", "Libérienne",
+        "Libyenne", "Lituanienne", "Luxembourgeoise", "Malaisienne", "Malienne", "Maltaise", "Marocaine",
+        "Mauricienne", "Mexicaine", "Monégasque", "Mozambicaine", "Namibienne", "Néerlandaise", "Népalaise",
+        "Nigériane", "Nigérienne", "Norvégienne", "Pakistanaise", "Palestinienne", "Panaméenne", "Paraguayenne",
+        "Péruvienne", "Philippine", "Polonaise", "Portugaise", "Qatarienne", "Roumaine", "Russe", "Rwandaise",
+        "Salvadorienne", "Sénégalaise", "Serbe", "Singapourienne", "Slovaque", "Slovène", "Somalienne",
+        "Soudanaise", "Sri-lankaise", "Suédoise", "Suisse", "Syrienne", "Tadjike", "Tanzanienne",
+        "Thaïlandaise", "Togolaise", "Tunisienne", "Turque", "Ukrainienne", "Uruguayenne", "Vénézuélienne",
+        "Vietnamienne", "Yéménite", "Zambienne", "Zimbabwéenne"
+    ];
 
-        employees.forEach(emp => {
-            const selectNationalite = document.getElementById(`nationalite_${emp[8]}`);
-            if (!selectNationalite) return;
-            // Nettoyer le select avant de le peupler
-            selectNationalite.innerHTML = '';
+    const departements = [
+        "Ressources Humaines", "Finance", "Comptabilité", "Marketing", "Ventes",
+        "Service Client", "Production", "Recherche et Développement", "Logistique",
+        "Informatique", "Qualité", "Achats", "Juridiques", "Communication", "Direction Générale"
+    ];
 
-            // Ajouter les options pour la nationalité
-            nationalites.forEach(nationalite => {
-                const option = document.createElement('option');
-                option.value = nationalite;
-                option.textContent = nationalite;
+    const employees = {{ employees | tojson }};
+    
+    // Remplir toutes les listes une seule fois
+    employees.forEach(emp => {
+        // Nationalité
+        const selectNationalite = document.getElementById(`nationalite_${emp[8]}`);
+        if (selectNationalite) {
+            selectNationalite.innerHTML = ""; // Vider avant d'ajouter des options
+            nationalites.forEach(nat => {
+                const option = document.createElement("option");
+                option.value = nat;
+                option.textContent = nat;
                 selectNationalite.appendChild(option);
             });
-            // Sélectionner la nationalité actuelle de l'employé
-            selectNationalite.value = emp[17];
-        });
-    });
+            selectNationalite.value = emp[17]; // Sélectionner la valeur existante
+        }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const departements = [
-            "Ressources Humaines","Finance","Comptabilité","Marketing","Ventes","Service Client","Production",
-            "Recherche et Développement","Logistique","Informatique","Qualité","Achats","Juridiques","Communication","Direction Générale"
-        ];
-        const employees = {{ employees | safe }};
-
-        employees.forEach(emp => {
-            const selectDepartement = document.getElementById(`departement_${emp[8]}`);
-            if (!selectDepartement) return;
-            selectDepartement.innerHTML = '';
-
-            // Ajouter les départements
-            departements.forEach(departement => {
-                const option = document.createElement('option');
-                option.value = departement;
-                option.textContent = departement;
+        // Département
+        const selectDepartement = document.getElementById(`departement_${emp[8]}`);
+        if (selectDepartement) {
+            selectDepartement.innerHTML = ""; // Vider avant d'ajouter des options
+            departements.forEach(dep => {
+                const option = document.createElement("option");
+                option.value = dep;
+                option.textContent = dep;
                 selectDepartement.appendChild(option);
             });
-            // Sélectionner le département actuel de l'employé
-            selectDepartement.value = emp[4];
-        });
+            selectDepartement.value = emp[4]; // Sélectionner la valeur existante
+        }
     });
 
-    // Chargement des pays via API restcountries
-    document.addEventListener('DOMContentLoaded', function () {
-        const employees = {{ employees | safe }};
+    // Chargement des pays via API
+    fetch("https://restcountries.com/v3.1/all")
+        .then(response => response.json())
+        .then(data => {
+            const sortedCountries = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
 
-        employees.forEach(emp => {
-            const selectPays = document.getElementById(`pays_${emp[8]}`);
-            fetch('https://restcountries.com/v3.1/all')
-                .then(response => response.json())
-                .then(data => {
-                    const sortedCountries = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            employees.forEach(emp => {
+                const selectPays = document.getElementById(`pays_${emp[8]}`);
+                if (selectPays) {
                     selectPays.innerHTML = '<option value="">Sélectionner un pays</option>';
                     sortedCountries.forEach(country => {
-                        const option = document.createElement('option');
+                        const option = document.createElement("option");
                         option.value = country.name.common;
                         option.textContent = country.name.common;
                         selectPays.appendChild(option);
                     });
-                    // Définir le pays existant
-                    selectPays.value = emp[16];
-                })
-                .catch(error => {
-                    console.error('Erreur lors du chargement des pays:', error);
+                    selectPays.value = emp[16]; // Sélectionner la valeur existante
+                }
+            });
+        })
+        .catch(error => {
+            console.error("Erreur lors du chargement des pays:", error);
+            employees.forEach(emp => {
+                const selectPays = document.getElementById(`pays_${emp[8]}`);
+                if (selectPays) {
                     selectPays.innerHTML = '<option value="">Erreur de chargement</option>';
-                });
+                }
+            });
         });
-    });
 
-    // Auto-complétion ville à partir du code postal
-    document.addEventListener('DOMContentLoaded', function () {
-        const employees = {{ employees | safe }};
+    // Auto-complétion de la ville à partir du code postal
+    employees.forEach(emp => {
+        const codePostalInput = document.getElementById(`code_postal_${emp[8]}`);
+        const villeInput = document.getElementById(`ville_${emp[8]}`);
 
-        employees.forEach(emp => {
-            const codePostalInput = document.getElementById(`code_postal_${emp[8]}`);
-            const villeInput = document.getElementById(`ville_${emp[8]}`);
-
-            codePostalInput.addEventListener('input', function () {
+        if (codePostalInput && villeInput) {
+            codePostalInput.addEventListener("input", function () {
                 const codePostal = codePostalInput.value.trim();
                 if (/^\d{5}$/.test(codePostal)) {
                     fetch(`https://api.zippopotam.us/fr/${codePostal}`)
                         .then(response => {
-                            if (!response.ok) throw new Error('Code postal introuvable');
+                            if (!response.ok) throw new Error("Code postal introuvable");
                             return response.json();
                         })
                         .then(data => {
-                            villeInput.value = data.places[0]['place name'];
+                            villeInput.value = data.places[0]["place name"];
                         })
                         .catch(error => {
-                            console.error('Erreur lors du chargement de la ville:', error);
-                            villeInput.value = '';
+                            console.error("Erreur lors du chargement de la ville:", error);
+                            villeInput.value = "";
                         });
                 } else {
-                    villeInput.value = '';
+                    villeInput.value = "";
                 }
             });
-        });
+        }
     });
+
+});
+
     </script>
+
     {% endfor %}
 {% endblock %}

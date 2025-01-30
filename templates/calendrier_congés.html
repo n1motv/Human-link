@@ -248,7 +248,7 @@
                             <p><strong>ID Employé :</strong> ${info.event.title}</p>
                             <p><strong>Nom Complet :</strong> ${info.event.extendedProps.nom_complet}</p>
                             <p><strong>Email :</strong> ${info.event.extendedProps.email}</p>
-                            <p><strong>Description :</strong> ${info.event.extendedProps.description}</p>
+                            <p><strong>Description :</strong> ${info.event.extendedProps.description || 'Aucune description'}</p>
                         `,
                         icon: 'info',
                         confirmButtonText: 'Fermer'

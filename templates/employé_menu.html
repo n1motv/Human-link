@@ -41,18 +41,18 @@
                 <p class="card-text mt-3">
                     <div class="row">
                         <div class="col-md-6">
-                            <strong>Sexualité:</strong> {{ row[11] }}<br>
+                            <strong>Sexe:</strong> {{ row[11] }}<br>
                             <strong>Poste:</strong> {{ row[3] }}<br>
                             <strong>Département:</strong> {{ row[4] }}<br>
                             <strong>Date de naissance:</strong> {{ row[2] }}<br>
                             <strong>Email:</strong> {{ row[5] }}<br>
-                            <strong>Salaire:</strong> {{ row[7] }} €<br>
                         </div>
                         <div class="col-md-6">
                             <strong>Rôle:</strong> {{ row[10] }}<br>
                             <strong>Téléphone:</strong> {{ row[12] }}<br>
                             <strong>Nationalité:</strong> {{ row[17] }}<br>
                             <strong>Numéro S.sociale:</strong> {{ row[18] }}
+                            <strong>Salaire:</strong> {{ row[7] }} €<br>
                         </div>
                     </div>
 
@@ -196,8 +196,17 @@
                     .catch(error => failureCallback(error));
             },
             eventClick: function (info) {
-                // Simple alerte lors d'un clic sur un événement
-                alert('Événement : ' + info.event.title + '\nDétails : ' + info.event.extendedProps.description);
+                // Utiliser SweetAlert2 pour afficher les détails de l'événement
+                Swal.fire({
+                    title: info.event.title,
+                    html: `<b>Date :</b> ${new Date(info.event.start).toLocaleDateString('fr-FR')}<br>
+                        <b>Description :</b> ${info.event.extendedProps.description || 'Aucune description'}`,
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-custom-popup'
+                    }
+                });
             }
         });
         calendar.render();
