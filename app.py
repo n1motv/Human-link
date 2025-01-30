@@ -273,14 +273,19 @@ def marquer_notifications_comme_lues(email):
     Marque toutes les notifications d'un utilisateur comme lues.
     """
     connexion = connect_db()
-    cur = connexion.cursor()
-    cur.execute("""
-        UPDATE notifications
-        SET is_read = 1
-        WHERE email = ?
-    """, (email,))
-    connexion.commit()
-    connexion.close()
+    try:
+        cur = connexion.cursor()
+        cur.execute("""
+            UPDATE notifications
+            SET is_read = 1
+            WHERE email = ?
+        """, (email,))
+        connexion.commit()
+    except sqlite3.OperationalError as e:
+        print(f"Erreur SQLite: {e}")
+    finally:
+        connexion.close()
+
 
 def compter_jours_de_conge(date_debut, date_fin):
     """
@@ -409,7 +414,6 @@ def verifier_toutes_contraintes(id_employe, date_debut, date_fin, type_demande):
         if cur.fetchone():
             connexion.close()
             return "Vous ne pouvez pas soumettre un jour de télétravail qui chevauche un arrêt maladie."
-
     connexion.close()
     return None
 
@@ -597,8 +601,6 @@ def contact():
         notifications = récupérer_notifications(email)
         nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(email)
         marquer_notifications_comme_lues(email)
-        if session['role'] == 'manager':
-            session['role'] = "employe"
         return render_template(
             'contact.html',
             notifications=notifications,
@@ -610,41 +612,16 @@ def contact():
 
 @app.route('/reset_password', methods=["GET", "POST"])
 def reset_password():
-    """
-    Page qui permet à l'utilisateur de demander la réinitialisation de son mot de passe.
-    Envoie ensuite un e-mail avec un token pour mettre à jour le mot de passe.
-    """
-    if request.method == "POST":
-        email = request.form['email']
-        # Vérifier si l'utilisateur existe
-        connexion = connect_db()
-        cur = connexion.cursor()
-        cur.execute("SELECT id FROM utilisateurs WHERE email = ?", (email,))
-        user = cur.fetchone()
-        connexion.close()
-
-        if not user:
-            flash("Adresse email introuvable.", "danger")
-            return redirect(url_for('reset_password'))
-
-        # Générer un token
-        token = serializer.dumps(email, salt="reset-password")
-        lien = f"http://localhost:5000/update_password?token={token}"
-
-        contenu = f"Bonjour,\n\nPour réinitialiser votre mot de passe, cliquez sur le lien suivant : {lien}\n\nCe lien expirera dans 30 minutes."
-        envoyer_email("Réinitialisation de mot de passe", email, contenu)
-
-        flash("Un email de réinitialisation a été envoyé.", "success")
-        return redirect(url_for('reset_password'))
 
     return render_template('récupération_mot_de_passe.html')
 
-@app.route('/envoyer_email_reinitialisation')
+@app.route('/envoyer_email_reinitialisation', methods=["POST"])
 def envoyer_email_reinitialisation():
     """
-    Route appelée en Ajax pour envoyer l'e-mail de réinitialisation.
+    Route appelée en AJAX pour envoyer l'e-mail de réinitialisation.
+    Utilisée par l'admin et les employés.
     """
-    email = request.args.get('email')
+    email = request.json.get('email')
     if not email:
         return jsonify({'success': False, 'error': 'Email non fourni'}), 400
 
@@ -658,6 +635,7 @@ def envoyer_email_reinitialisation():
     if not utilisateur:
         return jsonify({'success': False, 'error': 'Email non trouvé'}), 404
 
+    # Générer un token et le lien de réinitialisation
     token = serializer.dumps(email, salt="reset-password")
     lien_reinitialisation = f"http://localhost:5000/update_password?token={token}"
 
@@ -677,6 +655,7 @@ def envoyer_email_reinitialisation():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/update_password', methods=['GET', 'POST'])
 def update_password():
@@ -881,12 +860,12 @@ def afficher_employés():
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
     connexion = connect_db()
+    connexion.row_factory = None
     curseur = connexion.cursor()
     curseur.execute("""
         SELECT nom, prenom, date_naissance, poste, departement, email, solde_congé, salaire,id,role , photo,sexualite,telephone,adresse,ville,code_postal,pays,nationalite,numero_securite_sociale,date_embauche,type_contrat  FROM utilisateurs WHERE id != "None" ORDER BY id
     """)
     employees=  curseur.fetchall()
-
     notifications = récupérer_notifications(admin_email)
     nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(admin_email)
     marquer_notifications_comme_lues(admin_email)
@@ -904,7 +883,7 @@ def ajouter_employe_page():
     """
     Permet à l'administrateur (ou manager) d'ajouter un nouvel employé.
     """
-    if 'role' not in session or (session['role'] != 'admin' and session['role'] != 'manager'):
+    if 'role' not in session or (session['role'] != 'admin'):
         return redirect(url_for('login'))
     erreur = None
     connexion = connect_db()
@@ -938,8 +917,8 @@ def ajouter_employe_page():
             date_embauche = request.form['date_embauche']
             type_contrat = request.form['type_contrat']
             sexualite = request.form['sexualite']
-            solde_congé = request.form['solde_congé']
-            salaire = request.form['salaire']
+            solde_congé = float(request.form['solde_congé']) if request.form['solde_congé'] else 0.0
+            salaire = float(request.form['salaire']) if request.form['salaire'] else 0.0
             role = request.form['role']
             mot_de_passe = generer_mot_de_passe()
             mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), bcrypt.gensalt())
@@ -967,7 +946,8 @@ def ajouter_employe_page():
                     VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?, ?, ?, ?, ?, ?, ?, ?,?,?)
                 """, (id_employe,nom, prenom, date_naissance, poste, departement, email, mot_de_passe_hash, solde_congé, salaire,role,file_name_only,sexualite, telephone, adresse, 
                 ville, code_postal, pays, nationalite, numero_securite_sociale, date_embauche, type_contrat))
-            
+            connexion.commit()
+            connexion.close()
             # Envoyer l'e-mail de félicitations
             sujet_felicitations = "Bienvenue chez notre entreprise !"
             contenu_felicitations = f"""
@@ -978,7 +958,7 @@ def ajouter_employe_page():
             Cordialement,
             L'équipe RH
             """
-            #envoyer_email(sujet_felicitations, email, contenu_felicitations)
+            envoyer_email(sujet_felicitations, email, contenu_felicitations)
 
             # Envoyer l'e-mail avec le mot de passe
             sujet_mot_de_passe = "Votre compte a été créé avec succès"
@@ -994,7 +974,7 @@ def ajouter_employe_page():
             Cordialement,
             L'équipe RH
             """
-            #envoyer_email(sujet_mot_de_passe, email, contenu_mot_de_passe)
+            envoyer_email(sujet_mot_de_passe, email, contenu_mot_de_passe)
 
             return redirect(url_for('afficher_employés'))
 
@@ -1016,7 +996,7 @@ def afficher_demandes_congé():
     - L'admin voit toutes les demandes validées par le manager.
     - Le manager voit les demandes des employés qu'il supervise.
     """
-    if 'role' not in session:
+    if 'role' not in session or session['role'] not in ['admin', 'manager']:
         return redirect(url_for('login'))
 
     connexion = connect_db()
@@ -1068,6 +1048,8 @@ def répondre_congés(id):
     Permet à un manager ou un admin de répondre à une demande de congé (accepter/refuser).
     Met à jour les statuts et notifie l'employé concerné.
     """
+    if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        return redirect(url_for('login'))
     statut = request.form['statut']
     motif_refus = request.form.get('motif_refus', None)
     notifications = []
@@ -1084,7 +1066,6 @@ def répondre_congés(id):
 
         id_employe = demande[1]
         statut_manager = demande[7]
-        statut_admin = demande[8]
         role = session['role']
         email_employe = None
 
@@ -1106,6 +1087,7 @@ def répondre_congés(id):
                 """, (motif_refus, id))
                 curseur.execute("SELECT email FROM utilisateurs WHERE id = ?", (id_employe,))
                 email_employe = curseur.fetchone()[0]
+                sujet = "Refus de votre demande de congé"
                 contenu = f"Bonjour,\n\nVotre demande de congé a été refusée par votre manager pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
                 notifications.append((email_employe, contenu, "Congé"))
 
@@ -1139,6 +1121,7 @@ def répondre_congés(id):
                     """, (id_employe, date_debut, date_fin))
 
                     contenu = f"Bonjour,\n\nVotre demande de congé a été acceptée par l'administrateur.\n\nCordialement,\nL'équipe RH"
+                    sujet = "Acceptation de votre demande de congé"
                     notifications.append((email_employe, contenu, "Congé"))
                 else:
                     flash("Solde de congé insuffisant pour cette demande.", "danger")
@@ -1152,8 +1135,10 @@ def répondre_congés(id):
                 curseur.execute("SELECT email FROM utilisateurs WHERE id = ?", (id_employe,))
                 email_employe = curseur.fetchone()[0]
                 contenu = f"Bonjour,\n\nVotre demande de congé a été refusée par l'administrateur pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
+                sujet = "Refus de votre demande de congé"
                 notifications.append((email_employe, contenu, "Congé"))
-
+        
+        envoyer_email("Réponse demande congé",email_employe,contenu)
         connexion.commit()
         flash("Statut de la demande mis à jour avec succès.", "success")
 
@@ -1270,28 +1255,6 @@ def supprimer_employe(id):
 
     return redirect(url_for('afficher_employés'))
 
-@app.route("/supprimer_demande_conge/<int:id>", methods=["POST"])
-def supprimer_demande_conge(id):
-    """
-    Supprime une demande de congé.
-    Accessible à l'administrateur ou au manager.
-    """
-    if 'role' not in session:
-        return redirect(url_for('login'))
-
-    connexion = connect_db()
-    curseur = connexion.cursor()
-    curseur.execute("DELETE FROM demandes_congé WHERE id = ?", (id,))
-    connexion.commit()
-    connexion.close()
-
-    if session['role'] == 'admin':
-        return redirect(url_for('afficher_demandes_congé'))
-    elif session['role'] == 'manager':
-        return redirect(url_for('afficher_demandes_congé'))
-    else:
-        return redirect(url_for('mes_demandes_conges'))
-
 @app.route("/mettre_a_jour_employe/<string:id>", methods=["POST"])
 def mettre_a_jour_employe(id):
     """
@@ -1299,6 +1262,13 @@ def mettre_a_jour_employe(id):
     """
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
+
+    connexion = connect_db()
+    curseur = connexion.cursor()
+
+    # Récupérer l'ancienne photo avant la mise à jour
+    curseur.execute("SELECT photo FROM utilisateurs WHERE id = ?", (id,))
+    old_photo = curseur.fetchone()[0]  
 
     champs_a_mettre_a_jour = [
         ("nom", request.form['nom']),
@@ -1321,27 +1291,17 @@ def mettre_a_jour_employe(id):
         ("type_contrat", request.form['type_contrat'])
     ]
 
-    date_naissance = request.form['date_naissance']
-    if date_naissance:
-        today = datetime.today()
-        date_naissance_dt = datetime.strptime(date_naissance, "%Y-%m-%d")
-        age = today.year - date_naissance_dt.year - ((today.month, today.day) < (date_naissance_dt.month, date_naissance_dt.day))
-        if age < 17:
-            flash("L`employé doit avoir au moins 17 ans pour être enregistré.", "warning")
-            return redirect(url_for('afficher_employés'))
-
-    email = request.form['email']
-    if email:
-        if email_existe(email):
-            flash("Cet email est déjà assigné à un autre employé.", "warning")
-            return redirect(url_for('afficher_employés'))
-        else:
-            champs_a_mettre_a_jour.append(("email", email))
-
     file = request.files.get('photo')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(creation_upload_dossier("photo_profile"), filename))
+        file.save(os.path.join('static/uploads/photo_profile', filename))
+
+        # Supprimer l'ancienne photo si elle existe et n'est pas la photo par défaut
+        if old_photo and old_photo != "default.png":
+            old_photo_path = os.path.join('static/uploads/photo_profile', old_photo)
+            if os.path.exists(old_photo_path):
+                os.remove(old_photo_path)
+
         champs_a_mettre_a_jour.append(("photo", filename))
 
     mot_de_passe = request.form.get('mot_de_passe')
@@ -1353,13 +1313,12 @@ def mettre_a_jour_employe(id):
     valeurs = [valeur for _, valeur in champs_a_mettre_a_jour]
     valeurs.append(id)
 
-    connexion = connect_db()
-    curseur = connexion.cursor()
     curseur.execute(f"UPDATE utilisateurs SET {set_clause} WHERE id = ?", valeurs)
     connexion.commit()
     connexion.close()
 
     return redirect(url_for('afficher_employés'))
+
 
 @app.route('/admin_demandes_contact')
 def admin_demandes_contact():
@@ -1392,22 +1351,6 @@ def admin_demandes_contact():
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
 
-@app.route('/supprimer_demande_contact/<int:id>', methods=['POST'])
-def supprimer_demande_contact(id):
-    """
-    Supprime une demande de contact de la base de données.
-    """
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
-
-    connexion = connect_db()
-    cur = connexion.cursor()
-    cur.execute("DELETE FROM demandes_contact WHERE id = ?", (id,))
-    connexion.commit()
-    connexion.close()
-
-    flash("La demande de contact a été supprimée avec succès.", "success")
-    return redirect(url_for('admin_demandes_contact'))
 
 @app.route("/afficher_demandes_arrêts", methods=['GET', 'POST'])
 def afficher_demandes_arrêts():
@@ -1437,6 +1380,7 @@ def afficher_demandes_arrêts():
                 WHERE id = ?
             """, (statut, motif_refus, id))
             contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie a été refusée pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
+            sujet="Refus de demande d'arrêt"
         else:
             cur.execute("""
                 UPDATE demandes_arrêt
@@ -1453,10 +1397,12 @@ def afficher_demandes_arrêts():
                 WHERE id_employe = ? AND date_teletravail BETWEEN ? AND ?
             """, (id_employe, date_debut, date_fin))
             contenu = "Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
+            sujet="Acceptation de demande d'arrêt"
 
         connexion.commit()
         connexion.close()
         creer_notification(employe_email, contenu, "Arrét")
+        envoyer_email(sujet,employe_email,contenu)
 
     notifications = récupérer_notifications(admin_email)
     nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(admin_email)
@@ -1474,39 +1420,6 @@ def afficher_demandes_arrêts():
         notifications=notifications,
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
-
-@app.route("/supprimer_demande_arrêts/<int:id>", methods=["POST"])
-def supprimer_demande_arrêts(id):
-    """
-    Supprimer une demande d'arrêt maladie (admin ou manager).
-    """
-    if 'role' not in session:
-        return redirect(url_for('login'))
-
-    connexion = connect_db()
-    curseur = connexion.cursor()
-
-    # Vérifier si manager => vérifier autorisation
-    email_utilisateur = session['email']
-    if session['role'] == 'manager':
-        curseur.execute("""
-            SELECT 1 FROM managers 
-            WHERE id_manager = (SELECT id FROM utilisateurs WHERE email = ?) 
-            AND id_employe = (SELECT id_employe FROM demandes_arrêt WHERE id = ?)
-        """, (email_utilisateur, id))
-        if not curseur.fetchone():
-            connexion.close()
-            return "Vous n'avez pas l'autorisation de supprimer cette demande.", 403
-
-    curseur.execute("DELETE FROM demandes_arrêt WHERE id = ?", (id,))
-    connexion.commit()
-    connexion.close()
-
-    flash("La demande d'arrêt a été supprimée avec succès.", "success")
-    if session['role'] == 'admin' or session['role'] == 'manager':
-        return redirect(url_for('afficher_demandes_arrêts'))
-    else:
-        return redirect(url_for('mes_demandes_d_arrêts'))
 
 @app.route('/afficher_demandes_prime')
 def afficher_demandes_prime():
@@ -1589,36 +1502,12 @@ def traiter_demande_prime(id):
     connexion.commit()
     connexion.close()
 
-    #envoyer_email(sujet, manager_email, contenu)
+    envoyer_email(sujet, manager_email, contenu)
     creer_notification(manager_email, contenu, "Prime")
 
     flash("Demande de prime traitée avec succès.", "success")
     return redirect(url_for('afficher_demandes_prime'))
 
-@app.route('/supprimer_demande_prime/<int:id>', methods=['POST'])
-def supprimer_demande_prime(id):
-    """
-    Permet à l'administrateur de supprimer une demande de prime.
-    """
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
-
-    connexion = connect_db()
-    cur = connexion.cursor()
-    cur.execute("SELECT * FROM demandes_prime WHERE id = ?", (id,))
-    demande = cur.fetchone()
-
-    if not demande:
-        flash("La demande de prime n'existe pas.", "danger")
-        connexion.close()
-        return redirect(url_for('afficher_demandes_prime'))
-
-    cur.execute("DELETE FROM demandes_prime WHERE id = ?", (id,))
-    connexion.commit()
-    connexion.close()
-
-    flash("La demande de prime a été supprimée avec succès.", "success")
-    return redirect(url_for('afficher_demandes_prime'))
 
 @app.route('/coffre_fort', methods=['GET', 'POST'])
 def coffre_fort():
@@ -1790,7 +1679,7 @@ def deposer_document(id_employe):
         destinataire = cur.fetchone()[0]
         sujet = "Dépot de document"
         contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
-        #envoyer_email(sujet, destinataire, contenu)
+        envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
 
     notifications = récupérer_notifications(admin_email)
@@ -2030,6 +1919,8 @@ def mettre_a_jour_teletravail(employe_id):
     """
     Met à jour le nombre maximum de jours de télétravail d'un employé (uniquement pour le manager).
     """
+    if 'role' not in session or session['role'] != 'manager':
+        return redirect(url_for('login'))
     jours_max_teletravail = request.form.get('jours_max_teletravail')
     connexion = connect_db()
     cur = connexion.cursor()
@@ -2091,7 +1982,7 @@ def soumettre_demande_prime():
             nom_manager, prenom_manager = manager
             sujet = "Nouvelle demande de prime soumise"
             contenu = f"Bonjour,\n\nUne demande de prime a été soumise par votre manager {nom_manager} {prenom_manager} pour vous.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
-            #envoyer_email(sujet, "employe_email", contenu)
+            envoyer_email(sujet, "employe_email", contenu)
 
             contenu_admin = f"Bonjour,\n\nUne demande de prime a été soumise pour l'employé {nom_employe} {prenom_employe}.\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
             creer_notification(admin_email, contenu_admin, "Prime")
@@ -2165,11 +2056,8 @@ def voir_mes_infos():
     """
     Affiche les informations personnelles de l'employé connecté.
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         return redirect(url_for('login'))
-
-    if session['role'] == 'manager':
-        session['role'] = "employe"
 
     email = session['email']
     user_id = session['id']
@@ -2202,7 +2090,7 @@ def recuperer_evenements():
     Retourne les évènements (congés, arrêts, réunions, télétravail) 
     de l'employé connecté au format JSON (pour FullCalendar).
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         return jsonify([])
 
     connexion = connect_db()
@@ -2299,7 +2187,7 @@ def soumettre_demande_conge():
     """
     Permet à un employé (ou directeur) de soumettre une demande de congé.
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
@@ -2346,7 +2234,7 @@ def soumettre_demande_conge():
         nombre_jours = (date_fin_dt - date_debut).days + 1
 
         if solde_conge < nombre_jours:
-            flash(f"Vous n'avez pas assez de jours de congé disponibles. Solde actuel: {solde_conge} jours.", "error")
+            flash(f"Vous n`avez pas assez de jours de congé disponibles. Solde actuel: {solde_conge} jours.", "error")
             connexion.close()
             return render_template("employé_soumettre_congés.html")
 
@@ -2371,7 +2259,7 @@ def soumettre_demande_conge():
         connexion.commit()
 
         contenu = f"Bonjour,\n\nVotre demande de congé du {date_debut} au {date_fin} a été soumise avec succès.\n\nCordialement,\nL'équipe RH"
-        #envoyer_email("Confirmation de dépôt de demande de congé", employe_email, contenu)
+        envoyer_email("Confirmation de dépôt de demande de congé", employe_email, contenu)
         contenu_admin = f"Une demande de congé a été soumise par {employe_email}."
         creer_notification(admin_email, contenu_admin, "Congé")
 
@@ -2396,7 +2284,7 @@ def mes_demandes_conges():
     """
     Affiche les demandes de congé de l'employé connecté.
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
@@ -2429,7 +2317,7 @@ def soumettre_demande_arrêt():
     """
     Permet à l'employé de soumettre une demande d'arrêt maladie.
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         flash("Vous devez être connecté pour accéder à cette page.","success")
         return redirect(url_for('login'))
 
@@ -2477,7 +2365,7 @@ def soumettre_demande_arrêt():
         connexion.close()
 
         contenu = f"Bonjour,\n\nVotre demande d'arrêt maladie pour {type_maladie} a été déposée avec succès.\n\nCordialement,\nL'équipe RH"
-        #envoyer_email("Confirmation de dépôt d'arrêt maladie", employe_email, contenu)
+        envoyer_email("Confirmation de dépôt d'arrêt maladie", employe_email, contenu)
         creer_notification(admin_email, f"Une demande d'arrêt de {employe_email} à été deposer", "Arret")
 
         flash("Votre demande d`arrêt a été déposée avec succès.", "success")
@@ -2490,7 +2378,7 @@ def mes_demandes_d_arrêts():
     """
     Affiche les demandes d'arrêt maladie de l'employé connecté.
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
@@ -2517,7 +2405,7 @@ def modifier_mes_infos():
     """
     Permet à l'employé de modifier ses informations personnelles (nom, prénom, email, etc.).
     """
-    if 'email' not in session:
+    if 'email' not in session or session['role'] == "admin":
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
@@ -2528,6 +2416,10 @@ def modifier_mes_infos():
 
     connexion = connect_db()
     cur = connexion.cursor()
+
+    # Récupérer l'ancienne photo avant la mise à jour
+    cur.execute("SELECT photo FROM utilisateurs WHERE email = ?", (email,))
+    old_photo = cur.fetchone()[0]  
 
     if request.method == "POST":
         nom = request.form['nom']
@@ -2542,7 +2434,7 @@ def modifier_mes_infos():
         nouveau_email = request.form['email']
         nouveau_mot_de_passe = request.form.get('nouveau_mot_de_passe')
 
-        if nouveau_email:
+        if nouveau_email != session['email']:
             if email_existe(nouveau_email):
                 flash("Cet email est déjà assigné à un autre employé.", "warning")
                 return redirect(url_for('modifier_mes_infos'))
@@ -2556,16 +2448,19 @@ def modifier_mes_infos():
                 return redirect(request.url)
 
             nouveau_mot_de_passe_hache = bcrypt.hashpw(nouveau_mot_de_passe.encode('utf-8'), bcrypt.gensalt())
-            cur.execute("""
-                UPDATE utilisateurs
-                SET mot_de_passe = ?
-                WHERE email = ?
-            """, (nouveau_mot_de_passe_hache, email))
+            cur.execute("UPDATE utilisateurs SET mot_de_passe = ? WHERE email = ?", (nouveau_mot_de_passe_hache, email))
 
         file = request.files.get('photo')
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             photo_path = os.path.join('static/uploads/photo_profile', filename)
+
+            # Supprimer l'ancienne photo si elle existe et n'est pas la photo par défaut
+            if old_photo and old_photo != "default.png":
+                old_photo_path = os.path.join('static/uploads/photo_profile', old_photo)
+                if os.path.exists(old_photo_path):
+                    os.remove(old_photo_path)
+
             file.save(photo_path)
             cur.execute("""
                 UPDATE utilisateurs
@@ -2588,11 +2483,7 @@ def modifier_mes_infos():
         flash("Vos informations ont été mises à jour avec succès.", "success")
         return redirect(url_for('voir_mes_infos'))
 
-    cur.execute("""
-        SELECT nom, prenom, date_naissance, email, adresse, ville, code_postal, pays, nationalite, telephone, photo
-        FROM utilisateurs
-        WHERE email = ?
-    """, (email,))
+    cur.execute("SELECT nom, prenom, date_naissance, email, adresse, ville, code_postal, pays, nationalite, telephone, photo FROM utilisateurs WHERE email = ?", (email,))
     result = cur.fetchone()
     connexion.close()
 
@@ -2603,6 +2494,7 @@ def modifier_mes_infos():
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
 
+
 ##############################################################
 #             ROUTES POUR LE TÉLÉTRAVAIL (EMPLOYÉ)           #
 ##############################################################
@@ -2612,7 +2504,7 @@ def choisir_teletravail():
     """
     Permet à l'employé de choisir ses jours de télétravail pour la semaine prochaine.
     """
-    if 'role' not in session:
+    if 'role' not in session or session['role'] == "admin":
         return redirect(url_for('login'))
 
     id_employe = session['id']
@@ -2639,7 +2531,7 @@ def choisir_teletravail():
         today = datetime.today()
         days_until_next_monday = (7 - today.weekday()) if today.weekday() != 0 else 7
         next_monday = today + timedelta(days=days_until_next_monday)
-        next_sunday = next_monday + timedelta(days=6)
+        next_sunday = next_monday + timedelta(days=7)
 
         cur.execute("""
             DELETE FROM teletravail 
@@ -2649,6 +2541,7 @@ def choisir_teletravail():
         for jour in jours_choisis:
             erreur = verifier_toutes_contraintes(id_employe, jour, jour, "teletravail")
             if erreur:
+                connexion.close()
                 flash(erreur, "danger")
                 return redirect(url_for('choisir_teletravail'))
             cur.execute("INSERT INTO teletravail (id_employe, date_teletravail) VALUES (?, ?)", (id_employe, jour))
@@ -2657,7 +2550,7 @@ def choisir_teletravail():
         connexion.close()
         flash("Vos jours de télétravail ont été soumis avec succès.", "success")
         return redirect(url_for('choisir_teletravail'))
-
+    connexion.commit()
     connexion.close()
     return render_template(
         'employé_télétravail.html',
@@ -2772,10 +2665,10 @@ def réunion_scheduler():
 
             sujet = "Invitation à une réunion"
             contenu = f"Bonjour,\n\nVotre manager vous à invité à une réunion.\nVeuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
-            #envoyer_email(sujet, employee_email, contenu)
+            envoyer_email(sujet, employee_email, contenu)
             creer_notification(employee_email, contenu, "Invitation")
 
-        flash("L'invitation pour la réunion a été envoyée !", "success")
+        flash("L`invitation pour la réunion a été envoyée !", "success")
         return redirect(url_for('réunion_scheduler'))
 
     cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE role = 'employe'")
@@ -2848,7 +2741,7 @@ def meeting_invitations():
         manager_email = cur.fetchone()[0]
         sujet = "Réponse à l'invitation à la réunion"
         contenu = f"Bonjour,\n\nL'un de vos employés à répondu à votre invitation.\n\nCordialement,\nL'équipe RH"
-        #envoyer_email(sujet, manager_email, contenu)
+        envoyer_email(sujet, manager_email, contenu)
         creer_notification(manager_email, contenu, "Invitation réunion")
 
     cur.execute("""

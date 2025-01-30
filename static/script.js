@@ -655,15 +655,15 @@ function getNextWeekDays() {
     const daysContainer = document.getElementById('teletravail-days');
     const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
     const today = new Date();
-    // Prochain lundi
-    const nextMonday = new Date(today.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7 || 7)));
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7 || 7));  // Calcule le lundi suivant
 
     for (let i = 0; i < 5; i++) {
         const day = new Date(nextMonday);
-        day.setDate(nextMonday.getDate() + i);
-
+        day.setDate(nextMonday.getDate() + i);  // Ajoute les jours à partir du lundi suivant
+        console.log(day)
         const dayName = daysOfWeek[i];
-        const formattedDate = day.toISOString().split('T')[0];
+        const formattedDate = day.toLocaleDateString('fr-CA'); // YYYY-MM-DD format
 
         const dayHTML = `
             <div class="day-card" data-date="${formattedDate}">
@@ -686,6 +686,8 @@ function getNextWeekDays() {
     });
 }
 document.addEventListener('DOMContentLoaded', getNextWeekDays);
+
+
 
 /* *******************************
    23) Validation du formulaire d'arrêt maladie (justificatif obligatoire)

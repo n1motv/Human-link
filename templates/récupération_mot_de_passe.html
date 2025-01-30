@@ -55,7 +55,7 @@
         <main class="mx-3 d-flex justify-content-center align-items-center vh-100">
             <div class="card">
                 <h1 class="text-center mb-4">Réinitialisation du mot de passe</h1>
-                <form method="POST" id="password-reset-form">
+                <form id="password-reset-form">
                     <div class="mb-3">
                         <label for="email" class="form-label">Adresse email :</label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="Entrez votre email" required>
@@ -82,49 +82,52 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('password-reset-form');
             const emailInput = document.getElementById('email');
-
-            // Fonction pour afficher une notification
-            function showNotification(icon, title, text) {
-                Swal.fire({
-                    icon: icon,
-                    title: title,
-                    text: text,
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        popup: 'swal2-custom-popup'
-                    }
-                });
-            }
-
-            // Validation du formulaire avant soumission
+    
             form.addEventListener('submit', (event) => {
-                event.preventDefault(); // Empêche l'envoi du formulaire
-                const emailValue = emailInput.value;
-
+                event.preventDefault();
+                const emailValue = emailInput.value.trim();
+    
                 // Vérifie que l'email est valide
                 if (!validateEmail(emailValue)) {
                     showNotification('error', 'Email invalide', 'Veuillez entrer une adresse email valide.');
                     return;
                 }
-
-                // Affiche un spinner et envoie une requête (exemple de simulation)
+    
                 Swal.fire({
                     title: 'Envoi en cours...',
-                    text: 'Veuillez patienter pendant que nous envoyons votre lien de réinitialisation.',
+                    text: 'Veuillez patienter...',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
                     }
                 });
-
-                // Simulation de l'envoi du formulaire
-                setTimeout(() => {
-                    Swal.close(); // Fermer le spinner
-                    showNotification('success', 'Email envoyé', 'Le lien de réinitialisation a été envoyé à votre adresse email.');
-                }, 2000);
+    
+                // Envoi AJAX
+                fetch('/envoyer_email_reinitialisation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailValue })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    Swal.close();
+                    if (data.success) {
+                        showNotification('success', 'Email envoyé', 'Le lien de réinitialisation a été envoyé.');
+                    } else {
+                        showNotification('error', 'Erreur', data.error);
+                    }
+                })
+                .catch(error => {
+                    Swal.close();
+                    showNotification('error', 'Erreur', 'Une erreur est survenue.');
+                    console.error("❌ Erreur AJAX :", error);
+                });
             });
-
-            // Fonction pour valider l'email
+    
+            function showNotification(icon, title, text) {
+                Swal.fire({ icon, title, text, confirmButtonText: 'OK' });
+            }
+    
             function validateEmail(email) {
                 const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 return regex.test(email);

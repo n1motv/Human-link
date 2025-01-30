@@ -15,7 +15,7 @@
 </head>
 <body>
     <!-- Barre de navigation si l'utilisateur est un employé -->
-    {% if session['role'] == 'employe' %}
+    {% if session['role'] == 'employe' or session['role'] == 'manager' %}
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <!-- Logo renvoyant vers la page "mes infos" employé -->

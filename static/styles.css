@@ -294,7 +294,10 @@ a {
 .fc .fc-button-primary{
     background-color: #283e51;
 }
-
+.fc-list-empty-cushion{
+    color: #000;
+    font-size: large;
+}
 /*******************************************Erreur message*****************************************************************/
 /*
    Style pour l'affichage lorsqu'il n'y a pas de demande (no-demand-image).
