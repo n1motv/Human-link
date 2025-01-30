@@ -1,0 +1,159 @@
+{% extends "admin_base.html" %}
+
+<!-- Définition du titre de la page -->
+{% block title %}Voir les employés{% endblock %}
+
+{% block content2 %}
+    <!-- Titre principal de la page -->
+    <h1 class="text-center text-white mb-4 ">Ajouter un Employé</h1>
+
+    <!-- Carte contenant le formulaire d'ajout d'un employé -->
+    <div class="card border-0 rounded-4 fw-bold">
+        <div class="card-body p-4">
+            <!-- Formulaire d'ajout d'un employé, méthode POST pour l'envoi de données -->
+            <form method="POST" enctype="multipart/form-data">
+                
+                <!-- Aperçu de la photo (invisible par défaut) -->
+                <div id="photoPreviewContainer" class="mt-3 mb-3 d-none">
+                    <img id="photoPreview" class="img-fluid" alt="Aperçu de la photo" style="width: 150px; height: 150px; object-fit: cover;">
+                </div>
+
+                <div class="row text-white">
+                    <div class="col-md-6">
+                        <!-- Partie gauche du formulaire -->
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom :</label>
+                            <input type="text" name="nom" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="prenom" class="form-label">Prénom :</label>
+                            <input type="text" name="prenom" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_naissance" class="form-label">Date de naissance :</label>
+                            <input type="date" name="date_naissance" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email :</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="poste" class="form-label">Poste :</label>
+                            <input type="text" name="poste" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="departement" class="form-label">Département :</label>
+                            <select id="departement" name="departement" class="form-select" required>
+                                <option value="">Sélectionner un département</option>
+                            </select>
+                        </div>  
+                        <div class="mb-3">
+                            <label for="telephone" class="form-label">Téléphone :</label>
+                            <input type="text" name="telephone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="code_postal" class="form-label">Code Postal :</label>
+                            <input type="text" id="code_postal" name="code_postal" class="form-control" required placeholder="Ex: 13003">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ville" class="form-label">Ville :</label>
+                            <input type="text" id="ville" name="ville" class="form-control" required placeholder="Ville">
+                        </div>
+                        <div class="mb-3">
+                            <label for="photoInput" class="form-label text-white">Photo :</label>
+                            <input type="file" id="photoInput" name="photo" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- Partie droite du formulaire -->
+                        <div class="mb-3">
+                            <label for="adresse" class="form-label">Adresse :</label>
+                            <input type="text" id="adresse" name="adresse" class="form-control" required placeholder="Adresse complète">
+                        </div>
+                        <div class="mb-3">
+                            <label for="pays" class="form-label">Pays :</label>
+                            <select id="pays" name="pays" class="form-select" required>
+                                <option value="">Chargement en cours...</option>
+                            </select>
+                        </div>                        
+                        <div class="mb-3">
+                            <label for="nationalite" class="form-label">Nationalité :</label>
+                            <select id="nationalite" name="nationalite" class="form-select" required>
+                                <option value="">Sélectionner une nationalité</option>
+                            </select>
+                        </div>                                                                   
+                        <div class="mb-3">
+                            <label for="numero_securite_sociale" class="form-label">Numéro de Sécurité Sociale :</label>
+                            <input type="text" name="numero_securite_sociale" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_embauche" class="form-label">Date d'embauche :</label>
+                            <input type="date" name="date_embauche" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="type_contrat" class="form-label">Type de Contrat :</label>
+                            <select name="type_contrat" class="form-select" required>
+                                <option value="CDI">CDI</option>
+                                <option value="CDD">CDD</option>
+                                <option value="Stage">Stage</option>
+                                <option value="Alternance">Alternance</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sexualite" class="form-label">Sexe :</label>
+                            <select name="sexualite" class="form-select" required>
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solde_congé" class="form-label">Solde de Congés :</label>
+                            <input type="number" name="solde_congé" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="salaire" class="form-label">Salaire :</label>
+                            <input type="number" name="salaire" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Rôle :</label>
+                            <select name="role" class="form-select" required>
+                                <option value="employe">Employé</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bouton d'ajout de l'employé -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-send"></i> Ajouter l'employé
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content4 %}
+    <!-- Modal pour le recadrage de la photo -->
+    <div id="cropperModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Recadrer l'image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="imageToCrop" alt="Image à recadrer" style="max-width: 100%;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" id="cropButton" class="btn btn-primary">Recadrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

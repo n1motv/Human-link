@@ -1,0 +1,118 @@
+{% extends "admin_base.html" %}
+
+<!--
+    Template : admin_arrets.html
+    Affiche la liste des demandes d'arrêt maladie pour l'administrateur.
+    Permet la recherche, l'acceptation ou le refus, et la suppression multiple.
+-->
+
+{% block title %}Les demandes d'arrêts{% endblock %}
+
+{% block content1 %}
+    <!-- Barre de recherche pour filtrer les demandes d'arrêt par email employé -->
+    <li class="nav-item">
+        <form class="d-flex mx-2" id="searchBox">
+            <input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par email employé" aria-label="Rechercher">
+            <button class="btn btn-custom-search" type="button" onclick="searchDemande()">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </li>
+{% endblock %}
+
+{% block content2 %}
+    <!-- Titre de la page -->
+    <h1 class="text-center text-white mb-4">Demandes d'Arrêts</h1>
+
+    {% if arrets %}
+    <!-- Message d'erreur caché par défaut, s'affiche s'il n'y a aucune correspondance à la recherche -->
+    <div class="text-center mt-5 d-none" id="error-message">
+        <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
+        <h4 class="text-white mt-4">Aucune demande d'arrêt pour cet employé.</h4>
+    </div>
+
+    <!-- Conteneur pour les cartes de demandes d'arrêt -->
+    <div class="row justify-content-center" id="demande-list">
+        {% for arret in arrets | reverse %}
+        <!-- Chaque arrêt est affiché sous forme de carte -->
+        <div class="col-md-6 col-lg-4 demande-card-wrapper">
+            <div class="card demande-card" onclick="agrandirCarte(this)">
+                <!-- En-tête de la carte (avec case à cocher et titre) -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <input type="checkbox" class="checkbox-item mx-3" value="{{ arret[0] }}">
+                    <h5 class="card-title text-center fw-bold mb-0 mx-5">Arrêt de {{ arret[1] }}</h5>
+                </div>
+
+                <!-- Corps de la carte, affichant les détails de l'arrêt -->
+                <div class="card-body">
+                    <p class="card-text">
+                        <p><strong>ID :</strong> {{ arret[0] }}</p>
+                        <p><strong>Type :</strong> {{ arret[2] }}</p>
+                        <p><strong>Date début :</strong> {{ arret[3] }}</p>
+                        <p><strong>Date fin :</strong> {{ arret[4] }}</p>
+                        <p><strong>Description :</strong> {{ arret[5] }}</p>
+                        <p><strong>Statut :</strong> {{ arret[6] }}</p>
+
+                        <!-- Motif de refus et pièce jointe (si présente) -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <strong>Motif de refus :</strong> {{ arret[7] if arret[7] else "N/A" }}
+                            </span>
+                            {% if arret[8] %}
+                                <!-- Lien vers la pièce jointe -->
+                                <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank" class="btn btn-link btn-sm">
+                                    <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
+                                </a>
+                            {% else %}
+                                <span class="badge text-dark d-flex align-items-center justify-content-center" id="badgePerso">Pas de pièce jointe</span>
+                            {% endif %}
+                        </div>
+                    </p>
+
+                    <!-- Actions disponibles si l'arrêt est toujours en attente -->
+                    <div class="d-flex flex-column">
+                        {% if arret[6] == 'en attente' %}
+                        <form method="POST" action="{{ url_for('afficher_demandes_arrêts') }}" class="mb-2">
+                            <input type="hidden" name="id" value="{{ arret[0] }}">
+                            <input type="hidden" name="statut">
+
+                            <!-- Bouton pour accepter la demande -->
+                            <button type="button" onclick="handleAction(this, 'accepte')" class="btn btn-success btn-sm w-100 mb-1">Accepter</button>
+                            <!-- Bouton pour refuser la demande -->
+                            <button type="button" onclick="handleAction(this, 'refuse')" class="btn btn-danger btn-sm w-100 mb-1">Refuser</button>
+
+                            <!-- Zone de texte pour le motif de refus -->
+                            <textarea name="motif_refus" placeholder="Motif du refus" class="form-control mt-2" rows="3" style="width: 100%;"></textarea>
+                        </form>                        
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Boutons flottants pour la suppression multiple et la sélection/désélection -->
+    <div class="floating-buttons">
+        <!-- Supprimer les arrêts sélectionnés -->
+        <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('demandes_arrêt')" title="Supprimer les arrêts sélectionnés">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+        <!-- Sélectionner tous les arrêts -->
+        <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
+            <i class="fas fa-check-double"></i>
+        </button>
+        <!-- Désélectionner tous les arrêts -->
+        <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
+            <i class="fas fa-ban"></i>
+        </button>
+    </div>
+    
+    {% else %}
+        <!-- Message si aucune demande d'arrêt n'existe -->
+        <div class="text-center mt-5">
+            <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">
+            <h4 class="text-white mt-4">Aucune demande d'arrêt pour le moment.</h4>
+        </div>
+    {% endif %}
+{% endblock %}

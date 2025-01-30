@@ -1,0 +1,98 @@
+{% extends "employé_base.html" %}
+
+<!--
+    employé_réunion.html
+    Page permettant à l'employé de consulter ses invitations à des réunions et de les accepter ou refuser.
+-->
+
+{% block title %}Les Invitations aux Réunions{% endblock %}
+
+{% block content1 %}
+<!-- Barre de recherche : recherche par ID de la réunion -->
+<li class="nav-item">
+    <form class="d-flex mx-2" id="searchBox">
+        <input 
+            class="form-control me-2" 
+            type="search" 
+            id="searchInput" 
+            placeholder="Recherche par id réunion" 
+            aria-label="Rechercher"
+        >
+        <button 
+            class="btn btn-custom-search" 
+            type="button" 
+            onclick="searchDemandeEmploye()"
+        >
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+</li>
+{% endblock %}
+
+{% block content2 %}
+<h1 class="text-white text-center mb-4">Invitations aux Réunions</h1>
+
+<!-- Vérifie s'il existe des invitations -->
+{% if invitations %}
+    <!-- Liste des invitations sous forme de cartes -->
+    <div class="row d-flex flex-wrap justify-content-center" style="font-size: larger;">
+        {% for invitation in invitations %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card demande-card" onclick="agrandirCarte(this)">
+                <div class="card-body">
+                    <!-- Titre de la réunion -->
+                    <h4 class="card-title text-center fw-bold">{{ invitation[1] }}</h4>
+                    <p class="card-text text-center">
+                        <strong>Date & Heure :</strong> {{ invitation[2] }}<br>
+                        
+                        <!-- Badge d'état de la réunion -->
+                        {% if invitation[3] == 'Accepted' %}
+                            <span class="badge bg-success" id="badgePerso">Acceptée</span>
+                        {% elif invitation[3] == 'Rejected' %}
+                            <span class="badge bg-danger" id="badgePerso">Refusée</span>
+                        {% else %}
+                            <span class="badge bg-warning" id="badgePerso">En attente</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Affiche les boutons Accepter/Refuser uniquement si le statut est en attente -->
+                    {% if invitation[3] == 'en attente' %}
+                    <div class="d-flex justify-content-center">
+                        <form method="POST" class="d-flex w-100" onsubmit="return confirmAction()">
+                            <input type="hidden" name="meeting_id" value="{{ invitation[0] }}">
+                            <button 
+                                type="submit" 
+                                name="response" 
+                                value="Accepted" 
+                                class="btn btn-success w-50 me-2"
+                            >
+                                Accepter
+                            </button>
+                            <button 
+                                type="submit" 
+                                name="response" 
+                                value="Rejected" 
+                                class="btn btn-danger w-50 ms-2"
+                            >
+                                Refuser
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Affichage si aucune invitation n'existe -->
+    <div class="text-center mt-5">
+        <img 
+            src="{{ url_for('static', filename='img/Fichier2.png') }}" 
+            alt="Aucune prime" 
+            class="no-demand-image"
+        >
+        <h4 class="text-white mt-4">Aucune invitation reçue pour le moment.</h4>
+    </div>
+{% endif %}
+{% endblock %}

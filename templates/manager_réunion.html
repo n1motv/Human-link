@@ -1,0 +1,97 @@
+<!-- Ligne suivante : indique que ce template étend "manager_base.html" -->
+{% extends "manager_base.html" %}
+
+<!-- Ligne suivante : définit le titre de la page -->
+{% block title %}Les demandes de réunion{% endblock %}
+
+<!-- Ligne suivante : bloc content2 (corps principal du contenu) -->
+{% block content2 %}
+            <!-- Ligne suivante : titre pour la création d'invitation -->
+            <h1 class="text-center text-white mb-4">Créer une Invitation de Réunion</h1>
+            <!-- Ligne suivante : carte pour le formulaire d'invitation de réunion -->
+            <div class="card border-0 rounded-4 fw-bold text-white">
+                <div class="card-body p-4">
+                    <!-- Ligne suivante : formulaire d'envoi d'invitation -->
+                    <form method="POST" class="fw-bold">
+                        <!-- Ligne suivante : champ pour le titre de la réunion -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Titre de la Réunion</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="Entrez le titre" required>
+                        </div>
+                        <!-- Ligne suivante : champ pour la date et l'heure -->
+                        <div class="mb-3">
+                            <label for="date_time" class="form-label">Date & Heure</label>
+                            <input type="datetime-local" class="form-control" id="date_time" name="date_time" required>
+                        </div>
+                        <!-- Ligne suivante : liste multiple pour sélectionner les employés -->
+                        <div class="mb-3">
+                            <label for="employees" class="form-label ">Inviter des Employés</label>
+                            <select class="form-select" id="employees" name="employees" size="{{ employees|length }}" multiple required>
+                                {% for emp in employees %}
+                                <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-white">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs employés.</small>
+                        </div>
+                        <!-- Ligne suivante : bouton d'envoi de l'invitation -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-send"></i> Envoyer l'Invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <hr>
+            <!-- Ligne suivante : titre pour la liste des réunions planifiées -->
+            <h1 class="mt-5 text-white text-center mb-4">Réunions Planifiées</h1>
+            <!-- Ligne suivante : carte contenant la table des réunions -->
+            <div class="card bg-white text-dark shadow-lg border-0 rounded-4 fw-bold">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <!-- Ligne suivante : table pour afficher les réunions planifiées -->
+                        <table id="meetingsTable" class="table align-middle bg-white">
+                            <!-- Ligne suivante : en-tête du tableau -->
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="text-center">Titre</th>
+                                    <th>Date & Heure</th>
+                                    <th>Employés Invités</th>
+                                    <th>Acceptés</th>
+                                    <th>Rejetés</th>
+                                </tr>
+                            </thead>
+                            <!-- Ligne suivante : corps du tableau -->
+                            <tbody>
+                                {% for meeting in meetings | reverse %}
+                                <tr>
+                                    <!-- Ligne suivante : chaque réunion a une checkbox pour suppression multiple, plus le titre -->
+                                    <td><input type="checkbox" class="checkbox-item mx-3" value="{{ meeting[0] }}">  {{ meeting[1] }}</td>
+                                    <!-- Ligne suivante : date et heure de la réunion -->
+                                    <td>{{ meeting[2] }}</td>
+                                    <!-- Ligne suivante : employés invités -->
+                                    <td>{{ meeting[3] }}</td>
+                                    <!-- Ligne suivante : nombre d'acceptations -->
+                                    <td>{{ meeting[4] }}</td>
+                                    <!-- Ligne suivante : nombre de rejets -->
+                                    <td>{{ meeting[5] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Ligne suivante : boutons flottants pour la suppression multiple, la sélection et la désélection -->
+            <div class="floating-buttons">
+                <button class="btn btn-danger rounded-circle floating-btn" onclick="deleteSelectedItems('meetings')" title="Supprimer les Réunions sélectionnés">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button class="btn btn-primary rounded-circle floating-btn" onclick="selectAll()" title="Tout sélectionner">
+                    <i class="fas fa-check-double"></i>
+                </button>
+                <button class="btn btn-secondary rounded-circle floating-btn" onclick="deselectAll()" title="Tout désélectionner">
+                    <i class="fas fa-ban"></i>
+                </button>
+            </div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "employé_base.html" %}
+
+<!--
+    employé_soumettre_arrêts.html
+    Page permettant à l'employé de soumettre une demande d'arrêt maladie.
+-->
+
+{% block title %}Soumettre une demande d'arrêt{% endblock %}
+
+{% block content2 %}
+<h1 class="text-center text-white mb-4">Dépôt d'arrêt de maladie</h1>
+
+<div class="card border-0 rounded-4 fw-bold text-white">
+    <div class="card-body p-4">
+        <!-- Formulaire de soumission d'un arrêt maladie -->
+        <form method="POST" enctype="multipart/form-data" onsubmit="validerDateDebut(event)">
+
+            <!-- Type de maladie (justifié / non justifié) -->
+            <div class="mb-3">
+                <label for="type_maladie" class="form-label">Type de maladie :</label>
+                <select 
+                    class="form-select" 
+                    name="type_maladie" 
+                    id="type_maladie" 
+                    required
+                >
+                    <option value="justifie">Justifié</option>
+                    <option value="non justifie">Non Justifié</option>
+                </select>
+            </div>
+
+            <!-- Date de début -->
+            <div class="mb-3">
+                <label for="date_debut" class="form-label">Date de début :</label>
+                <input 
+                    type="date" 
+                    class="form-control" 
+                    name="date_debut" 
+                    id="date_debut" 
+                    required
+                >
+            </div>
+
+            <!-- Date de fin -->
+            <div class="mb-3">
+                <label for="date_fin" class="form-label">Date de fin :</label>
+                <input 
+                    type="date" 
+                    class="form-control" 
+                    name="date_fin" 
+                    id="date_fin" 
+                    required
+                >
+            </div>
+
+            <!-- Description de la maladie -->
+            <div class="mb-3">
+                <label for="description" class="form-label">Description :</label>
+                <textarea 
+                    class="form-control" 
+                    name="description" 
+                    id="description" 
+                    rows="3" 
+                    placeholder="Décrivez brièvement votre maladie"
+                ></textarea>
+            </div>
+
+            <!-- Pièce jointe (éventuel justificatif) -->
+            <div class="mb-3">
+                <label for="piece_jointe" class="form-label">Pièce jointe :</label>
+                <input 
+                    type="file" 
+                    class="form-control" 
+                    name="piece_jointe" 
+                    id="piece_jointe"
+                >
+            </div>
+
+            <!-- Bouton de soumission -->
+            <div class="d-grid">
+                <button 
+                    type="submit" 
+                    class="btn btn-success btn-lg"
+                >
+                    <i class="bi bi-send"></i> Soumettre
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
