@@ -1996,7 +1996,7 @@ def soumettre_demande_prime():
             nom_manager, prenom_manager = manager
             sujet = "Nouvelle demande de prime soumise"
             contenu = f"Bonjour,\n\nUne demande de prime a été soumise par votre manager {nom_manager} {prenom_manager} pour vous.\n\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
-            envoyer_email(sujet, "employe_email", contenu)
+            envoyer_email(sujet, employe_email, contenu)
 
             contenu_admin = f"Bonjour,\n\nUne demande de prime a été soumise pour l'employé {nom_employe} {prenom_employe}.\nMontant demandé : {montant}€\nMotif : {motif}\n\nCordialement,\nL'équipe RH."
             creer_notification(admin_email, contenu_admin, "Prime")
