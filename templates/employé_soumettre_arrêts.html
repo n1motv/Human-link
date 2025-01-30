@@ -18,12 +18,7 @@
             <!-- Type de maladie (justifié / non justifié) -->
             <div class="mb-3">
                 <label for="type_maladie" class="form-label">Type de maladie :</label>
-                <select 
-                    class="form-select" 
-                    name="type_maladie" 
-                    id="type_maladie" 
-                    required
-                >
+                <select class="form-select" name="type_maladie" id="type_maladie" required>
                     <option value="justifie">Justifié</option>
                     <option value="non justifie">Non Justifié</option>
                 </select>
@@ -32,56 +27,30 @@
             <!-- Date de début -->
             <div class="mb-3">
                 <label for="date_debut" class="form-label">Date de début :</label>
-                <input 
-                    type="date" 
-                    class="form-control" 
-                    name="date_debut" 
-                    id="date_debut" 
-                    required
-                >
+                <input type="date" class="form-control" name="date_debut" id="date_debut" required>
             </div>
 
             <!-- Date de fin -->
             <div class="mb-3">
                 <label for="date_fin" class="form-label">Date de fin :</label>
-                <input 
-                    type="date" 
-                    class="form-control" 
-                    name="date_fin" 
-                    id="date_fin" 
-                    required
-                >
+                <input type="date" class="form-control" name="date_fin" id="date_fin" required>
             </div>
 
             <!-- Description de la maladie -->
             <div class="mb-3">
                 <label for="description" class="form-label">Description :</label>
-                <textarea 
-                    class="form-control" 
-                    name="description" 
-                    id="description" 
-                    rows="3" 
-                    placeholder="Décrivez brièvement votre maladie"
-                ></textarea>
+                <textarea class="form-control" name="description" id="description" rows="3" placeholder="Décrivez brièvement votre maladie"></textarea>
             </div>
 
             <!-- Pièce jointe (éventuel justificatif) -->
             <div class="mb-3">
                 <label for="piece_jointe" class="form-label">Pièce jointe :</label>
-                <input 
-                    type="file" 
-                    class="form-control" 
-                    name="piece_jointe" 
-                    id="piece_jointe"
-                >
+                <input type="file" class="form-control" name="piece_jointe" id="piece_jointe">
             </div>
 
             <!-- Bouton de soumission -->
             <div class="d-grid">
-                <button 
-                    type="submit" 
-                    class="btn btn-success btn-lg"
-                >
+                <button type="submit" class="btn btn-success btn-lg">
                     <i class="bi bi-send"></i> Soumettre
                 </button>
             </div>

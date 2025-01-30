@@ -11,18 +11,8 @@
 <!-- Barre de recherche : recherche par ID de la réunion -->
 <li class="nav-item">
     <form class="d-flex mx-2" id="searchBox">
-        <input 
-            class="form-control me-2" 
-            type="search" 
-            id="searchInput" 
-            placeholder="Recherche par id réunion" 
-            aria-label="Rechercher"
-        >
-        <button 
-            class="btn btn-custom-search" 
-            type="button" 
-            onclick="searchDemandeEmploye()"
-        >
+        <input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par id réunion" aria-label="Rechercher">
+        <button class="btn btn-custom-search" type="button" onclick="searchDemandeEmploye()">
             <i class="bi bi-search"></i>
         </button>
     </form>
@@ -61,20 +51,10 @@
                         <form method="POST" class="d-flex w-100" onsubmit="return confirmAction()">
                             <input type="hidden" name="meeting_id" value="{{ invitation[0] }}">
                             <button 
-                                type="submit" 
-                                name="response" 
-                                value="Accepted" 
-                                class="btn btn-success w-50 me-2"
-                            >
-                                Accepter
+                                type="submit" name="response" value="Accepted" class="btn btn-success w-50 me-2">Accepter
                             </button>
                             <button 
-                                type="submit" 
-                                name="response" 
-                                value="Rejected" 
-                                class="btn btn-danger w-50 ms-2"
-                            >
-                                Refuser
+                                type="submit" name="response" value="Rejected" class="btn btn-danger w-50 ms-2">Refuser
                             </button>
                         </form>
                     </div>
@@ -87,11 +67,7 @@
 {% else %}
     <!-- Affichage si aucune invitation n'existe -->
     <div class="text-center mt-5">
-        <img 
-            src="{{ url_for('static', filename='img/Fichier2.png') }}" 
-            alt="Aucune prime" 
-            class="no-demand-image"
-        >
+        <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune prime" class="no-demand-image">
         <h4 class="text-white mt-4">Aucune invitation reçue pour le moment.</h4>
     </div>
 {% endif %}
