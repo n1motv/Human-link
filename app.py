@@ -704,6 +704,7 @@ def mark_notifications_as_read():
     Marque toutes les notifications comme lues pour l'utilisateur connecté.
     """
     if 'email' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return jsonify({'error': 'Unauthorized'}), 401
 
     email = session['email']
@@ -744,6 +745,7 @@ def admin_dashboard():
     Affiche des statistiques (nombre d'employés, départements, salaire moyen, etc.).
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
     connexion = connect_db()
@@ -858,6 +860,7 @@ def afficher_employés():
     Affiche la liste des employés pour l'administrateur.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
     connexion = connect_db()
     connexion.row_factory = None
@@ -884,6 +887,7 @@ def ajouter_employe_page():
     Permet à l'administrateur (ou manager) d'ajouter un nouvel employé.
     """
     if 'role' not in session or (session['role'] != 'admin'):
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
     erreur = None
     connexion = connect_db()
@@ -997,6 +1001,7 @@ def afficher_demandes_congé():
     - Le manager voit les demandes des employés qu'il supervise.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
     connexion = connect_db()
@@ -1049,6 +1054,7 @@ def répondre_congés(id):
     Met à jour les statuts et notifie l'employé concerné.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
     statut = request.form['statut']
     motif_refus = request.form.get('motif_refus', None)
@@ -1156,6 +1162,7 @@ def calendrier_congés():
     Afficher le calendrier des congés acceptés avec une couleur unique par employé.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
     connexion = connect_db()
@@ -1237,8 +1244,8 @@ def supprimer_employe(id):
     Accessible uniquement à l'admin.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     curseur = connexion.cursor()
     try:
@@ -1261,8 +1268,8 @@ def mettre_a_jour_employe(id):
     Met à jour les informations d'un employé (pour l'admin).
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     curseur = connexion.cursor()
 
@@ -1326,8 +1333,8 @@ def admin_demandes_contact():
     Affiche toutes les demandes de contact pour l'administrateur.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("""
@@ -1358,8 +1365,8 @@ def afficher_demandes_arrêts():
     Affiche les demandes d'arrêt maladie pour l'admin et permet de les accepter ou refuser.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     if request.method == 'POST':
         id = request.form['id']
         statut = request.form['statut']
@@ -1427,8 +1434,8 @@ def afficher_demandes_prime():
     Affiche toutes les demandes de prime pour l'administrateur.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("""
@@ -1459,8 +1466,8 @@ def traiter_demande_prime(id):
     Permet à l'administrateur de traiter (accepter/refuser) une demande de prime.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     statut = request.form['statut']
     motif_refus = request.form.get('motif_refus')
 
@@ -1619,8 +1626,8 @@ def deposer_document(id_employe):
     Permet à l'administrateur de déposer un document (bulletin, contrat, autre) pour un employé.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
     cur.execute("SELECT nom, prenom FROM utilisateurs WHERE id = ?", (id_employe,))
@@ -1699,8 +1706,8 @@ def assigner_manager():
     Permet à l'administrateur d'assigner un manager à un employé ou un autre manager.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     curseur = connexion.cursor()
 
@@ -1782,8 +1789,8 @@ def designer_directeur():
     Permet de désigner un nouveau directeur parmi les managers.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     manager_id = request.form.get('manager')
     if not manager_id:
         flash("Veuillez sélectionner un manager.", "error")
@@ -1808,8 +1815,8 @@ def supprimer_assignation(manager_id, supervise_id):
     Supprime une relation d'assignation (manager->supervisé) de la table managers.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     curseur = connexion.cursor()
     try:
@@ -1843,6 +1850,7 @@ def récupérer_orgchart():
     à partir du directeur et de ses managers subordonnés.
     """
     if 'role' not in session or session['role'] != 'admin':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return jsonify({"error": "Unauthorized access"}), 401
 
     connexion = connect_db()
@@ -1885,8 +1893,8 @@ def manager_dashboard():
     Tableau de bord du manager, affichant les employés qu'il supervise.
     """
     if 'role' not in session or session['role'] != 'manager':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     manager_id = session['id']
     connexion = connect_db()
     curseur = connexion.cursor()
@@ -1920,6 +1928,7 @@ def mettre_a_jour_teletravail(employe_id):
     Met à jour le nombre maximum de jours de télétravail d'un employé (uniquement pour le manager).
     """
     if 'role' not in session or session['role'] != 'manager':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
     jours_max_teletravail = request.form.get('jours_max_teletravail')
     connexion = connect_db()
@@ -1942,8 +1951,8 @@ def soumettre_demande_prime():
     Permet au manager de soumettre une demande de prime pour un employé qu'il supervise.
     """
     if 'role' not in session or session['role'] != 'manager':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     id_manager = session['id']
     manager_email = session['email']
 
@@ -2020,8 +2029,8 @@ def manager_primes():
     Affiche les demandes de prime soumises par le manager connecté.
     """
     if 'role' not in session or session['role'] != 'manager':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     manager_id = session['id']
     connexion = connect_db()
     cur = connexion.cursor()
@@ -2057,6 +2066,7 @@ def voir_mes_infos():
     Affiche les informations personnelles de l'employé connecté.
     """
     if 'email' not in session or session['role'] == "admin":
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
 
     email = session['email']
@@ -2091,6 +2101,8 @@ def recuperer_evenements():
     de l'employé connecté au format JSON (pour FullCalendar).
     """
     if 'email' not in session or session['role'] == "admin":
+
+        flash("Vous devez être connecté pour accéder à cette page.")
         return jsonify([])
 
     connexion = connect_db()
@@ -2505,8 +2517,8 @@ def choisir_teletravail():
     Permet à l'employé de choisir ses jours de télétravail pour la semaine prochaine.
     """
     if 'role' not in session or session['role'] == "admin":
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     id_employe = session['id']
     employe_email = session['email']
     notifications = récupérer_notifications(employe_email)
@@ -2565,8 +2577,8 @@ def calendrier_teletravail():
     Affiche un calendrier regroupant les jours de télétravail acceptés pour l'admin ou le manager.
     """
     if 'role' not in session or session['role'] not in ['admin', 'manager']:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
 
@@ -2636,8 +2648,8 @@ def réunion_scheduler():
     Permet au manager de planifier une réunion et d'inviter des employés.
     """
     if 'role' not in session or session['role'] != 'manager':
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     connexion = connect_db()
     cur = connexion.cursor()
 
@@ -2799,8 +2811,8 @@ def supprimer_elements(table):
     Vérifie également les permissions de l'utilisateur connecté.
     """
     if 'role' not in session:
+        flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
-
     data = request.get_json()
     ids = data.get('ids', [])
     if not ids:
