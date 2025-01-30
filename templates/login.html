@@ -1,42 +1,282 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <!-- Méta-données de base -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Intégration de Bootstrap, Bootstrap Icons et du fichier de styles personnalisé -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"rel="stylesheet"integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet"href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet"href="../static/styles.css">
+    <link rel="stylesheet"href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        .card {
+            border-radius: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: slideInUp 0.8s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .input-group-text {
+            border: none;
+            border-radius: 0;
+        }
+
+        .input-group .form-control {
+            border-radius: 0 10px 10px 0;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .input-group .form-control:focus {
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.7);
+            border-color: #007bff;
+        }
+
+        .alert {
+            border-radius: 10px;
+            animation: bounceIn 0.5s ease;
+        }
+
+        /* Animation for input focus */
+        input:focus {
+            animation: pulse 0.4s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 20px 10px rgba(0, 123, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+            }
+        }
+
+        /* Fade-in animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive design adjustments */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 2rem;
+            }
+
+            .btn-primary {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div>
-            <div class="logo">
-                <h1>Mon Application</h1>
+    <nav class="navbar navbar-expand-lg navbar-dark text-center">
+        <div class="container-fluid text-center">
+            <!-- Logo principal (pourrait renvoyer vers la page d'accueil ou autre) -->
+            <a href="{{ url_for('afficher_employés') }}">
+                <img id="main-logo" src="../static/logo/logo-white.png" alt="">
+            </a>
+        </div>
+    </nav>
+
+    <!-- Gestion des messages flash via SweetAlert -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    {% for category, message in messages %}
+                    Swal.fire({
+                        icon: '{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'warning' if category == 'warning' else 'info' }}',
+                        title: '{{ category|capitalize }}',
+                        text: '{{ message }}',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-custom-popup'
+                        }
+                    });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    <div id="main-body">
+        <main class="my-1 d-flex justify-content-center align-items-center vh-100">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-10 col-lg-8">
+                        <div class="card shadow-lg border-0 rounded-4">
+                            <div class="card-body p-5">
+                                <h2 class="card-title text-center mb-4 fw-bold">Bienvenue 👋</h2>
+                                <p class="text-center text-muted mb-4">
+                                    Veuillez vous connecter à votre compte
+                                </p>
+
+                                <!-- Formulaire de connexion -->
+                                <form method="POST" action="{{ url_for('login') }}">
+                                    {{ form.hidden_tag() }}
+
+                                    <!-- Champ Email -->
+                                    <div class="mb-4">
+                                        <label for="email" class="form-label">Email :</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-primary text-white">
+                                                <i class="bi bi-envelope" placeholder="Entrez votre adresse email"></i>
+                                            </span>
+                                            {{ form.email(class="form-control") }}
+                                        </div>
+                                    </div>
+
+                                    <!-- Champ Mot de passe -->
+                                    <div class="mb-4">
+                                        <label for="mot_de_passe" class="form-label">Mot de passe :</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-primary text-white">
+                                                <i class="bi bi-lock"></i>
+                                            </span>
+                                            {{ form.mot_de_passe(class="form-control") }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Liens d'aide et mot de passe oublié -->
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
+                                        <a 
+                                            href="{{ url_for('contact') }}" 
+                                            class="text-decoration-none text-primary d-flex align-items-center"
+                                        >
+                                            <i class="bi bi-chat-left-dots me-2" style="font-size: 1.2rem;"></i>
+                                            <span class="fw-semibold">Besoin d'aide ?</span>
+                                        </a>
+                                        <a 
+                                            href="{{ url_for('reset_password') }}" 
+                                            class="text-decoration-none text-primary d-flex align-items-center"
+                                        >
+                                            <i class="bi bi-key-fill me-2" style="font-size: 1.2rem;"></i>
+                                            <span class="fw-semibold">Mot de passe oublié ?</span>
+                                        </a>
+                                    </div>                                
+
+                                    <!-- Bouton de connexion -->
+                                    <button 
+                                        type="submit" 
+                                        class="btn btn-primary w-100 d-flex align-items-center justify-content-center py-2"
+                                    >
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Connexion
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </header>
+        </main>
 
-    <main>
-        <div class="container">
-            <h2>Connexion à votre compte</h2>
-            {% if message %}
-                <p class="error-message">{{ message }}</p>
-            {% endif %}
-            <form method="POST" class="login-form">
-                <label for="email">Email :</label>
-                <input type="text" name="email" id="email" required placeholder="Entrez votre email"><br>
-                <br>
-                <label for="mot_de_passe">Mot de passe :</label>
-                <input type="password" name="mot_de_passe" id="mot_de_passe" required placeholder="Entrez votre mot de passe"><br>
-                <br>
-            
+        <!-- Pied de page -->
+        <footer class="py-3">
+            <div class="container text-center">
+                <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
+            </div>
+        </footer>
+    </div>
 
-                <button type="submit" class="btn-login"id= "btn_exept">Connexion</button>
-            </form>
-        </div>
-    </main>
-    <script src="script.js"></script>
-    <footer>
-        <p>&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
-    </footer>
+    <!-- Scripts JS (Bootstrap, script.js, SweetAlert2) -->
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+        crossorigin="anonymous"
+    ></script>
+    <script src="../static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Animation sur la mise au focus d'un champ de formulaire
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.parentElement.classList.add('border-primary');
+                });
+
+                input.addEventListener('blur', () => {
+                    input.parentElement.classList.remove('border-primary');
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // Animation d'ombre sur le focus d'un champ
+        document.addEventListener('DOMContentLoaded', () => {
+            const formControls = document.querySelectorAll('.form-control');
+
+            formControls.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.style.transition = 'box-shadow 0.3s ease';
+                    input.style.boxShadow = '0 0 15px rgba(0, 123, 255, 0.8)';
+                });
+
+                input.addEventListener('blur', () => {
+                    input.style.boxShadow = 'none';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,132 @@
+{% extends "admin_base.html" %}
+
+<!--
+    admin_dépot.html
+    Page pour déposer différents types de documents (bulletin, contrat, autre) 
+    pour un employé spécifique.
+-->
+
+{% block title %}Déposer un Document{% endblock %}
+
+{% block content2 %}
+<!-- Titre principal affichant le nom complet de l'employé -->
+<h1 class="text-center text-white mb-4">Déposer un Document pour : {{ employe[0] }} {{ employe[1] }}</h1>
+
+<!-- Carte de formulaire pour le dépôt de document -->
+<div class="card text-white p-4 fw-bold">
+    <form method="POST" enctype="multipart/form-data">
+        <!-- Sélection du type de document (bulletin, contrat ou autre) -->
+        <div class="mb-3">
+            <label for="type_document" class="form-label">Type de Document</label>
+            <select class="form-select" name="type_document" id="type_document" required onchange="toggleFields()">
+                <option value="bulletin">Bulletin de Salaire</option>
+                <option value="contrat">Contrat de Travail</option>
+                <option value="autre">Autre Document</option>
+            </select>
+        </div>
+
+        <!-- Champs pour la sélection du mois et de l'année (bulletin/contrat) -->
+        <div id="mois_annee_fields">
+            <!-- Liste déroulante pour les mois -->
+            <div class="mb-3">
+                <label for="mois" class="form-label">Mois</label>
+                <select class="form-select" name="mois" id="mois" required>
+                    <option value="Janvier">Janvier</option>
+                    <option value="Février">Février</option>
+                    <option value="Mars">Mars</option>
+                    <option value="Avril">Avril</option>
+                    <option value="Mai">Mai</option>
+                    <option value="Juin">Juin</option>
+                    <option value="Juillet">Juillet</option>
+                    <option value="Août">Août</option>
+                    <option value="Septembre">Septembre</option>
+                    <option value="Octobre">Octobre</option>
+                    <option value="Novembre">Novembre</option>
+                    <option value="Décembre">Décembre</option>
+                </select>
+            </div>
+
+            <!-- Liste déroulante pour les années -->
+            <div class="mb-3">
+                <label for="annee" class="form-label">Année</label>
+                <select class="form-select" name="annee" id="annee" required>
+                    <!-- Les options seront ajoutées dynamiquement avec JavaScript (voir content3) -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Champ pour le nom d'un document si le type est "autre" -->
+        <div id="nom_document_field" class="d-none">
+            <div class="mb-3">
+                <label for="nom_document" class="form-label">Nom du Document</label>
+                <input type="text" class="form-control" name="nom_document" placeholder="Ex: Attestation, Justificatif">
+            </div>
+        </div>
+
+        <!-- Sélection du fichier à uploader -->
+        <div class="mb-3">
+            <label for="fichier" class="form-label">Fichier</label>
+            <input type="file" class="form-control" name="fichier" required>
+        </div>
+
+        <!-- Bouton pour soumettre le formulaire -->
+        <div class="d-grid">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-upload"></i> Déposer
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block content3 %}
+<script>
+    /*
+        Script JavaScript pour :
+        1. Générer la liste des années (1900 à 2100) et pré-sélectionner l'année en cours.
+        2. Pré-sélectionner le mois en cours.
+        3. Gérer l'affichage/masquage de certains champs selon le type de document choisi.
+    */
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const anneeSelect = document.getElementById('annee');
+        const moisSelect = document.getElementById('mois');
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth(); // Janvier = 0
+
+        // Générer les options pour les années de 1900 à 2100
+        for (let year = 1900; year <= 2100; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+
+            // Sélection par défaut de l'année actuelle
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            anneeSelect.appendChild(option);
+        }
+
+        // Sélectionner le mois courant (index du tableau des mois)
+        moisSelect.selectedIndex = currentMonth;
+    });
+
+    // Fonction pour afficher ou masquer les champs selon le type de document
+    function toggleFields() {
+        const typeDocument = document.getElementById('type_document').value;
+        const moisAnneeFields = document.getElementById('mois_annee_fields');
+        const nomDocumentField = document.getElementById('nom_document_field');
+
+        if (typeDocument === 'autre') {
+            // Masquer les champs mois/année et afficher le champ nom du document
+            moisAnneeFields.classList.add('d-none');
+            nomDocumentField.classList.remove('d-none');
+        } else {
+            // Afficher les champs mois/année et masquer le champ nom du document
+            moisAnneeFields.classList.remove('d-none');
+            nomDocumentField.classList.add('d-none');
+        }
+    }
+</script>
+{% endblock %}
