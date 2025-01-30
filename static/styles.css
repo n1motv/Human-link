@@ -329,6 +329,10 @@ a {
     #calendar2 .fc-toolbar-title {
         font-size: 1rem;
     }
+    .fc-col-header-cell-cushion {
+        width: 100%;
+        text-overflow: clip;
+    }
 }
 
 /* Media Query pour les téléphones */
