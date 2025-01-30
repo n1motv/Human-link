@@ -1,34 +1,45 @@
 ##############################################################
 #                  IMPORTS ET CONFIGURATION                  #
 ##############################################################
+#                  IMPORTS ET CONFIGURATION                  #
+##############################################################
 
-import sqlite3, bcrypt, os, uuid, string, random
-from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify
-from db_setup import (
-    cree_table_notifications,
-    cree_table_utilisateurs,
-    cree_table_prime,
-    cree_compte_admin,
-    cree_table_conges,
-    connect_db,
-    cree_table_managers,
-    cree_table_arrets_maladie,
-    cree_table_demandes_contact,
-    cree_table_réunion,
-    cree_table_réponse_réunion,
-    cree_table_teletravail
-)
-from werkzeug.utils import secure_filename
+# Imports de la bibliothèque standard
+import os
+import random
+import re
+import string
+import sqlite3
+import uuid
 from datetime import datetime, timedelta
+
+# Imports de tiers
+import bcrypt
+from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
+from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from forms import LoginForm
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
-from apscheduler.schedulers.background import BackgroundScheduler
-from hashlib import md5
-import re
+from werkzeug.utils import secure_filename
+
+# Imports de votre propre application
+from db_setup import (
+    cree_compte_admin,
+    cree_table_arrets_maladie,
+    cree_table_conges,
+    cree_table_managers,
+    cree_table_notifications,
+    cree_table_prime,
+    cree_table_réponse_réunion,
+    cree_table_réunion,
+    cree_table_teletravail,
+    cree_table_utilisateurs,
+    cree_table_demandes_contact,
+    connect_db
+)
+from forms import LoginForm
 
 # Initialisation de l'application Flask + configuration
 load_dotenv()
@@ -67,12 +78,10 @@ mail = Mail(app)
 
 def ajouter_conge_mensuel():
     mois_actuel = datetime.now().strftime("%Y-%m")  # Format: "2023-10"
-    
     connexion = connect_db()
     curseur = connexion.cursor()
     curseur.execute("SELECT id, solde_congé, dernier_mois_maj FROM utilisateurs")
     employes = curseur.fetchall()
-    
     for employe in employes:
         employe_id, solde_congé, dernier_mois_maj = employe
         if dernier_mois_maj != mois_actuel:
@@ -85,12 +94,9 @@ def ajouter_conge_mensuel():
             print(f"Congé mis à jour pour l'utilisateur ID {employe_id}: {nouveau_solde_conge} jours")
         else:
             print(f"Pas de mise à jour pour l'utilisateur ID {employe_id}, mois déjà mis à jour")
-    
     connexion.commit()
     connexion.close()
     print("Mise à jour mensuelle des congés terminée.")
-
-
 def creation_upload_dossier(nom):
     """
     Crée un dossier pour l'upload si celui-ci n'existe pas.
@@ -252,7 +258,6 @@ def récupérer_notifications(email):
         }
         for n in notifications
     ]
-
 def récupérer_nombre_notifications_non_lues(email):
     """
     Récupère le nombre de notifications non lues pour un utilisateur.
@@ -1130,7 +1135,7 @@ def répondre_congés(id):
                         WHERE id_employe = ? AND date_teletravail BETWEEN ? AND ?
                     """, (id_employe, date_debut, date_fin))
 
-                    contenu = f"Bonjour,\n\nVotre demande de congé a été acceptée par l'administrateur.\n\nCordialement,\nL'équipe RH"
+                    contenu = "Bonjour,\n\nVotre demande de congé a été acceptée par l'administrateur.\n\nCordialement,\nL'équipe RH"
                     sujet = "Acceptation de votre demande de congé"
                     notifications.append((email_employe, contenu, "Congé"))
                     envoyer_email("Réponse demande congé",email_employe,contenu)
@@ -1410,7 +1415,7 @@ def afficher_demandes_arrêts():
             """, (id_employe, date_debut, date_fin))
             contenu = "Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
             sujet="Acceptation de demande d'arrêt"
-            
+
         flash("Statut de la demande est mis à jour avec succès.")
         connexion.commit()
         connexion.close()
@@ -1691,7 +1696,7 @@ def deposer_document(id_employe):
         cur.execute("SELECT email FROM utilisateurs WHERE id = ?", (id_employe,))
         destinataire = cur.fetchone()[0]
         sujet = "Dépot de document"
-        contenu = f"Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
+        contenu = "Bonjour,\n\nUn nouveau document a été déposer dans votre coffre fort.\n\nCordialement,\nEquipe RH."
         envoyer_email(sujet, destinataire, contenu)
         creer_notification(destinataire, contenu, "document")
 
@@ -2682,7 +2687,7 @@ def réunion_scheduler():
             connexion.commit()
 
             sujet = "Invitation à une réunion"
-            contenu = f"Bonjour,\n\nVotre manager vous à invité à une réunion.\nVeuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
+            contenu = "Bonjour,\n\nVotre manager vous à invité à une réunion.\nVeuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
             envoyer_email(sujet, employee_email, contenu)
             creer_notification(employee_email, contenu, "Invitation")
 
@@ -2758,7 +2763,7 @@ def meeting_invitations():
         """, (employee_id,))
         manager_email = cur.fetchone()[0]
         sujet = "Réponse à l'invitation à la réunion"
-        contenu = f"Bonjour,\n\nL'un de vos employés à répondu à votre invitation.\n\nCordialement,\nL'équipe RH"
+        contenu = "Bonjour,\n\nL'un de vos employés à répondu à votre invitation.\n\nCordialement,\nL'équipe RH"
         envoyer_email(sujet, manager_email, contenu)
         creer_notification(manager_email, contenu, "Invitation réunion")
 
