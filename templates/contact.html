@@ -122,7 +122,7 @@
 
     <!-- Si l'utilisateur n'est pas connecté (role non défini) -->
     {% elif not session['role'] %}
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark text-center">
+        <nav class="navbar navbar-expand-lg text-center">
             <div class="container-fluid text-center">
                 <a href="{{ url_for('afficher_employés') }}">
                     <img id="main-logo" src="../static/logo/logo-white.png" alt="">
