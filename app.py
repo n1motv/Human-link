@@ -1084,6 +1084,7 @@ def répondre_congés(id):
                 """, (id,))
                 contenu = f"Une demande de congé de l'employé {id_employe} a été acceptée par le manager et requiert votre approbation."
                 notifications.append((admin_email, contenu, "Congé"))
+                envoyer_email("Réponse demande congé",email_employe,contenu)
 
             elif statut == 'refuse':
                 curseur.execute("""
@@ -1096,6 +1097,7 @@ def répondre_congés(id):
                 sujet = "Refus de votre demande de congé"
                 contenu = f"Bonjour,\n\nVotre demande de congé a été refusée par votre manager pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
                 notifications.append((email_employe, contenu, "Congé"))
+                envoyer_email("Réponse demande congé",email_employe,contenu)
 
         # Rôle admin
         elif role == 'admin':
@@ -1129,6 +1131,7 @@ def répondre_congés(id):
                     contenu = f"Bonjour,\n\nVotre demande de congé a été acceptée par l'administrateur.\n\nCordialement,\nL'équipe RH"
                     sujet = "Acceptation de votre demande de congé"
                     notifications.append((email_employe, contenu, "Congé"))
+                    envoyer_email("Réponse demande congé",email_employe,contenu)
                 else:
                     flash("Solde de congé insuffisant pour cette demande.", "danger")
 
@@ -1143,8 +1146,8 @@ def répondre_congés(id):
                 contenu = f"Bonjour,\n\nVotre demande de congé a été refusée par l'administrateur pour le motif suivant : {motif_refus}.\n\nCordialement,\nL'équipe RH"
                 sujet = "Refus de votre demande de congé"
                 notifications.append((email_employe, contenu, "Congé"))
+                envoyer_email("Réponse demande congé",email_employe,contenu)
         
-        envoyer_email("Réponse demande congé",email_employe,contenu)
         connexion.commit()
         flash("Statut de la demande mis à jour avec succès.", "success")
 
