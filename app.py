@@ -979,7 +979,7 @@ def ajouter_employe_page():
             L'équipe RH
             """
             envoyer_email(sujet_mot_de_passe, email, contenu_mot_de_passe)
-
+            flash("L`employé a été ajouter avec succès","success")
             return redirect(url_for('afficher_employés'))
 
     notifications = récupérer_notifications(admin_email)
