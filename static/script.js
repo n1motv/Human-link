@@ -106,31 +106,61 @@ function toggleNotificationPanel() {
    6) Suppression d'une notification
 ******************************* */
 function supprimerNotification(id) {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette notification ?")) {
-        fetch(`/supprimer_notification/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('.notification-item').remove();
-                const badge = document.querySelector('#notification-icon .badge');
-                if (badge) {
-                    let count = parseInt(badge.innerText) - 1;
-                    if (count > 0) {
-                        badge.innerText = count;
-                    } else {
-                        badge.remove();
-                    }
+    Swal.fire({
+        title: 'Êtes-vous sûr ?',
+        text: "Cette action est irréversible !",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/supprimer_notification/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-            }
-        })
-        .catch(error => console.error('Erreur :', error));
-    }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[onclick="supprimerNotification(${id})"]`).closest('.notification-item').remove();
+                    
+                    // Mettre à jour le badge des notifications
+                    const badge = document.querySelector('#notification-icon .badge');
+                    if (badge) {
+                        let count = parseInt(badge.innerText) - 1;
+                        if (count > 0) {
+                            badge.innerText = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+
+                    // Affichage d'une alerte de succès
+                    Swal.fire({
+                        title: 'Supprimée !',
+                        text: 'La notification a été supprimée avec succès.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erreur :', error);
+                Swal.fire({
+                    title: 'Erreur',
+                    text: 'Une erreur est survenue lors de la suppression.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        }
+    });
 }
+
 
 /* *******************************
    7) Recherche d'employés par nom
