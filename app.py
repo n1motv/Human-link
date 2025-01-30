@@ -1410,7 +1410,8 @@ def afficher_demandes_arrêts():
             """, (id_employe, date_debut, date_fin))
             contenu = "Bonjour,\n\nVotre demande d'arrêt maladie a été acceptée.\n\nCordialement,\nL'équipe RH"
             sujet="Acceptation de demande d'arrêt"
-
+            
+        flash("Statut de la demande est mis à jour avec succès.")
         connexion.commit()
         connexion.close()
         creer_notification(employe_email, contenu, "Arrét")
