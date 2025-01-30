@@ -45,22 +45,35 @@
 
                         <!-- Informations supplémentaires de l'employé -->
                         <p class="card-text" id="infos">
-                            <strong>Date de naissance :</strong> {{ emp[2] }}<br>
                             <strong>Poste :</strong> {{ emp[3] }}<br>
                             <strong>Département :</strong> {{ emp[4] }}<br>
-                            <strong>Email :</strong> {{ emp[5] }}<br>
-                            <strong>Congés :</strong> {{ emp[6] }} jours<br>
-                            <strong>Salaire :</strong> {{ emp[7] }} €<br>
                             <strong>Rôle :</strong> {{ emp[9] }}<br>
-                            <strong>Sexe :</strong> {{ emp[11] }}<br>
-                            <strong>Téléphone :</strong> {{ emp[12] }}<br>
-                            <strong>Adresse complète :</strong> {{ emp[13] }}, {{ emp[14] }}, {{ emp[15] }}.<br>
-                            <strong>Pays :</strong> {{ emp[16] }}<br>
-                            <strong>Nationalité :</strong> {{ emp[17] }}<br>
-                            <strong>Numéro de Sécurité Sociale :</strong> {{ emp[18] }}<br>
-                            <strong>Date d'embauche :</strong> {{ emp[19] }}<br>
                             <strong>Type de contrat :</strong> {{ emp[20] }}<br>
+                            <strong>Date d'embauche :</strong> {{ emp[19] }}<br>
+                        
+                            <!-- Bouton pour afficher/masquer les infos supplémentaires -->
+                            <div class="text-center">
+                                <button class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#detailsInfos_{{ emp[8] }}" aria-expanded="false"
+                                    id="toggleButton_{{ emp[8] }}" style="width: 40px; height: 40px; border: none;">
+                                    <i class="bi bi-plus-circle-fill fs-3"></i>
+                                </button>
+                            </div>
+                        
+                            <!-- Contenu caché par défaut -->
+                            <div class="collapse mt-2" id="detailsInfos_{{ emp[8] }}">
+                                <strong>Email :</strong> {{ emp[5] }}<br>
+                                <strong>Congés :</strong> {{ emp[6] }} jours<br>
+                                <strong>Salaire :</strong> {{ emp[7] }} €<br>
+                                <strong>Sexe :</strong> {{ emp[11] }}<br>
+                                <strong>Téléphone :</strong> {{ emp[12] }}<br>
+                                <strong>Adresse complète :</strong> {{ emp[13] }}, {{ emp[14] }}, {{ emp[15] }}.<br>
+                                <strong>Pays :</strong> {{ emp[16] }}<br>
+                                <strong>Nationalité :</strong> {{ emp[17] }}<br>
+                                <strong>Numéro de Sécurité Sociale :</strong> {{ emp[18] }}<br>
+                            </div>
                         </p>
+                        
 
                         <!-- Formulaire de modification (caché par défaut) -->
                         <form class="edit-form d-none w-100" method="POST" action="{{ url_for('mettre_a_jour_employe', id=emp[8]) }}" enctype="multipart/form-data">
@@ -519,10 +532,23 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     });
-
-});
-
     </script>
 
     {% endfor %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let toggleButton = document.getElementById(`toggleButton_${emp[8]}`);
+            let icon = toggleButton.querySelector("i");
+
+            toggleButton.addEventListener("click", function () {
+                if (icon.classList.contains("bi-plus-circle-fill")) {
+                    icon.classList.remove("bi-plus-circle-fill");
+                    icon.classList.add("bi-dash-circle-fill"); // Change l'icône en "moins"
+                } else {
+                    icon.classList.remove("bi-dash-circle-fill");
+                    icon.classList.add("bi-plus-circle-fill"); // Rechange en "plus"
+                }
+            });
+        });
+    </script>
 {% endblock %}

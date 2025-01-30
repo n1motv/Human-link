@@ -73,51 +73,50 @@
 
     <!-- Navigation affichée si l'utilisateur a le rôle "manager" -->
     {% if role =='manager' %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <!-- Logo renvoyant vers le dashboard manager -->
-            <a href="{{ url_for('manager_dashboard') }}">
-                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
-            </a>
-
-            <!-- Bouton toggle pour petits écrans -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Liens de navigation -->
-            <div class="collapse navbar-collapse text-center" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <!-- Lien vers les demandes de congés -->
-                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
-                    <!-- Lien vers le calendrier de congés -->
-                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
-
-                    <!-- Menu déroulant "Plus" -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <!-- Début de la barre de navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid">
+                <!-- Logo principal -->
+                <a href="{{ url_for('manager_dashboard') }}">
+                    <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
+                </a>
+    
+                <!-- Bouton pour afficher/masquer la navigation sur mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+    
+                <!-- Liens de navigation -->
+                <div class="collapse navbar-collapse text-center" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <!-- Lien vers les demandes de congés -->
+                        <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                        <!-- Lien vers le calendrier des congés -->
+                        <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
+                        <!-- Menu déroulant pour les options supplémentaires -->
+                        <li class="nav-item dropdown d-none d-lg-block">
+                            <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Plus
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <!-- Liens pour la planification de réunion, demande de prime, etc. -->
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Liens redondants pour petits écrans -->
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
-                </ul>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <!-- Liens supplémentaires -->
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('réunion_scheduler') }}"><i class="bi bi-send"></i> Planification de réunion</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('soumettre_demande_prime') }}"><i class="bi bi-envelope"></i> Soumettre demande prime</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('manager_primes') }}"><i class="bi bi-currency-dollar"></i> Demandes de Primes</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
+    
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
     {% endif %}
 
     <!-- Icône flottante pour accéder aux notifications -->
