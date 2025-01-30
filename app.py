@@ -637,7 +637,7 @@ def envoyer_email_reinitialisation():
 
     # Générer un token et le lien de réinitialisation
     token = serializer.dumps(email, salt="reset-password")
-    lien_reinitialisation = f"http://localhost:5000/update_password?token={token}"
+    lien_reinitialisation = f"https://hr-management2.onrender.com/update_password?token={token}"
 
     sujet = "Réinitialisation de votre mot de passe"
     contenu = f"""Bonjour,
