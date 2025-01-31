@@ -53,7 +53,7 @@ A comprehensive Human Resource Management System for employee management, leave 
    
    Create .env file:
    ```bash
-   python run.py
+   python app.py
    ```
 ## 📖 Usage
 
