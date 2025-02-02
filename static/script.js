@@ -601,6 +601,35 @@ function handleAction(button, status) {
     });
 }
 
+function handleMeetingAction(button, status) {
+    // Récupère le formulaire parent
+    const form = button.closest('form');
+    
+    // Affecte la valeur de la réponse dans le champ caché
+    const responseInput = form.querySelector('input[name="response"]');
+    responseInput.value = status;
+    
+    // Prépare le texte de l'action en fonction du statut
+    const actionText = status === 'Accepted' ? 'accepter' : 'refuser';
+    
+    // Affiche la boîte de confirmation avec SweetAlert
+    Swal.fire({
+      title: 'Confirmation',
+      text: `Êtes-vous sûr de vouloir ${actionText} cette invitation ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: status === 'Accepted' ? '#28a745' : '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Oui, continuer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Soumet le formulaire si l'utilisateur confirme
+        form.submit();
+      }
+    });
+  }
+  
 /* *******************************
    20) Sélection / Désélection de tous les éléments
 ******************************* */

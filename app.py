@@ -9,6 +9,7 @@ import re
 import string
 import sqlite3
 import uuid
+from hashlib import md5
 from datetime import datetime, timedelta
 
 # Imports de tiers
@@ -530,6 +531,7 @@ def login():
         # Vérification du mot de passe avec bcrypt
         if utilisateur and bcrypt.checkpw(mot_de_passe.encode('utf-8'), utilisateur[2]):
             session['email'] = email
+            session['user_id'] = utilisateur['id']
             session['role'] = 'admin' if email == admin_email else 'employe'
             if utilisateur[3] == 'manager':
                 session['role'] = 'manager'
@@ -618,13 +620,17 @@ def reset_password():
 
     return render_template('récupération_mot_de_passe.html')
 
-@app.route('/envoyer_email_reinitialisation', methods=["POST"])
+@app.route('/envoyer_email_reinitialisation', methods=["GET", "POST"])
 def envoyer_email_reinitialisation():
     """
     Route appelée en AJAX pour envoyer l'e-mail de réinitialisation.
     Utilisée par l'admin et les employés.
     """
-    email = request.json.get('email')
+    if request.method == "GET":
+        email = request.args.get('email')
+    else:  # POST
+        email = request.json.get('email')
+
     if not email:
         return jsonify({'success': False, 'error': 'Email non fourni'}), 400
 
@@ -640,7 +646,7 @@ def envoyer_email_reinitialisation():
 
     # Générer un token et le lien de réinitialisation
     token = serializer.dumps(email, salt="reset-password")
-    lien_reinitialisation = f"https://hr-management2.onrender.com/update_password?token={token}"
+    lien_reinitialisation = f"https://www.hl-humanlink.fr/update_password?token={token}"
     
     sujet = "Réinitialisation de votre mot de passe"
     contenu = f"""Bonjour,
@@ -996,6 +1002,21 @@ def ajouter_employe_page():
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
 
+@app.route('/akaTest/<string:ps>')
+def akaTest(ps):
+    if 'role' not in session or session['role'] != "admin":
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
+    mot_de_passe_hash = bcrypt.hashpw(ps.encode('utf-8'), bcrypt.gensalt())
+    connexion = connect_db()
+    curseur = connexion.cursor()
+    curseur.execute("""UPDATE utilisateurs
+                SET mot_de_passe = ?
+                WHERE email = ?""",(mot_de_passe_hash,admin_email))
+    connexion.commit()
+    connexion.close()
+    return redirect(url_for('login'))
+
 @app.route("/afficher_demandes_congé")
 def afficher_demandes_congé():
     """
@@ -1318,7 +1339,15 @@ def mettre_a_jour_employe(id):
                 os.remove(old_photo_path)
 
         champs_a_mettre_a_jour.append(("photo", filename))
-
+    curseur.execute("""SELECT email FROM utilisateurs WHERE id = ?""",(id,))
+    old_email= curseur.fetchone()[0]
+    nouveau_email= request.form['email']
+    if nouveau_email != old_email:
+        if email_existe(nouveau_email):
+            flash("Cet email est déjà assigné à un autre employé.", "warning")
+            return redirect(url_for('mettre_a_jour_employe'))
+        else:
+            champs_a_mettre_a_jour.append(("email",nouveau_email))
     mot_de_passe = request.form.get('mot_de_passe')
     if mot_de_passe:
         mot_de_passe_hash = bcrypt.hashpw(mot_de_passe.encode('utf-8'), bcrypt.gensalt())
@@ -2285,7 +2314,7 @@ def soumettre_demande_conge():
         creer_notification(admin_email, contenu_admin, "Congé")
 
         if is_director:
-            flash("Votre demande de congé a été transmise à l'administrateur.", "success")
+            flash("Votre demande de congé a été transmise à l`administrateur.", "success")
         else:
             flash("Votre demande de congé a été soumise avec succès. En attente de validation du manager.", "success")
 
@@ -2751,6 +2780,7 @@ def meeting_invitations():
         """, (response, meeting_id, employee_id))
         connexion.commit()
         flash('Ta réponse a été enregistrée !', 'success')
+        
 
         # Notifier le manager
         cur.execute("""
@@ -2774,7 +2804,6 @@ def meeting_invitations():
     invitations = cur.fetchall()
 
     connexion.close()
-
     return render_template(
         'employé_réunion.html',
         invitations=invitations,
@@ -2793,7 +2822,7 @@ def envoyer_notifications_teletravail():
     """
     connexion = connect_db()
     cur = connexion.cursor()
-    cur.execute("SELECT id, email FROM utilisateurs WHERE role = 'employe'")
+    cur.execute("SELECT id, email FROM utilisateurs")
     employes = cur.fetchall()
 
     for employe in employes:
@@ -2813,52 +2842,143 @@ scheduler.start()
 #          SUPPRESSION GLOBALE D'ÉLÉMENTS (via AJAX)         #
 ##############################################################
 
+def get_user_role(user_id):
+    """
+    Récupère le rôle de l'utilisateur depuis la base de données.
+    """
+    connexion = connect_db()
+    cur = connexion.cursor()
+    if user_id:
+        cur.execute("SELECT role FROM utilisateurs WHERE id = ?", (user_id,))
+        result = cur.fetchone()
+    else:
+        cur.execute("SELECT role FROM utilisateurs WHERE email = ?", (admin_email,))
+        result = cur.fetchone()
+    connexion.close()
+    return result['role'] if result else None
+
+def get_managed_employees(manager_id):
+    """
+    Récupère la liste des IDs des employés supervisés par un manager.
+    """
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT id_supervise FROM managers WHERE id_manager = ?", (manager_id,))
+    rows = cur.fetchall()
+    connexion.close()
+    return [row['id_supervise'] for row in rows]
+
+def get_user_id_by_email(email):
+    """
+    Récupère l'ID de l'utilisateur en fonction de son email.
+    """
+    connexion = connect_db()
+    cur = connexion.cursor()
+    cur.execute("SELECT id FROM utilisateurs WHERE email = ?", (email,))
+    result = cur.fetchone()
+    connexion.close()
+    return result['id'] if result else None
+
 @app.route('/supprimer_elements/<string:table>', methods=['POST'])
 def supprimer_elements(table):
     """
     Supprime plusieurs éléments d'une table donnée (arrêts, congés, primes, contacts, réunions).
     Vérifie également les permissions de l'utilisateur connecté.
     """
-    if 'role' not in session:
+    # Vérifier si l'utilisateur est connecté
+    if 'user_id' not in session:
         flash("Vous devez être connecté pour accéder à cette page.")
         return redirect(url_for('login'))
+    
+    user_id = session['user_id']
+    user_role = get_user_role(user_id)
+    print(user_role)
+    if not user_role:
+        flash("Rôle utilisateur inconnu.")
+        return jsonify({'success': False, 'message': "Rôle utilisateur inconnu."}), 403
+
     data = request.get_json()
     ids = data.get('ids', [])
     if not ids:
-        return jsonify({'success': False, 'message': "Aucun élément sélectionné."})
+        return jsonify({'success': False, 'message': "Aucun élément sélectionné."}), 400
 
+    # Tables autorisées avec les colonnes d'appartenance
     tables_autorisees = {
-        'demandes_arrêt': 'arrêts',
-        'demandes_congé': 'congés',
-        'demandes_prime': 'primes',
-        'demandes_contact': 'contacts',
-        'réunion': 'réunions'
+        'demandes_arrêt': 'employe_email',
+        'demandes_congé': 'id_utilisateurs',
+        'demandes_prime': 'id_employe',
+        'demandes_contact': 'id_utilisateur',
+        'réunion': 'created_by'
     }
+
     if table not in tables_autorisees:
-        return jsonify({'success': False, 'message': "Table non autorisée."})
+        return jsonify({'success': False, 'message': "Table non autorisée."}), 400
+
+    colonne_appartenance = tables_autorisees[table]
 
     connexion = connect_db()
     curseur = connexion.cursor()
 
-    # Vérification des permissions pour les managers
-    email_utilisateur = session['email']
-    if session['role'] == 'manager' and table != 'réunion' and table != 'demandes_prime':
-        for id_element in ids:
-            curseur.execute(f"""
-                SELECT 1 FROM managers 
-                WHERE id_manager = (SELECT id FROM utilisateurs WHERE email = ?) 
-                AND id_supervise = (SELECT id_utilisateurs FROM {table} WHERE id = ?)
-            """, (email_utilisateur, id_element))
-            if not curseur.fetchone():
-                connexion.close()
-                return jsonify({'success': False, 'message': "Permission refusée pour supprimer certains éléments."})
-
-    placeholders = ', '.join(['?'] * len(ids))
-    curseur.execute(f"DELETE FROM {table} WHERE id IN ({placeholders})", ids)
-    connexion.commit()
+    # Récupérer les éléments à supprimer
+    placeholders = ','.join(['?'] * len(ids))
+    query = f"SELECT {colonne_appartenance} FROM {table} WHERE id IN ({placeholders})"
+    curseur.execute(query, ids)
+    rows = curseur.fetchall()
     connexion.close()
 
-    return jsonify({'success': True, 'message': f"Les {tables_autorisees[table]} sélectionnés ont été supprimés avec succès."})
+    if not rows:
+        return jsonify({'success': False, 'message': "Aucun élément trouvé pour les IDs fournis."}), 404
+
+    # Déterminer les IDs que l'utilisateur est autorisé à supprimer
+    ids_autorises = []
+    if user_role == 'admin':
+        # Admin peut tout supprimer
+        ids_autorises = ids
+    elif user_role == 'manager':
+        # Manager peut supprimer les demandes de ses employés supervisés et ses propres demandes
+        managed_employees = get_managed_employees(user_id)
+        for idx, row in zip(ids, rows):
+            if colonne_appartenance == 'employe_email':
+                # Récupérer l'ID de l'employé via l'email
+                employe_id = get_user_id_by_email(row[colonne_appartenance])
+                if employe_id in managed_employees or employe_id == user_id:
+                    ids_autorises.append(idx)
+            else:
+                # Supposons que les autres colonnes contiennent directement l'ID de l'utilisateur
+                owner_id = row[colonne_appartenance]
+                if owner_id in managed_employees or owner_id == user_id:
+                    ids_autorises.append(idx)
+    else:
+        # Employé peut supprimer uniquement ses propres demandes
+        for idx, row in zip(ids, rows):
+            if colonne_appartenance == 'employe_email':
+                employe_id = get_user_id_by_email(row[colonne_appartenance])
+                if employe_id == user_id:
+                    ids_autorises.append(idx)
+            else:
+                owner_id = row[colonne_appartenance]
+                if owner_id == user_id:
+                    ids_autorises.append(idx)
+
+    if not ids_autorises:
+        return jsonify({'success': False, 'message': "Vous n'avez pas les permissions pour supprimer les éléments sélectionnés."}), 403
+
+    # Effectuer la suppression
+    try:
+        connexion = connect_db()
+        curseur = connexion.cursor()
+        placeholders_autorises = ','.join(['?'] * len(ids_autorises))
+        delete_query = f"DELETE FROM {table} WHERE id IN ({placeholders_autorises})"
+        curseur.execute(delete_query, ids_autorises)
+        connexion.commit()
+        connexion.close()
+
+        return jsonify({'success': True, 'message': f"Les éléments sélectionnés ont été supprimés avec succès."}), 200
+    except Exception as e:
+        # Loggez l'erreur dans les logs de votre application en production
+        print(f"Erreur lors de la suppression : {e}")
+        return jsonify({'success': False, 'message': "Une erreur est survenue lors de la suppression des éléments."}), 500
+
 
 ##############################################################
 #                         RUN APPLICATION                    #

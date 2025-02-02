@@ -39,7 +39,7 @@
                         
                         <!-- Section nom/prénom + matricule -->
                         <div class="text-center py-3" id="nomEtprenom" style="margin: 20px;">
-                            <h3 class="mb-0" style="font-weight: bold; margin: 5px;">Nom: {{ emp[0] }} Prénom: {{ emp[1] }}</h3>
+                            <h3 class="mb-0 text" style="font-weight: bold; margin: 5px;">Nom: {{ emp[0] }} Prénom: {{ emp[1] }}</h3>
                             <p class="mb-0" style="margin: 5px;">Matricule: {{ emp[8] }}</p>
                         </div>
 
@@ -52,11 +52,12 @@
                             <strong>Date d'embauche :</strong> {{ emp[19] }}<br>
                         
                             <!-- Bouton pour afficher/masquer les infos supplémentaires -->
+
                             <div class="text-center">
-                                <button class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
-                                    type="button" data-bs-toggle="collapse" data-bs-target="#detailsInfos_{{ emp[8] }}" aria-expanded="false"
-                                    id="toggleButton_{{ emp[8] }}" style="width: 40px; height: 40px; border: none;">
-                                    <i class="bi bi-plus-circle-fill fs-3"></i>
+                                <button class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center btn-plus"
+                                        type="button" data-bs-toggle="collapse" data-bs-target="#detailsInfos_{{ emp[8] }}"
+                                        aria-expanded="false" id="toggleButton_{{ emp[8] }}" style="width: 40px; height: 40px; border: none;">
+                                    <i class="bi bi-plus fs-3"></i>
                                 </button>
                             </div>
                         
@@ -532,6 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     });
+  });
     </script>
 
     {% endfor %}

@@ -48,16 +48,18 @@
                     <!-- Affiche les boutons Accepter/Refuser uniquement si le statut est en attente -->
                     {% if invitation[3] == 'en attente' %}
                     <div class="d-flex justify-content-center">
-                        <form method="POST" class="d-flex w-100" onsubmit="return confirmAction()">
-                            <input type="hidden" name="meeting_id" value="{{ invitation[0] }}">
-                            <button 
-                                type="submit" name="response" value="Accepted" class="btn btn-success w-50 me-2">Accepter
-                            </button>
-                            <button 
-                                type="submit" name="response" value="Rejected" class="btn btn-danger w-50 ms-2">Refuser
-                            </button>
+                        <form method="POST" class="d-flex w-100" id="meetingForm_{{ invitation[0] }}">
+                          <input type="hidden" name="meeting_id" value="{{ invitation[0] }}">
+                          <!-- Champ caché pour la réponse -->
+                          <input type="hidden" name="response" value="">
+                          
+                          <!-- Bouton pour accepter -->
+                          <button type="button" onclick="handleMeetingAction(this, 'Accepted')"class="btn btn-success w-50 me-2">Accepter </button>
+                          
+                          <!-- Bouton pour refuser -->
+                          <button type="button"onclick="handleMeetingAction(this, 'Rejected')"class="btn btn-danger w-50 ms-2">Refuser</button>
                         </form>
-                    </div>
+                      </div>                      
                     {% endif %}
                 </div>
             </div>

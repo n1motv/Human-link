@@ -104,7 +104,7 @@
             <!-- Liste des notifications -->
             {% for notification in notifications %}
                 <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div >
                         <p>{{ notification.message }}</p>
                         <button class="btn btn-sm btn-outline-danger ms-2" onclick="supprimerNotification({{ notification.id }})">
                             <i class="bi bi-trash"></i>
@@ -124,7 +124,7 @@
     {% elif not session['role'] %}
         <nav class="navbar navbar-expand-lg text-center">
             <div class="container-fluid text-center">
-                <a href="{{ url_for('afficher_employés') }}">
+                <a href="{{ url_for('login') }}">
                     <img id="main-logo" src="../static/logo/logo-white.png" alt="">
                 </a>
             </div>

@@ -116,7 +116,16 @@ nav li {
     left: auto;
     transform-origin: top right;
 }
+/* Style pour le bouton avec transition */
+.btn-plus {
+transition: transform 0.2s ease, color 0.2s ease;
+}
 
+/* Effet au survol du bouton */
+.btn-plus:hover {
+transform: scale(1.1);
+color: #ffffff; /* Couleur bleue Bootstrap par exemple */
+}
 /* Boîte de résultats de recherche (cachée par défaut) */
 #search-results {
     display: none;
@@ -387,7 +396,7 @@ a {
     top: 10px;
     right: 10px;
     background-color: #ff3e3e;
-    color: #fff;
+    color: #ffff;
     font-size: 0.75rem;
     padding: 4px 6px;
     border-radius: 50%;
@@ -422,6 +431,7 @@ a {
     max-height: 300px;
     overflow-y: auto;
     min-height: fit-content;
+    background-color: white;
 }
 
 #notification-panel .notification-item {
@@ -524,6 +534,8 @@ a:hover{
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    width: 100%;
+    max-width: 400px; 
 }
 
 /* Agrandissement de la carte au clic */
@@ -534,6 +546,7 @@ a:hover{
     transform: translate(-50%, -50%) scale(1.2);
     z-index: 1050;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 80%;
 }
 
 body.flou::before {
