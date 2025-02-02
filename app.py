@@ -1001,22 +1001,7 @@ def ajouter_employe_page():
         notifications=notifications,
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
-
-@app.route('/akaTest/<string:ps>')
-def akaTest(ps):
-    if 'role' not in session or session['role'] != "admin":
-        flash("Vous devez être connecté pour accéder à cette page.")
-        return redirect(url_for('login'))
-    mot_de_passe_hash = bcrypt.hashpw(ps.encode('utf-8'), bcrypt.gensalt())
-    connexion = connect_db()
-    curseur = connexion.cursor()
-    curseur.execute("""UPDATE utilisateurs
-                SET mot_de_passe = ?
-                WHERE email = ?""",(mot_de_passe_hash,admin_email))
-    connexion.commit()
-    connexion.close()
-    return redirect(url_for('login'))
-
+    
 @app.route("/afficher_demandes_congé")
 def afficher_demandes_congé():
     """
