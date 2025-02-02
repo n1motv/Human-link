@@ -324,12 +324,12 @@ def cree_compte_admin():
     cur.execute("""
         INSERT INTO utilisateurs (
             nom, prenom, date_naissance, poste, departement,
-            email, mot_de_passe, solde_congé, salaire
+            email, mot_de_passe, solde_congé, salaire, role
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)
     """, (
         "admin", "admin", 30, "Administrateur", "RH",
-        admin_email, mot_de_passe_hash, 0, 0
+        admin_email, mot_de_passe_hash, 0, 0 ,"admin"
     ))
     connexion.commit()
     connexion.close()

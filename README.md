@@ -1,6 +1,6 @@
 # HUMAN LINK ( An advanced Human Resource Management System )
 
-![Human link RH Dashboard Preview](static/images/dashboard_preview.png).
+![Human link RH Dashboard Preview](static/img/image.png).
 
 A comprehensive Human Resource Management System for employee management, leave tracking, notifications, and more. Designed for small to medium businesses with scalability in mind.
 
@@ -28,8 +28,8 @@ A comprehensive Human Resource Management System for employee management, leave 
 
 1. **Clone Repository**
    ```bash
-   git clone https://github.com/n1motv/Human-link.git
-   cd Human-link
+   git clone https://github.com/yourusername/hr-management-system.git
+   cd hr-management-system
    ```
 2. **Create Virtual Environment**
    ```bash
