@@ -27,8 +27,8 @@ A comprehensive Human Resource Management System for employee management, leave 
 
 1. **Clone Repository**
    ```bash
-   git clone https://github.com/yourusername/hr-management-system.git
-   cd hr-management-system
+   git clone https://github.com/n1motv/Human-link.git
+   cd Human-link
    ```
 2. **Create Virtual Environment**
    ```bash
