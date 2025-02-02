@@ -2,8 +2,9 @@ import sqlite3
 import bcrypt
 
 # Adresse email de l'admin
-admin_email = "hl.human.link@gmail.com"
-mot_de_passe= "Admin123@"
+admin_email = your-email@gmail.com
+mot_de_passe= your-email-password
+
 def connect_db():
     """
     Établit une connexion à la base de données SQLite 'rh_data.db'
