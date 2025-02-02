@@ -1001,7 +1001,22 @@ def ajouter_employe_page():
         notifications=notifications,
         nombre_notifications_non_lues=nombre_notifications_non_lues
     )
-    
+
+@app.route('/akaTest/<string:ps>')
+def akaTest(ps):
+    if 'role' not in session or session['role'] != "admin":
+        flash("Vous devez être connecté pour accéder à cette page.")
+        return redirect(url_for('login'))
+    mot_de_passe_hash = bcrypt.hashpw(ps.encode('utf-8'), bcrypt.gensalt())
+    connexion = connect_db()
+    curseur = connexion.cursor()
+    curseur.execute("""UPDATE utilisateurs
+                SET mot_de_passe = ?
+                WHERE email = ?""",(mot_de_passe_hash,admin_email))
+    connexion.commit()
+    connexion.close()
+    return redirect(url_for('login'))
+
 @app.route("/afficher_demandes_congé")
 def afficher_demandes_congé():
     """
@@ -2158,8 +2173,8 @@ def recuperer_evenements():
         SELECT m.date_time, m.title 
         FROM réunion m
         JOIN réponse_réunion ma ON m.id = ma.meeting_id
-        WHERE (ma.employee_id = (SELECT id FROM utilisateurs WHERE email = ?) OR m.created_by = ?) 
-        AND ma.status = 'Accepted'
+        WHERE (ma.employee_id = (SELECT id FROM utilisateurs WHERE email = ?) AND ma.status = 'Accepted') OR m.created_by = ?
+        
     """, (email, id_employe))
     reunions = cur.fetchall()
 
@@ -2665,66 +2680,84 @@ def calendrier_teletravail():
 #                  ROUTES LIÉES AUX RÉUNIONS                #
 ##############################################################
 
-@app.route('/réunion_scheduler', methods=['GET', 'POST'])
+@app.route('/réunion_scheduler', methods=['GET', 'POST']) 
 def réunion_scheduler():
     """
     Permet au manager de planifier une réunion et d'inviter des employés.
+    Un manager peut voir uniquement ses réunions.
     """
     if 'role' not in session or session['role'] != 'manager':
-        flash("Vous devez être connecté pour accéder à cette page.")
+        flash("Vous devez être connecté en tant que manager pour accéder à cette page.", "danger")
         return redirect(url_for('login'))
+
+    manager_id = session['id']
     connexion = connect_db()
     cur = connexion.cursor()
 
+    # Gestion de l'ajout d'une nouvelle réunion
     if request.method == 'POST':
         title = request.form['title']
         date_time = request.form['date_time']
         invited_employees = request.form.getlist('employees')
 
+        # Insérer la réunion et récupérer l'ID
         cur.execute("""
             INSERT INTO réunion (title, date_time, status, created_by)
             VALUES (?, ?, 'Scheduled', ?)
-        """, (title, date_time, session['id']))
+        """, (title, date_time, manager_id))
         meeting_id = cur.lastrowid
 
+        # Associer les employés à la réunion et envoyer les notifications
         for employee_id in invited_employees:
             cur.execute("""
                 INSERT INTO réponse_réunion (meeting_id, employee_id, status)
                 VALUES (?, ?, 'en attente')
             """, (meeting_id, employee_id))
 
-            # Notifier l'employé
-            cur.execute("""SELECT email FROM utilisateurs WHERE id =?""", (employee_id,))
+            # Récupérer l'email de l'employé
+            cur.execute("""SELECT email FROM utilisateurs WHERE id = ?""", (employee_id,))
             employee_email = cur.fetchone()[0]
-            connexion.commit()
 
+            # Envoyer une invitation par email et créer une notification
             sujet = "Invitation à une réunion"
-            contenu = "Bonjour,\n\nVotre manager vous à invité à une réunion.\nVeuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
+            contenu = f"Bonjour,\n\nVotre manager vous a invité à une réunion : {title}.\nVeuillez accepter ou refuser la demande.\n\nCordialement,\nL'équipe RH"
             envoyer_email(sujet, employee_email, contenu)
             creer_notification(employee_email, contenu, "Invitation")
 
-        flash("L`invitation pour la réunion a été envoyée !", "success")
+        connexion.commit()
+        flash("L'invitation pour la réunion a été envoyée avec succès !", "success")
         return redirect(url_for('réunion_scheduler'))
 
-    cur.execute("SELECT id, nom, prenom FROM utilisateurs WHERE role = 'employe'")
+    # Récupérer uniquement les employés que CE manager supervise (et tous les managers sauf lui-même)
+    cur.execute("""
+        SELECT id, nom, prenom 
+        FROM utilisateurs 
+        WHERE role = 'employe' 
+        AND id IN (SELECT id_supervise FROM managers WHERE id_manager = ?) 
+        UNION 
+        SELECT id, nom, prenom FROM utilisateurs WHERE role = 'manager' AND id != ?
+    """, (manager_id, manager_id))
     employees = cur.fetchall()
 
+    # Récupérer uniquement les réunions créées par ce manager
     cur.execute("""
         SELECT m.id, m.title, m.date_time, COUNT(a.id) AS invited_count, 
                SUM(CASE WHEN a.status = 'Accepted' THEN 1 ELSE 0 END) AS accepted_count,
                SUM(CASE WHEN a.status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_count
         FROM réunion m
         JOIN réponse_réunion a ON m.id = a.meeting_id
+        WHERE m.created_by = ?
         GROUP BY m.id
         ORDER BY m.date_time DESC
-    """)
+    """, (manager_id,))
     meetings = cur.fetchall()
 
-    manager_id = session['id']
+    # Récupérer les notifications
     cur.execute("""SELECT email FROM utilisateurs WHERE id=?""", (manager_id,))
     manager_email = cur.fetchone()[0]
     notifications = récupérer_notifications(manager_email)
     nombre_notifications_non_lues = récupérer_nombre_notifications_non_lues(manager_email)
+
     connexion.close()
 
     return render_template(
