@@ -1,5 +1,5 @@
 # HUMAN LINK ( An advanced Human Resource Management System )
-[Alt text](https://github.com/n1motv/Human-link/blob/main/static/img/image.png)
+[rqge](https://github.com/n1motv/Human-link/blob/main/static/img/image.png)
 
 A comprehensive Human Resource Management System for employee management, leave tracking, notifications, and more. Designed for small to medium businesses with scalability in mind.
 
