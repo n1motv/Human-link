@@ -12,44 +12,60 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 </head>
 <body>
     <!-- Barre de navigation si l'utilisateur est un employé -->
-    {% if session['role'] == 'employe' or session['role'] == 'manager' %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <!-- Logo renvoyant vers la page "mes infos" employé -->
-            <a href="{{ url_for('voir_mes_infos') }}">
-                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
-            </a>
-            <!-- Bouton de toggling pour les petits écrans -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+{% if session['role'] == 'employe' or session['role'] == 'manager' %}
+<!-- Barre de navigation du compte employé -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Logo complètement à gauche -->
+        <a href="{{ url_for('voir_mes_infos') }}">
+            <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="Logo" style="width: 150px;">
+        </a>
 
+            <!-- Bouton toggle pour les mobiles -->
+        <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+             {% set photo_key = photo %}
+             {% if photo_key and photo_key != 'default.png' %}
+                 <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle border border-light shadow-sm"
+                      style="width: 45px; height: 45px; object-fit: cover;">
+             {% else %}
+                 <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                      style="width: 45px; height: 45px; object-fit: cover;">
+             {% endif %}
+         </a>
             <!-- Liens de navigation -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <!-- Soumettre un arrêt maladie -->
+            <div class="collapse navbar-collapse text-center" id="navbarNav">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <!-- Bloc contenant "Soumettre un arrêt" et "Soumettre un congé" -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('soumettre_demande_arrêt') }}">
-                            <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
-                        </a>
+                            <a class="nav-link" href="{{ url_for('soumettre_demande_arrêt') }}">
+                                <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
+                            </a>
                     </li>
-                    <!-- Soumettre une demande de congé -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('soumettre_demande_conge') }}">
                             <i class="bi bi-calendar-plus"></i> Soumettre un congé
                         </a>
                     </li>
-                    {% block content1 %}{% endblock %}
-
                     <!-- Menu déroulant "Plus" (uniquement sur grand écran) -->
                     <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
+
+                        <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% set photo_key = photo %}
+                            {% if photo_key and photo_key != 'default.png' %}
+                                <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% endif %}
                         </a>
+
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <!-- Liens supplémentaires dans la liste déroulante -->
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('mes_demandes_d_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Voir les arrêts</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('mes_demandes_conges') }}"><i class="bi bi-calendar-check"></i> Voir les congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort') }}"><i class="bi bi-folder"></i> Voir les documents</a></li>
@@ -57,11 +73,12 @@
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('choisir_teletravail') }}"><i class="bi bi-check2-circle"></i> Choisir télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('contact') }}"><i class="bi bi-info-circle"></i> Demande de Contact</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('meeting_invitations') }}"><i class="bi bi-calendar-event"></i> Invitation réunion</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('feedback') }}"><i class="bi bi-arrow-down-up"></i> Envoyer un Feedback</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
 
-                    <!-- Liens affichés uniquement sur petit écran (d-lg-none) -->
+                    <!-- Les mêmes liens s'affichent en dessous pour les petits écrans (d-lg-none) -->
                     <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('mes_demandes_d_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Voir les arrêts</a>
                     </li>
@@ -83,6 +100,7 @@
                     <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('meeting_invitations') }}"><i class="bi bi-calendar-event"></i> Invitation réunion</a>
                     </li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('feedback') }}"><i class="bi bi-arrow-down-up"></i> Envoyer un Feedback</a></li>
                     <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a>
                     </li>
@@ -99,7 +117,7 @@
         {% endif %}
     </div>
     <div id="notification-panel">
-        <div class="notification-header">Notifications</div>
+        <div class="notification-header">📢 Notifications</div>
         <div class="notification-list">
             <!-- Liste des notifications -->
             {% for notification in notifications %}
@@ -120,15 +138,39 @@
         </div>
     </div>
 
+    <!-- Bouton flottant du chatbot -->
+    <div id="chatbot-floating-btn" class="chatbot-floating-btn">
+        <i class="fa fa-comment"></i>
+    </div>
+    
+    <!-- Overlay grisé (caché par défaut) -->
+    <div id="chatbot-overlay" class="chatbot-overlay"></div>
+    
+    <!-- Fenêtre de chat -->
+    <div id="chatbot-window" class="chatbot-window">
+        <div class="chatbot-header">
+        <h4>🤖 Chatbot</h4>
+        <span id="chatbot-close" class="chatbot-close">&times;</span>
+        </div>
+        <div class="chatbot-body" id="chatbot-body">
+        <!-- ... -->
+        </div>
+        <div class="chatbot-footer">
+        <input id="chatbot-input" type="text" placeholder="Écrivez votre question..." />
+        <button id="chatbot-send">Envoyer</button>
+        </div>
+    </div>
+  
     <!-- Si l'utilisateur n'est pas connecté (role non défini) -->
     {% elif not session['role'] %}
-        <nav class="navbar navbar-expand-lg text-center">
-            <div class="container-fluid text-center">
-                <a href="{{ url_for('login') }}">
-                    <img id="main-logo" src="../static/logo/logo-white.png" alt="">
-                </a>
-            </div>
-        </nav>
+    <nav class="navbar navbar-expand-lg navbar-dark text-center">
+        <div class="container-fluid text-center">
+            <!-- Logo principal (pourrait renvoyer vers la page d'accueil ou autre) -->
+            <a href="{{ url_for('login') }}">
+                <img id="main-logo" src="../static/logo/logo-white.png" alt="">
+            </a>
+        </div>
+    </nav>
     {% endif %}
 
     <!-- Gestion des messages flash via SweetAlert -->
@@ -158,7 +200,7 @@
             <h1 class="text-center text-white mb-4">Contactez-nous</h1>
 
             <!-- Carte contenant le formulaire de contact -->
-            <div class="card border-0 rounded-4 fw-bold text-white">
+            <div class="card border-0 rounded-4 fw-bold text-dark">
                 <div class="card-body p-4">
                     <!-- Formulaire de contact -->
                     <form method="POST">
@@ -208,7 +250,7 @@
             
                         <!-- Bouton d'envoi -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-custom-action btn-lg">
                                 <i class="bi bi-send"></i> Envoyer
                             </button>
                         </div>
@@ -221,13 +263,164 @@
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+        </footer> 
     </div>
 
     <!-- Scripts JavaScript (script.js, SweetAlert, Bootstrap) -->
     <script src="../static/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fonction qui ferme tous les panneaux ouverts
+function closeAllPanels() {
+  // Ferme la fenêtre du chatbot et son overlay
+  const chatWindow = document.getElementById('chatbot-window');
+  const chatOverlay = document.getElementById('chatbot-overlay');
+  if (chatWindow) chatWindow.style.display = 'none';
+  if (chatOverlay) chatOverlay.style.display = 'none';
+
+  // Ferme le panneau des notifications
+  const notifPanel = document.getElementById('notification-panel');
+  if (notifPanel) notifPanel.style.display = 'none';
+
+
+  // Ferme les popups SweetAlert si elles sont ouvertes
+  if (Swal.isVisible()) {
+    Swal.close();
+  }
+}
+
+// Écouteurs pour le bouton du chatbot
+document.addEventListener('DOMContentLoaded', function() {
+  const floatingBtn = document.getElementById('chatbot-floating-btn');
+  const chatbotWindow = document.getElementById('chatbot-window');
+  const chatbotOverlay = document.getElementById('chatbot-overlay');
+  const chatbotClose = document.getElementById('chatbot-close');
+  const chatbotSend = document.getElementById('chatbot-send');
+  const chatbotInput = document.getElementById('chatbot-input');
+  const chatbotBody = document.getElementById('chatbot-body');
+
+  let typingIndicator; // Variable globale pour l'indicateur de saisie
+
+  // Affiche l'animation "en train d'écrire"
+  function showTypingIndicator() {
+    typingIndicator = document.createElement('div');
+    typingIndicator.classList.add('message-bubble', 'message-bot', 'typing-indicator');
+    typingIndicator.innerHTML = `
+      <div class="typing-container">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    chatbotBody.appendChild(typingIndicator);
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+  }
+
+  // Retire l'indicateur
+  function hideTypingIndicator() {
+    if (typingIndicator) {
+      chatbotBody.removeChild(typingIndicator);
+      typingIndicator = null;
+    }
+  }
+
+  // Gestion de l'ouverture/fermeture du chatbot
+  floatingBtn.addEventListener('click', () => {
+    // Avant d'ouvrir, on ferme tous les autres panneaux
+    closeAllPanels();
+    // Ensuite, on toggle le chatbot
+    if (chatbotWindow.style.display === 'none' || chatbotWindow.style.display === '') {
+      chatbotWindow.style.display = 'flex';
+      chatbotOverlay.style.display = 'block';
+    } else {
+      chatbotWindow.style.display = 'none';
+      chatbotOverlay.style.display = 'none';
+    }
+  });
+
+  // Fermeture du chatbot avec la croix
+  chatbotClose.addEventListener('click', () => {
+    closeAllPanels();
+  });
+
+  // Gestion de l'envoi du message dans le chatbot
+  function sendMessage() {
+    const question = chatbotInput.value.trim();
+    if (!question) return;
+    displayMessage(question, 'user');
+    chatbotInput.value = '';
+    showTypingIndicator();
+
+    // Envoi de la requête AJAX
+    fetch('/chatbot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question })
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideTypingIndicator();
+      if (data.answer) {
+        displayMessage(data.answer, 'bot');
+      } else {
+        displayMessage("Une erreur s'est produite.", 'bot');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      hideTypingIndicator();
+      displayMessage("Impossible de contacter le serveur.", 'bot');
+    });
+  }
+
+  chatbotSend.addEventListener('click', sendMessage);
+  chatbotInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Fonction pour afficher un message dans la fenêtre de chat
+  function displayMessage(text, sender = 'bot') {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message-bubble', sender === 'user' ? 'message-user' : 'message-bot');
+    msgDiv.innerText = text;
+    chatbotBody.appendChild(msgDiv);
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+  }
+
+  // Gestion du bouton de notification
+  const notifIcon = document.getElementById('notification-icon');
+  notifIcon.addEventListener('click', () => {
+    closeAllPanels();
+    const notifPanel = document.getElementById('notification-panel');
+    // Toggle affichage du panneau
+    if (notifPanel.style.display === 'none' || notifPanel.style.display === '') {
+      notifPanel.style.display = 'block';
+    } else {
+      notifPanel.style.display = 'none';
+    }
+  });
+
+  // Exemple : si un clic en dehors d'un panneau est détecté, fermer tous
+  document.addEventListener('click', function(event) {
+    const chatbot = document.getElementById('chatbot-window');
+    const notifPanel = document.getElementById('notification-panel');
+    if (!chatbot.contains(event.target) && !notifIcon.contains(event.target) && !floatingBtn.contains(event.target)) {
+      closeAllPanels();
+    }
+  });
+});
+    </script>
 </body>
 </html>

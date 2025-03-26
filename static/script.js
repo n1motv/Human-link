@@ -15,6 +15,7 @@
 /* *******************************
    1) Gestion de l'affichage des employés en congé
 ******************************* */
+
 function showEmployees(day) {
     // Récupérer les employés qui sont en congé ce jour-là via les données envoyées par le serveur
     let employeesList = document.getElementById('employeesList');
@@ -206,6 +207,8 @@ function agrandirCarte(card) {
         event.target.tagName === 'BUTTON' ||
         event.target.tagName === 'A' ||
         event.target.tagName === 'INPUT' ||
+        event.target.tagName === 'I' ||
+        event.target.tagName === 'TEXTAREA' ||
         event.target.closest('.no-zoom')
     ) {
         return; // Ne rien faire si un bouton ou un lien est cliqué
@@ -700,7 +703,7 @@ function deleteSelectedItems(table) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Erreur',
-                    text: 'Une erreur est survenue lors de la suppression.'
+                    text: error
                 });
             });
         }
@@ -830,3 +833,13 @@ document.getElementById('cropButton').addEventListener('click', function () {
     const modal = bootstrap.Modal.getInstance(document.getElementById('cropperModal'));
     modal.hide();
 });
+
+
+
+
+
+
+
+
+
+

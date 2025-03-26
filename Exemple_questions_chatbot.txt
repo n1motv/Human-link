@@ -1,0 +1,20 @@
+1. Quel est mon nom ?
+2. Quel est mon âge ?
+3. Quel est mon poste ?
+4. Quel est mon département ?
+5. Quel est mon salaire ?
+6. Quel est mon numéro de sécurité sociale ?
+7. Quel est mon numéro de téléphone ?
+8. Quelle est mon adresse ?
+9. Quelle est ma date de naissance ?
+10. Quelle est la date de mon embauche ?
+11. Quel est le type de mon contrat ?
+12. Quel est mon matricule ?
+13. Ai-je des congés déposés ? Si oui, lesquels et quel est leur statut ?
+14. Combien de demandes de congé ai-je effectuées ?
+15. Quels sont les détails de mes congés ?
+16. Ai-je des arrêts maladie en cours ? Quels sont-ils ?
+17. Quels jours de télétravail sont prévus pour moi ?
+18. Ai-je une prime en attente ? De quel montant ?
+19. Quelles sont mes notifications non lues ?
+20. Qui est mon manager ? 

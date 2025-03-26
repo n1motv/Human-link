@@ -20,13 +20,13 @@
 {% block content2 %}
 <h1 class="text-center text-white mb-4">Primes Soumises</h1>
 {% if primes %}
-<div class="row justify-content-center">
+<div class="row justify-content-center" id="demande-list">
     {% for prime in primes %}
     <div class="col-md-6 col-lg-4 demande-card-wrapper">
         <div class="card demande-card" onclick="agrandirCarte(this)">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <input type="checkbox" class="checkbox-item mx-3" value="{{ prime[0] }}">
-                <h5 class="card-title text-center fw-bold mx-5">Prime pour {{ prime.employe_nom }} {{ prime.employe_prenom }}</h5>
+                <h5 class="card-title text-center fw-bold ">Prime pour {{ prime.employe_nom }} {{ prime.employe_prenom }}</h5>
             </div>
             <div class="card-body">
                 <p class="card-text">

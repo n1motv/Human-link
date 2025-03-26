@@ -9,7 +9,7 @@
 
 {% block content2 %}
 <h1 class="text-center text-white mb-4">Modifier Mes Informations</h1>
-<div class="card border-0 rounded-4 fw-bold text-white">
+<div class="card border-0 rounded-4 fw-bold text-dark">
     <div class="card-body p-4">        
         <!-- Formulaire de modification des informations -->
         <form action="{{ url_for('modifier_mes_infos') }}" method="POST" enctype="multipart/form-data">
@@ -87,7 +87,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                <button type="button" id="cropButton" class="btn btn-primary">Recadrer</button>
+                                <button type="button" id="cropButton" class="btn btn-custom-action">Recadrer</button>
                             </div>
                         </div>
                     </div>
@@ -96,7 +96,7 @@
             </div>
 
             <div class="d-grid">
-                <button type="submit" class="btn btn-success btn-lg">
+                <button type="submit" class="btn btn-custom-action btn-lg">
                     <i class="bi bi-arrow-down-up"></i> Mettre à jour mes informations
                 </button>
             </div>       

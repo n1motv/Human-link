@@ -8,7 +8,7 @@
     <h1 class="text-center text-white mb-4 ">Ajouter un Employé</h1>
 
     <!-- Carte contenant le formulaire d'ajout d'un employé -->
-    <div class="card border-0 rounded-4 fw-bold">
+    <div class="card border-0 rounded-4 fw-bold text-dark">
         <div class="card-body p-4">
             <!-- Formulaire d'ajout d'un employé, méthode POST pour l'envoi de données -->
             <form method="POST" enctype="multipart/form-data">
@@ -18,28 +18,28 @@
                     <img id="photoPreview" class="img-fluid" alt="Aperçu de la photo" style="width: 150px; height: 150px; object-fit: cover;">
                 </div>
 
-                <div class="row text-white">
+                <div class="row">
                     <div class="col-md-6">
                         <!-- Partie gauche du formulaire -->
                         <div class="mb-3">
                             <label for="nom" class="form-label">Nom :</label>
-                            <input type="text" name="nom" class="form-control" required>
+                            <input type="text" name="nom" class="form-control" required placeholder="Entrer le nom :">
                         </div>
                         <div class="mb-3">
                             <label for="prenom" class="form-label">Prénom :</label>
-                            <input type="text" name="prenom" class="form-control" required>
+                            <input type="text" name="prenom" class="form-control" required placeholder="Entrer le prénom :">
                         </div>
                         <div class="mb-3">
                             <label for="date_naissance" class="form-label">Date de naissance :</label>
-                            <input type="date" name="date_naissance" class="form-control" required>
+                            <input type="date" name="date_naissance" class="form-control" required placeholder="Entrer la date de naissance :">
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email :</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <input type="email" name="email" class="form-control" required placeholder="Entrer l'adresse mail':">
                         </div>
                         <div class="mb-3">
                             <label for="poste" class="form-label">Poste :</label>
-                            <input type="text" name="poste" class="form-control" required>
+                            <input type="text" name="poste" class="form-control" required placeholder="Entrer le poste :">
                         </div>
                         <div class="mb-3">
                             <label for="departement" class="form-label">Département :</label>
@@ -49,7 +49,7 @@
                         </div>  
                         <div class="mb-3">
                             <label for="telephone" class="form-label">Téléphone :</label>
-                            <input type="text" name="telephone" class="form-control" required>
+                            <input type="text" name="telephone" class="form-control" required placeholder="Entrer le numéro de téléphone :">
                         </div>
                         <div class="mb-3">
                             <label for="code_postal" class="form-label">Code Postal :</label>
@@ -60,7 +60,7 @@
                             <input type="text" id="ville" name="ville" class="form-control" required placeholder="Ville">
                         </div>
                         <div class="mb-3">
-                            <label for="photoInput" class="form-label text-white">Photo :</label>
+                            <label for="photoInput" class="form-label">Photo :</label>
                             <input type="file" id="photoInput" name="photo" class="form-control" accept="image/*">
                         </div>
                     </div>
@@ -85,7 +85,7 @@
                         </div>                                                                   
                         <div class="mb-3">
                             <label for="numero_securite_sociale" class="form-label">Numéro de Sécurité Sociale :</label>
-                            <input type="text" name="numero_securite_sociale" class="form-control" required>
+                            <input type="text" name="numero_securite_sociale" class="form-control" required placeholder="Entrer le numéro de sécurité sociale :">
                         </div>
                         <div class="mb-3">
                             <label for="date_embauche" class="form-label">Date d'embauche :</label>
@@ -113,7 +113,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="salaire" class="form-label">Salaire :</label>
-                            <input type="number" name="salaire" class="form-control" required>
+                            <input type="number" name="salaire" class="form-control" required placeholder="Entrer le salaire :">
                         </div>
                         <div class="mb-3">
                             <label for="role" class="form-label">Rôle :</label>
@@ -127,13 +127,14 @@
 
                 <!-- Bouton d'ajout de l'employé -->
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-success btn-lg">
+                    <button type="submit" class="btn btn-custom-action btn-lg">
                         <i class="bi bi-send"></i> Ajouter l'employé
                     </button>
                 </div>
             </form>
         </div>
     </div>
+    
 {% endblock %}
 
 {% block content4 %}
@@ -150,7 +151,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" id="cropButton" class="btn btn-primary">Recadrer</button>
+                    <button type="button" id="cropButton" class="btn btn-custom-action">Recadrer</button>
                 </div>
             </div>
         </div>

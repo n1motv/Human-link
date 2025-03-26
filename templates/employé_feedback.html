@@ -1,0 +1,159 @@
+{% extends "employé_base.html" %}
+
+{% block title %}Donnez votre avis{% endblock %}
+
+{% block content2 %}
+  <h1 class="text-center text-white mb-4">Votre Avis sur l'Environnement de Travail</h1>
+
+  <!-- Début de la carte -->
+  <div class="card border-0 rounded-4 fw-bold text-dark">
+    <div class="card-body p-4 text-dark">
+      <!-- Formulaire d'avis anonyme -->
+      <form method="POST" action="{{ url_for('feedback') }}">
+        <!-- Question 1 : Environnement de travail -->
+        <div class="mb-3">
+          <label for="rating_env" class="form-label">
+            1. Notez l'environnement de travail (1 = Très mauvais, 5 = Excellent)
+          </label>
+          <select class="form-select" id="rating_env" name="rating_env" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 2 : Management -->
+        <div class="mb-3">
+          <label for="rating_management" class="form-label">
+            2. Notez le management
+          </label>
+          <select class="form-select" id="rating_management" name="rating_management" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 3 : Équilibre vie pro/perso -->
+        <div class="mb-3">
+          <label for="rating_worklife" class="form-label">
+            3. Notez l'équilibre vie professionnelle / personnelle
+          </label>
+          <select class="form-select" id="rating_worklife" name="rating_worklife" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 4 : Communication interne -->
+        <div class="mb-3">
+          <label for="rating_comm" class="form-label">
+            4. Notez la communication interne
+          </label>
+          <select class="form-select" id="rating_comm" name="rating_comm" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 5 : Reconnaissance du travail -->
+        <div class="mb-3">
+          <label for="rating_recognition" class="form-label">
+            5. Notez la reconnaissance de votre travail
+          </label>
+          <select class="form-select" id="rating_recognition" name="rating_recognition" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 6 : Opportunités de formation -->
+        <div class="mb-3">
+          <label for="rating_training" class="form-label">
+            6. Notez les opportunités de formation et de développement professionnel
+          </label>
+          <select class="form-select" id="rating_training" name="rating_training" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 7 : Qualité des équipements -->
+        <div class="mb-3">
+          <label for="rating_equipment" class="form-label">
+            7. Notez la qualité des équipements et outils de travail
+          </label>
+          <select class="form-select" id="rating_equipment" name="rating_equipment" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 8 : Ambiance au sein de l'équipe -->
+        <div class="mb-3">
+          <label for="rating_team" class="form-label">
+            8. Notez l'ambiance au sein de votre équipe
+          </label>
+          <select class="form-select" id="rating_team" name="rating_team" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 9 : Organisation des réunions -->
+        <div class="mb-3">
+          <label for="rating_meetings" class="form-label">
+            9. Notez l'organisation des réunions et la gestion du temps
+          </label>
+          <select class="form-select" id="rating_meetings" name="rating_meetings" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Question 10 : Transparence des informations -->
+        <div class="mb-3">
+          <label for="rating_transparency" class="form-label">
+            10. Notez la transparence des informations communiquées par la direction
+          </label>
+          <select class="form-select" id="rating_transparency" name="rating_transparency" required>
+            <option value="" disabled selected>Choisissez une note</option>
+            {% for i in range(1,6) %}
+              <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Zone de suggestion libre -->
+        <div class="mb-3">
+          <label for="suggestion" class="form-label">Vos suggestions (optionnel)</label>
+          <textarea class="form-control" id="suggestion" name="suggestion" rows="4" placeholder="Exprimez vos idées ou suggestions..."></textarea>
+        </div>
+
+        <!-- Bouton d'envoi -->
+        <div class="d-grid">
+          <button type="submit" class="btn btn-custom-action btn-lg">
+            Envoyer mon avis
+          </button>
+        </div>
+      </form>
+      <!-- Fin du formulaire -->
+    </div>
+  </div>
+{% endblock %}

@@ -31,16 +31,16 @@
         <h4 class="text-white mt-4">Aucune demande de prime pour cet employé.</h4>
     </div>
 
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" id="demande-list">
         {% for demande in demandes %}
         <!-- Chaque demande est affichée comme une carte -->
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-lg-4 demande-card-wrapper">
             <div class="card demande-card" onclick="agrandirCarte(this)">
                 <!-- En-tête de la carte (case à cocher + info manager) -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <input type="checkbox" class="checkbox-item mx-3" value="{{ demande[0] }}">
                     <h5 class="text-center fw-bold">
-                        Demande du manager :
+                        Demande du manager:
                         <h5 class="card-title text-center">{{ demande.manager_nom }} {{ demande.manager_prenom }}</h5>
                     </h5>
                 </div>

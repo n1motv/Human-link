@@ -1,22 +1,15 @@
 {% extends "admin_base.html" %}
 
-<!-- 
-    admin_dashboard.html
-    Tableau de bord principal de l'administrateur.
-    Affiche des statistiques globales et différents graphiques (Chart.js).
--->
-
 {% block title %}Dashboard Admin{% endblock %}
 
 {% block content2 %}
-<!-- Titre principal -->
 <h1 class="text-center text-white mb-4">Tableau de Bord Administratif</h1>
 
 <!-- Rangée contenant les statistiques principales -->
 <div class="row">
     <!-- Nombre total d'employés -->
     <div class="col-md-3 mb-4">
-        <div class="card text-white text-center shadow" style="background-color: #007BFF">
+        <div class="card text-white text-center shadow" style="background-color: #fd7e14;">
             <div class="card-body">
                 <h5 class="card-title">Employés</h5>
                 <p class="card-text display-4">{{ total_employes }}</p>
@@ -26,7 +19,7 @@
 
     <!-- Nombre total de départements -->
     <div class="col-md-3 mb-4">
-        <div class="card text-white text-center shadow" style="background-color: #28A745">
+        <div class="card text-white text-center shadow" style="background-color: #56ab2f;">
             <div class="card-body">
                 <h5 class="card-title">Départements</h5>
                 <p class="card-text display-4">{{ total_departements }}</p>
@@ -36,7 +29,7 @@
 
     <!-- Nombre de congés acceptés -->
     <div class="col-md-3 mb-4">
-        <div class="card text-white text-center shadow" style="background-color: #FD7E14">
+        <div class="card text-white text-center shadow" style="background-color: #4b79a1;">
             <div class="card-body">
                 <h5 class="card-title">Congés Acceptés</h5>
                 <p class="card-text display-4">{{ conges_acceptes }}</p>
@@ -46,7 +39,7 @@
 
     <!-- Salaire moyen -->
     <div class="col-md-3 mb-4">
-        <div class="card text-white text-center shadow" style="background-color: #C82333">
+        <div class="card text-white text-center shadow" style="background-color: #c82333;">
             <div class="card-body">
                 <h5 class="card-title">Salaire Moyen</h5>
                 <p class="card-text display-4">{{ salaire_moyen }} €</p>
@@ -59,83 +52,106 @@
 <div class="row">
     <!-- Graphique des congés acceptés -->
     <div class="col-lg-6 mb-4">
-        <div class="card bg-light shadow">
+        <div class="card bg-light shadow text-center" style="margin-bottom: 30px;">
             <div class="card-body">
-                <h5 class="card-title">Congés Acceptés</h5>
+                <h3 class="card-title mb-3 fw-bold">Congés Acceptés</h3>
                 <!-- Boutons pour basculer entre vue par jour et vue par mois -->
                 <div class="d-flex justify-content-end mb-2">
                     <button id="btnJour" class="btn btn-outline-primary btn-sm mx-1">Par Jour</button>
                     <button id="btnMois" class="btn btn-outline-primary btn-sm">Par Mois</button>
                 </div>
-                <canvas id="chartConges"></canvas>
+                <canvas id="chartConges" height="200"></canvas>
             </div>
         </div>
 
-        <!-- Statistiques du jour (personnes sur site et en télétravail) -->
-        <div class="col-lg-6 mb-4" style="width: 100%;">
-            <div class="card bg-light shadow text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Statistiques du Jour</h5>
-                    <p><strong>Personnes sur site aujourd'hui :</strong> {{ personnes_sur_site }}</p>
-                    <p><strong>Personnes en télétravail aujourd'hui :</strong> {{ personnes_teletravail }}</p>
-                </div>
+        <!-- Statistiques du jour (sur site / télétravail) -->
+        <div class="card bg-light shadow text-center">
+            <div class="card-body">
+                <h3 class="card-title mb-3 fw-bold">Statistiques du Jour</h3>
+                <p><strong>Personnes sur site aujourd'hui :</strong> {{ personnes_sur_site }}</p>
+                <p><strong>Personnes en télétravail aujourd'hui :</strong> {{ personnes_teletravail }}</p>
             </div>
         </div>
     </div>
 
     <!-- Graphique du nombre d'employés par département -->
     <div class="col-lg-6 mb-4">
-        <div class="card bg-light shadow">
-            <div class="card-body">
-                <h5 class="card-title">Employés par Département</h5>
-                <canvas id="chartDepartements"></canvas>
+        <div class="card bg-light shadow text-center">
+            <div class="card-body ">
+                <h3 class="card-title mb-3 fw-bold">Employés par Département</h3>
+                <canvas id="chartDepartements" height="200"></canvas>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
+
 {% block content3 %}
 <script>
-    /* -----------------------------
-       Configuration des données pour les congés acceptés
+    /* ---------------------------------------
+       Données pour les congés acceptés
        (par jours et par mois).
-    ----------------------------- */
+    ---------------------------------------- */
     const joursLabels = {{ jours_labels | tojson }};
     const congesParJour = {{ conges_par_jour | tojson }};
     const moisLabels = {{ mois_labels | tojson }};
     const congesParMois = {{ conges_par_mois | tojson }};
 
+    let currentCongesChart = null;
     const chartCongesCtx = document.getElementById('chartConges').getContext('2d');
-    let currentChart;
 
     /**
-     * Fonction pour créer ou détruire un graphique Chart.js.
-     * @param {Array} labels - Les labels de l'axe X
-     * @param {Array} data - Les données de l'axe Y
+     * Crée un graphique ou détruit l'ancien s'il existe déjà
+     * @param {Array} labels - Labels de l'axe X
+     * @param {Array} data - Données de l'axe Y
      * @param {String} label - Intitulé de la dataset
      */
-    function createChart(labels, data, label) {
-        if (currentChart) {
-            currentChart.destroy();
+    function createCongesChart(labels, data, label) {
+        if (currentCongesChart) {
+            currentCongesChart.destroy();
         }
-        currentChart = new Chart(chartCongesCtx, {
+
+        currentCongesChart = new Chart(chartCongesCtx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
                     label: label,
                     data: data,
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: '#4b79a1',
+                    hoverBackgroundColor: '#283e51',
+                    borderColor: '#333',
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeInOutQuad'
+                },
                 plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    },
                     legend: {
                         display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
                     }
                 }
             }
@@ -143,26 +159,45 @@
     }
 
     // Affichage par défaut : congés acceptés par mois
-    createChart(moisLabels, congesParMois, 'Congés Acceptés par Mois');
+    createCongesChart(moisLabels, congesParMois, 'Congés Acceptés par Mois');
 
     // Bouton "Par Jour"
     document.getElementById('btnJour').addEventListener('click', () => {
-        createChart(joursLabels, congesParJour, 'Congés Acceptés par Jour');
+        createCongesChart(joursLabels, congesParJour, 'Congés Acceptés par Jour');
     });
 
     // Bouton "Par Mois"
     document.getElementById('btnMois').addEventListener('click', () => {
-        createChart(moisLabels, congesParMois, 'Congés Acceptés par Mois');
+        createCongesChart(moisLabels, congesParMois, 'Congés Acceptés par Mois');
     });
 
-    /* -----------------------------
-       Configuration des données pour
-       le graphique des employés par département
-    ----------------------------- */
+
+    /* ---------------------------------------
+       Données pour le graphique 
+       des employés par département
+    ---------------------------------------- */
     const departementLabels = {{ departement_labels | tojson }};
     const employesParDepartement = {{ employes_par_departement | tojson }};
 
     const chartDepartementsCtx = document.getElementById('chartDepartements').getContext('2d');
+
+    // Couleurs de base pour chaque "part" du Pie
+    const backgroundPie = [
+        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+        '#F7464A', '#46BFBD', '#FDB45C', '#949FB1', '#4D5360',
+        '#F3A683', '#786FA6', '#F8EFBA', '#596275', '#F5CD79'
+    ];
+    // Couleurs de survol, distinctes (par exemple, on fonce la teinte de base)
+    const hoverPie = [
+        '#E62950', '#1E82CA', '#E8B700', '#36A7A7', '#784BEF',
+        '#D02C30', '#2CAFA1', '#D9A14B', '#7F8FA1', '#3A4246',
+        '#C87C5E', '#5B4B83', '#D9CF8A', '#414857', '#D3A461'
+    ];
+
+    // Au cas où il y a plus de départements que prévu, on "recycle" les couleurs
+    const pieBackgroundColors = departementLabels.map((_, i) => backgroundPie[i % backgroundPie.length]);
+    const pieHoverColors = departementLabels.map((_, i) => hoverPie[i % hoverPie.length]);
+
     new Chart(chartDepartementsCtx, {
         type: 'pie',
         data: {
@@ -170,28 +205,32 @@
             datasets: [{
                 label: 'Employés',
                 data: employesParDepartement,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.5)',
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(255, 206, 86, 0.5)',
-                    'rgba(75, 192, 192, 0.5)',
-                    'rgba(153, 102, 255, 0.5)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1
+                backgroundColor: pieBackgroundColors,
+                hoverBackgroundColor: pieHoverColors,
+                borderColor: '#fff',
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
+            animation: {
+                duration: 1200,
+                easing: 'easeInOutQuad'
+            },
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        color: '#000',
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#fff',
+                    borderWidth: 1
                 }
             }
         }

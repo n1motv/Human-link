@@ -9,7 +9,7 @@
             <!-- Ligne suivante : titre pour la création d'invitation -->
             <h1 class="text-center text-white mb-4">Créer une Invitation de Réunion</h1>
             <!-- Ligne suivante : carte pour le formulaire d'invitation de réunion -->
-            <div class="card border-0 rounded-4 fw-bold text-white">
+            <div class="card border-0 rounded-4 fw-bold text-dark">
                 <div class="card-body p-4">
                     <!-- Ligne suivante : formulaire d'envoi d'invitation -->
                     <form method="POST" class="fw-bold">
@@ -31,11 +31,11 @@
                                 <option value="{{ emp[0] }}">{{ emp[1] }} {{ emp[2] }}</option>
                                 {% endfor %}
                             </select>
-                            <small class="form-text text-white">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs employés.</small>
+                            <small class="form-text ">Maintenez Ctrl (ou Cmd sur Mac) pour sélectionner plusieurs employés.</small>
                         </div>
                         <!-- Ligne suivante : bouton d'envoi de l'invitation -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-custom-action btn-lg">
                                 <i class="bi bi-send"></i> Envoyer l'Invitation
                             </button>
                         </div>
@@ -46,7 +46,7 @@
             <!-- Ligne suivante : titre pour la liste des réunions planifiées -->
             <h1 class="mt-5 text-white text-center mb-4">Réunions Planifiées</h1>
             <!-- Ligne suivante : carte contenant la table des réunions -->
-            <div class="card bg-white text-dark shadow-lg border-0 rounded-4 fw-bold">
+            <div class="card text-dark shadow-lg border-0 rounded-4 fw-bold">
                 <div class="card-body">
                     <div class="table-responsive">
                         <!-- Ligne suivante : table pour afficher les réunions planifiées -->

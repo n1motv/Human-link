@@ -26,7 +26,7 @@
 
 <!-- Vérification : si des demandes existent -->
 {% if demandes %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" id="demande-list">
         {% for demande in demandes | reverse %}
         <!-- Chaque demande de congé affichée comme une carte -->
         <div class="col-md-6 col-lg-4 demande-card-wrapper">
@@ -34,7 +34,7 @@
                 <!-- En-tête de la carte : case à cocher + ID de la demande -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <input type="checkbox" class="checkbox-item mx-3" value="{{ demande[0] }}">
-                    <h5 class="card-title text-center fw-bold mb-0 mx-5">ID de la demande : {{ demande[0] }}</h5>
+                    <h5 class="card-title text-center fw-bold mb-0 ">ID de la demande : {{ demande[0] }}</h5>
                 </div>
 
                 <!-- Corps de la carte : détails de la demande -->
@@ -50,10 +50,11 @@
                             <span>
                                 <strong>Motif de refus :</strong> {{ demande[9] if demande[9] else "N/A" }}
                             </span>
+                            {% set piece = demande.pièce_jointe %}
                             {% if demande.pièce_jointe %}
-                            <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank" class="btn btn-link btn-sm">
-                                <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
-                            </a>
+                                <a href="{{ generate_presigned_url(piece) }}" target="_blank" class="btn btn-link btn-sm">
+                                    <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
+                                </a>
                             {% else %}
                             <span class="badge text-dark d-flex align-items-center justify-content-center" id="badgePerso">
                                 Pas de pièce jointe

@@ -10,72 +10,75 @@
 
 {% block content2 %}
 <!-- Titre principal affichant le nom complet de l'employé -->
-<h1 class="text-center text-white mb-4">Déposer un Document pour : {{ employe[0] }} {{ employe[1] }}</h1>
+<h1 class="text-center text-white mb-4">Déposer un Document pour :  {{ employe[1] }} {{ employe[0] }}</h1>
+<div class="row">
+    <div class="col-md-8 offset-md-2 col-lg-6 offset-lg-3">
+        <!-- Carte de formulaire pour le dépôt de document -->
+        <div class="card text-dark p-4 fw-bold">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Sélection du type de document (bulletin, contrat ou autre) -->
+                <div class="mb-3">
+                    <label for="type_document" class="form-label">Type de Document</label>
+                    <select class="form-select" name="type_document" id="type_document" required onchange="toggleFields()">
+                        <option value="bulletin">Bulletin de Salaire</option>
+                        <option value="contrat">Contrat de Travail</option>
+                        <option value="autre">Autre Document</option>
+                    </select>
+                </div>
 
-<!-- Carte de formulaire pour le dépôt de document -->
-<div class="card text-white p-4 fw-bold">
-    <form method="POST" enctype="multipart/form-data">
-        <!-- Sélection du type de document (bulletin, contrat ou autre) -->
-        <div class="mb-3">
-            <label for="type_document" class="form-label">Type de Document</label>
-            <select class="form-select" name="type_document" id="type_document" required onchange="toggleFields()">
-                <option value="bulletin">Bulletin de Salaire</option>
-                <option value="contrat">Contrat de Travail</option>
-                <option value="autre">Autre Document</option>
-            </select>
+                <!-- Champs pour la sélection du mois et de l'année (bulletin/contrat) -->
+                <div id="mois_annee_fields">
+                    <!-- Liste déroulante pour les mois -->
+                    <div class="mb-3">
+                        <label for="mois" class="form-label">Mois</label>
+                        <select class="form-select" name="mois" id="mois" required>
+                            <option value="Janvier">Janvier</option>
+                            <option value="Février">Février</option>
+                            <option value="Mars">Mars</option>
+                            <option value="Avril">Avril</option>
+                            <option value="Mai">Mai</option>
+                            <option value="Juin">Juin</option>
+                            <option value="Juillet">Juillet</option>
+                            <option value="Août">Août</option>
+                            <option value="Septembre">Septembre</option>
+                            <option value="Octobre">Octobre</option>
+                            <option value="Novembre">Novembre</option>
+                            <option value="Décembre">Décembre</option>
+                        </select>
+                    </div>
+
+                    <!-- Liste déroulante pour les années -->
+                    <div class="mb-3">
+                        <label for="annee" class="form-label">Année</label>
+                        <select class="form-select" name="annee" id="annee" required>
+                            <!-- Les options seront ajoutées dynamiquement avec JavaScript (voir content3) -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Champ pour le nom d'un document si le type est "autre" -->
+                <div id="nom_document_field" class="d-none">
+                    <div class="mb-3">
+                        <label for="nom_document" class="form-label">Nom du Document</label>
+                        <input type="text" class="form-control" name="nom_document" placeholder="Ex: Attestation, Justificatif">
+                    </div>
+                </div>
+
+                <!-- Sélection du fichier à uploader -->
+                <div class="mb-3">
+                    <label for="fichier" class="form-label">Fichier</label>
+                    <input type="file" class="form-control" name="fichier" required>
+                </div>
+
+                <!-- Bouton pour soumettre le formulaire -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-custom-action btn-lg">
+                        <i class="bi bi-upload"></i> Déposer
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <!-- Champs pour la sélection du mois et de l'année (bulletin/contrat) -->
-        <div id="mois_annee_fields">
-            <!-- Liste déroulante pour les mois -->
-            <div class="mb-3">
-                <label for="mois" class="form-label">Mois</label>
-                <select class="form-select" name="mois" id="mois" required>
-                    <option value="Janvier">Janvier</option>
-                    <option value="Février">Février</option>
-                    <option value="Mars">Mars</option>
-                    <option value="Avril">Avril</option>
-                    <option value="Mai">Mai</option>
-                    <option value="Juin">Juin</option>
-                    <option value="Juillet">Juillet</option>
-                    <option value="Août">Août</option>
-                    <option value="Septembre">Septembre</option>
-                    <option value="Octobre">Octobre</option>
-                    <option value="Novembre">Novembre</option>
-                    <option value="Décembre">Décembre</option>
-                </select>
-            </div>
-
-            <!-- Liste déroulante pour les années -->
-            <div class="mb-3">
-                <label for="annee" class="form-label">Année</label>
-                <select class="form-select" name="annee" id="annee" required>
-                    <!-- Les options seront ajoutées dynamiquement avec JavaScript (voir content3) -->
-                </select>
-            </div>
-        </div>
-
-        <!-- Champ pour le nom d'un document si le type est "autre" -->
-        <div id="nom_document_field" class="d-none">
-            <div class="mb-3">
-                <label for="nom_document" class="form-label">Nom du Document</label>
-                <input type="text" class="form-control" name="nom_document" placeholder="Ex: Attestation, Justificatif">
-            </div>
-        </div>
-
-        <!-- Sélection du fichier à uploader -->
-        <div class="mb-3">
-            <label for="fichier" class="form-label">Fichier</label>
-            <input type="file" class="form-control" name="fichier" required>
-        </div>
-
-        <!-- Bouton pour soumettre le formulaire -->
-        <div class="d-grid">
-            <button type="submit" class="btn btn-success btn-lg">
-                <i class="bi bi-upload"></i> Déposer
-            </button>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}
 
