@@ -13,50 +13,62 @@
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.2/main.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../static/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        .container{
+            width : 100%;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation affichée si l'utilisateur a le rôle "admin" -->
     {% if role =='admin' %}
+    <!-- Barre de navigation principale -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <!-- Logo renvoyant vers le dashboard admin -->
+            <!-- Logo principal qui redirige vers le dashboard admin -->
             <a href="{{ url_for('admin_dashboard') }}">
                 <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
             </a>
 
-            <!-- Bouton toggle pour petits écrans -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <!-- Bouton toggle pour les mobiles -->
+            <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                    style="width: 45px; height: 45px; object-fit: cover;">
+            </a>
 
             <!-- Liens de navigation -->
             <div class="collapse navbar-collapse text-center" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <!-- Lien pour voir les employés -->
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <!-- Lien vers la page des employés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
+                    
                     <!-- Lien pour ajouter un employé -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
-                    <!-- Lien pour accéder au calendrier des congés -->
+                    
+                    <!-- Lien vers le calendrier des congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
-
-                    <!-- Menu déroulant "Plus" visible uniquement sur grands écrans (d-none d-lg-block) -->
+                    
+                    <!-- Menu déroulant "Plus" (apparaît sur grands écrans) -->
                     <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
+                        <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <!-- Liens supplémentaires -->
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i> Déposer documents</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('feedback_results') }}"><i class="bi bi-arrow-down-up"></i> Analyse des retours</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                         </ul>
                     </li>
 
-                    <!-- Même contenu affiché sous forme de liens pour les petits écrans (d-lg-none) -->
+                    <!-- Affichage des mêmes options en dehors du menu déroulant pour petits écrans (d-lg-none) -->
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
@@ -64,6 +76,7 @@
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('feedback_results') }}"><i class="bi bi-arrow-down-up"></i> Analyse des retours</a></li>
                     <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
                 </ul>
             </div>
@@ -75,28 +88,41 @@
     {% if role =='manager' %}
         <!-- Début de la barre de navigation -->
         <nav class="navbar navbar-expand-lg navbar-dark">
-            <div class="container-fluid">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
                 <!-- Logo principal -->
                 <a href="{{ url_for('manager_dashboard') }}">
                     <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
                 </a>
     
-                <!-- Bouton pour afficher/masquer la navigation sur mobile -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <!-- Bouton toggle pour les mobiles -->
+                <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    {% set photo_key = photo %}
+                    {% if photo_key and photo_key != 'default.png' %}
+                        <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle border border-light shadow-sm"
+                            style="width: 45px; height: 45px; object-fit: cover;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                            style="width: 45px; height: 45px; object-fit: cover;">
+                    {% endif %}
+                </a>
     
                 <!-- Liens de navigation -->
                 <div class="collapse navbar-collapse text-center" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center">
                         <!-- Lien vers les demandes de congés -->
                         <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                         <!-- Lien vers le calendrier des congés -->
                         <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
                         <!-- Menu déroulant pour les options supplémentaires -->
                         <li class="nav-item dropdown d-none d-lg-block">
-                            <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
+                            <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% set photo_key = photo %}
+                                {% if photo_key and photo_key != 'default.png' %}
+                                    <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                                {% endif %}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <!-- Liens supplémentaires -->
@@ -117,12 +143,10 @@
                 </div>
             </div>
         </nav>
-    {% endif %}
-
-    <!-- Icône flottante pour accéder aux notifications -->
+        {% endif %}
+    <!-- Icône flottante pour les notifications -->
     <div id="notification-icon" onclick="toggleNotificationPanel()">
         <i class="bi bi-bell-fill"></i>
-        <!-- Affichage du badge si le nombre de notifications non lues est supérieur à 0 -->
         {% if nombre_notifications_non_lues > 0 %}
             <span class="badge">{{ nombre_notifications_non_lues }}</span>
         {% endif %}
@@ -130,7 +154,7 @@
 
     <!-- Panneau des notifications -->
     <div id="notification-panel">
-        <div class="notification-header">Notifications</div>
+        <div class="notification-header">📢 Notifications</div>
         <div class="notification-list">
             {% for notification in notifications %}
                 <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
@@ -148,7 +172,6 @@
             {% endif %}
         </div>
     </div>
-
     <!-- Gestion des messages flash via SweetAlert -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -193,8 +216,20 @@
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+                
+        </footer> 
     </div>
 
     <!-- Scripts JS nécessaires -->
@@ -261,6 +296,47 @@
             // Rendre le calendrier visible
             calendar.render();
         });
+
+        // Fonction qui ferme le panneau de notifications et les popups SweetAlert
+        function closeAllPanels() {
+        // Ferme le panneau des notifications
+        const notifPanel = document.getElementById('notification-panel');
+        if (notifPanel) notifPanel.style.display = 'none';
+
+
+        }
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+        // Gestion du bouton de notification
+        const notifIcon = document.getElementById('notification-icon');
+
+        notifIcon.addEventListener('click', function(event) {
+            // Empêche la propagation du clic pour ne pas fermer immédiatement le panneau
+            event.stopPropagation();
+
+            // Ferme d'abord tous les panneaux ouverts
+            closeAllPanels();
+
+            // Toggle du panneau de notifications
+            const notifPanel = document.getElementById('notification-panel');
+            if (notifPanel.style.display === 'none' || notifPanel.style.display === '') {
+            notifPanel.style.display = 'block';
+            } else {
+            notifPanel.style.display = 'none';
+            }
+        });
+
+        // Ferme tous les panneaux (notifications, SweetAlert, etc.) lorsqu'on clique en dehors
+        document.addEventListener('click', function(event) {
+            // Vérifier si le clic se produit en dehors du panneau de notifications ou du bouton
+            if (!event.target.closest('#notification-panel') && !event.target.closest('#notification-icon')) {
+            closeAllPanels();
+            }
+        });
+        });
+
     </script>
 </body>
 </html>

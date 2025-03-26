@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .card {
-            max-width: 400px;
+            max-width: 500px;
             width: 100%;
             padding: 20px;
             border-radius: 15px;
@@ -54,13 +54,13 @@
     <div id="main-body">
         <main class="mx-3 d-flex justify-content-center align-items-center vh-100">
             <div class="card">
-                <h1 class="text-center mb-4">Réinitialisation du mot de passe</h1>
+                <h2 class="text-center mb-4 fw-bold">Réinitialisation du mot de passe</h2>
                 <form id="password-reset-form">
                     <div class="mb-3">
                         <label for="email" class="form-label">Adresse email :</label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="Entrez votre email" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-custom-action w-100">
                         <i class="fas fa-paper-plane"></i> Envoyer le lien de réinitialisation
                     </button>
                 </form>
@@ -71,8 +71,20 @@
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+                
+        </footer> 
     </div>
 
     <!-- Scripts -->

@@ -52,11 +52,13 @@
                 id="cardPersonaliser"
             >
                 <!-- Photo de l'employé (ou "default.jpg" si pas de photo) -->
-                <img 
-                    src="../static/uploads/photo_profile/{{ emp.photo or 'default.jpg' }}" 
-                    class="card-img-top id-pic" 
-                    alt="Photo de l'employé"
-                >
+                {% set photo_key = emp.photo %}
+                {% if photo_key and photo_key != 'default.png' %}
+                    <img src="{{ generate_presigned_url(photo_key) }}" class="card-img-top id-pic" alt="Photo de l'employé">
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/default.png') }}" class="card-img-top id-pic" alt="Photo de l'employé">
+                {% endif %}
+                
                 <div class="card-body text-dark">
                     <!-- Informations de base de l'employé -->
                     <h4 class="card-title text-center fw-bold">
@@ -113,7 +115,7 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <button type="submit"class="btn btn-primary w-100"><i class="bi bi-save"></i> Enregistrer</button>
+                            <button type="submit"class="btn btn-custom-action w-100"><i class="bi bi-save"></i> Enregistrer</button>
                         </form>
                     </p>
                 </div>

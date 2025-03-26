@@ -1,0 +1,171 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Analyse des Retours Anonymes{% endblock %}
+
+{% block content2 %}
+  <h1 class="text-center text-white mb-4">Analyse des Retours Anonymes</h1>
+
+  
+  <div class="row">
+    <!-- On mobile, wrap the chart in a container that is 50% of the viewport width and horizontally scrollable -->
+    <div class="col-md-6">
+      <div class="chart-container" style=" overflow-y: auto;">
+        <canvas id="ratingsChart"  style="min-height: 400px; margin-bottom: 40px;"></canvas>
+      </div>
+        <!-- Enhanced Month selector using Flatpickr -->
+      <div class="d-flex justify-content-center mb-4">
+        <form method="GET" action="{{ url_for('feedback_results') }}" class="d-flex align-items-center">
+          <!-- This input will be turned into a fancy month picker -->
+          <input type="text" id="monthSelect" name="month" value="{{ selected_month }}" class="form-control me-2" style="max-width: 200px;">
+          <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="color : black ; background-color: rgba(255, 255, 255, 0.8); border: black; "><i class="bi bi-arrow-down-up"></i></button>
+        </form>
+      </div>
+    </div>
+    <div class="col-md-6 text-white">
+      <div class="card border-0 rounded-4 fw-bold text-dark">
+        <div class="card-body p-4">
+          <ul class="list-group">
+            <li class="list-group-item bg-transparent">
+              <strong>Environnement de travail:</strong> {{ avg_env }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Management:</strong> {{ avg_mgmt }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Equilibre vie pro/perso:</strong> {{ avg_work }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Communication:</strong> {{ avg_comm }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Reconnaissance:</strong> {{ avg_recognition }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Formation:</strong> {{ avg_training }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Equipement:</strong> {{ avg_equipment }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Ambiance d'équipe:</strong> {{ avg_team }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Réunions:</strong> {{ avg_meetings }} / 5
+            </li>
+            <li class="list-group-item bg-transparent">
+              <strong>Transparence:</strong> {{ avg_transparency }} / 5
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+  <hr>
+  <div class="mt-3 text-white text-center">
+    <h3>Suggestions des employés</h3>
+    {% if suggestions %}
+      <ul class="list-group">
+        {% for suggestion in suggestions %}
+          <li class="list-group-item bg-transparent text-white">{{ suggestion }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Aucune suggestion fournie pour ce mois.</p>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block content3 %}
+<!-- Include Flatpickr and its MonthSelect plugin -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
+<script>
+  // Initialize Flatpickr with the MonthSelect plugin on the #monthSelect input
+  flatpickr("#monthSelect", {
+    plugins: [
+      new monthSelectPlugin({
+        shorthand: true,        // use abbreviated month names
+        dateFormat: "Y-m",      // value format sent to server
+        altFormat: "F Y"        // display format, e.g., "September 2023"
+      })
+    ],
+    // Optionally, disable manual editing
+    allowInput: false
+  });
+</script>
+
+<script>
+  // Configuration du graphique pour afficher les feedbacks avec Chart.js
+  const data = {
+    labels: [
+      'Environnement', 'Management', 'Vie pro/perso',
+      'Communication', 'Reconnaissance', 'Formation',
+      'Equipement', 'Ambiance', 'Réunions', 'Transparence'
+    ],
+    datasets: [{
+      label: 'Note moyenne (sur 5)',
+      data: [
+        {{ avg_env }}, {{ avg_mgmt }}, {{ avg_work }},
+        {{ avg_comm }}, {{ avg_recognition }}, {{ avg_training }},
+        {{ avg_equipment }}, {{ avg_team }}, {{ avg_meetings }}, {{ avg_transparency }}
+      ],
+      backgroundColor: [
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(153, 102, 255, 0.6)',
+        'rgba(255, 159, 64, 0.6)',
+        'rgba(54, 162, 235, 0.6)',
+        'rgba(255, 206, 86, 0.6)',
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(153, 102, 255, 0.6)',
+        'rgba(255, 99, 132, 0.6)',
+        'rgba(54, 162, 235, 0.6)',
+        'rgba(201, 203, 207, 0.6)'
+      ],
+      borderColor: [
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(201, 203, 207, 1)'
+      ],
+      borderWidth: 1
+    }]
+  };
+
+  const config = {
+    type: 'bar',
+    data: data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: { color: '#fff' },
+          grid: { color: 'rgba(255, 255, 255, 0.2)' }
+        },
+        y: {
+          ticks: { color: '#fff' },
+          grid: { color: 'rgba(255, 255, 255, 0.2)' },
+          beginAtZero: true,
+          max: 5
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  };
+
+  var ctx = document.getElementById('ratingsChart').getContext('2d');
+  new Chart(ctx, config);
+</script>
+{% endblock %}

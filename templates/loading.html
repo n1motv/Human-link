@@ -92,7 +92,7 @@
 </head>
 <body id="main-body">
     <!-- Logo principal -->
-    <img id="main-logo" src="../static/logo/logo-white.png" alt="Logo">
+    <img id="main-logo" src="../static/logo/logo.png" alt="Logo">
 
     <!-- Contenu visible pendant le chargement -->
     <div id="content">
@@ -129,5 +129,16 @@
             }, 4000);
         });
     </script>
+    <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'fr',
+          includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

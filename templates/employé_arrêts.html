@@ -26,7 +26,7 @@
 
 <!-- Vérifier s'il existe des demandes d'arrêt -->
 {% if arrets %}
-    <div class="row justify-content-center">
+    <div class="row justify-content-center" id="demande-list">
         {% for arret in arrets | reverse %}
         <!-- Chaque demande est affichée comme une carte -->
         <div class="col-md-6 col-lg-4 demande-card-wrapper">
@@ -34,7 +34,7 @@
                 <!-- En-tête de la carte : checkbox + ID de la demande -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <input type="checkbox" class="checkbox-item mx-3" value="{{ arret[0] }}">
-                    <h5 class="card-title text-center fw-bold mb-0 mx-5">ID de la demande : {{ arret[0] }}</h5>
+                    <h5 class="card-title text-center fw-bold mb-0 ">ID de la demande : {{ arret[0] }}</h5>
                 </div>
 
                 <!-- Contenu de la carte : détails de la demande -->
@@ -51,8 +51,9 @@
                         <span>
                             <strong>Motif de refus :</strong> {{ arret[7] if arret[7] else "N/A" }}
                         </span>
+                        {% set piece = arret[8] %}
                         {% if arret[8] %}
-                            <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank" class="btn btn-link btn-sm">
+                            <a href="{{ generate_presigned_url(piece) }}" target="_blank" class="btn btn-link btn-sm">
                                 <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
                             </a>
                         {% else %}

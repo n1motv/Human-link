@@ -25,14 +25,19 @@
 
 <!-- Vérification : si la liste d'employés n'est pas vide -->
 {% if employees %}
-    <div class="row g-4 justify-content-center" id="employeeList">
+    <div class="row  g-4 justify-content-center" id="employeeList">
         {% for emp in employees | reverse %}
         <!-- Chaque employé est affiché dans une carte -->
-        <div class="col-md-6 col-lg-3 employee-card" id="big-card" data-name="{{ emp[0] }} {{ emp[1] }}">
+        <div class="col-md-6 col-lg-4 employee-card" id="big-card" data-name="{{ emp[0] }} {{ emp[1] }}">
             <div class="card border-0" id="cardPersonaliser">
                 <!-- Photo de profil -->
-                <img src="../static/uploads/photo_profile/{{ emp[10] }}" class="card-img-top id-pic" alt="Photo de l'employé">
-
+                {% set photo_key = emp[10] %}
+                {% if photo_key and photo_key != 'default.png' %}
+                    <img src="{{ generate_presigned_url(photo_key) }}" class="card-img-top id-pic" alt="Photo de l'employé">
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/default.png') }}" class="card-img-top id-pic" alt="Photo de l'employé">
+                {% endif %}
+                
                 <div class="card-body text-dark">
                     <p class="card-text">
                         <h5 class="card-title text-center" style="font-size: 1.5rem;">Informations Complètes</h5>
@@ -148,7 +153,7 @@
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                                    <button type="button" id="cropButton{{ emp[10] }}" class="btn btn-primary">Recadrer</button>
+                                                    <button type="button" id="cropButton{{ emp[10] }}" class="btn btn-custom-action">Recadrer</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -225,7 +230,7 @@
                                 </button>
 
                                 <!-- Bouton pour confirmer la modification (envoyé vers le serveur) -->
-                                <button type="button" class="btn btn-success mx-2 confirm-edit">
+                                <button type="button" class="btn btn-custom-action mx-2 confirm-edit">
                                     Confirmer
                                 </button>
                             </div>
@@ -252,6 +257,7 @@
         {% endfor %}
     </div>
 {% else %}
+
     <!-- Avertissement s'il n'y a aucun employé -->
     <div class="text-center mt-5">
         <img src="{{ url_for('static', filename='img/Fichier2.png') }}" alt="Aucune demande" class="no-demand-image">

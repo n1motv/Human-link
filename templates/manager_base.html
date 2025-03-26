@@ -22,20 +22,28 @@
 <body>
     <!-- Début de la barre de navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
             <!-- Logo principal -->
             <a href="{{ url_for('manager_dashboard') }}">
                 <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
             </a>
 
-            <!-- Bouton pour afficher/masquer la navigation sur mobile -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <!-- Bouton toggle pour les mobiles -->
+            <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                {% set photo_key = photo %}
+                {% if photo_key and photo_key != 'default.png' %}
+                    <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle border border-light shadow-sm"
+                        style="width: 45px; height: 45px; object-fit: cover;">
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                        style="width: 45px; height: 45px; object-fit: cover;">
+                {% endif %}
+            </a>
 
             <!-- Liens de navigation -->
             <div class="collapse navbar-collapse text-center" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
                     <!-- Lien vers les demandes de congés -->
                     <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
                     <!-- Lien vers le calendrier des congés -->
@@ -65,8 +73,13 @@
 
                     <!-- Menu déroulant pour les options supplémentaires -->
                     <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Plus
+                        <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% set photo_key = photo %}
+                            {% if photo_key and photo_key != 'default.png' %}
+                                <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <!-- Liens supplémentaires -->
@@ -98,7 +111,7 @@
 
     <!-- Panneau des notifications -->
     <div id="notification-panel">
-        <div class="notification-header">Notifications</div>
+        <div class="notification-header">📢 Notifications</div>
         <div class="notification-list">
             {% for notification in notifications %}
                 <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
@@ -150,10 +163,22 @@
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+                
+        </footer> 
     </div>
-
+    
     <!-- Inclusion des scripts nécessaires -->
     <script src="../static/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -163,5 +188,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block content3 %}{% endblock %}
+    <script>
+        
+        // Fonction qui ferme le panneau de notifications et les popups SweetAlert
+        function closeAllPanels() {
+        // Ferme le panneau des notifications
+        const notifPanel = document.getElementById('notification-panel');
+        if (notifPanel) notifPanel.style.display = 'none';
+
+
+        }
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+        // Gestion du bouton de notification
+        const notifIcon = document.getElementById('notification-icon');
+
+        notifIcon.addEventListener('click', function(event) {
+            // Empêche la propagation du clic pour ne pas fermer immédiatement le panneau
+            event.stopPropagation();
+
+            // Ferme d'abord tous les panneaux ouverts
+            closeAllPanels();
+
+            // Toggle du panneau de notifications
+            const notifPanel = document.getElementById('notification-panel');
+            if (notifPanel.style.display === 'none' || notifPanel.style.display === '') {
+            notifPanel.style.display = 'block';
+            } else {
+            notifPanel.style.display = 'none';
+            }
+        });
+
+        // Ferme tous les panneaux (notifications, SweetAlert, etc.) lorsqu'on clique en dehors
+        document.addEventListener('click', function(event) {
+            // Vérifier si le clic se produit en dehors du panneau de notifications ou du bouton
+            if (!event.target.closest('#notification-panel') && !event.target.closest('#notification-icon')) {
+            closeAllPanels();
+            }
+        });
+        });
+    </script>
 </body>
 </html>

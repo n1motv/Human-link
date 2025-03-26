@@ -9,14 +9,14 @@
 {% block title %}Les demandes de congés{% endblock %}
 
 <!-- Barre de recherche pour filtrer par ID employé -->
-{% block content1 %}<li class="nav-item"><form class="d-flex mx-2" id ="searchBox"><input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par id employé" aria-label="Rechercher"><button class="btn btn-custom-search" type="button" onclick="searchDemande()"><i class="bi bi-search"></i></button></form></li>{% endblock %}
+{% block content1 %}<li class="nav-item"><form class="d-flex mx-2" id ="searchBox"><input class="form-control me-2" type="search" id="searchInput" placeholder="Recherche par Immatricule" aria-label="Rechercher"><button class="btn btn-custom-search" type="button" onclick="searchDemande()"><i class="bi bi-search"></i></button></form></li>{% endblock %}
 
 {% block content2 %}
 <!-- Titre principal -->
 <h1 class="text-center text-white mb-4">Demandes de Congés</h1>
 <!-- Vérification : s'il existe des demandes -->
 {% if demandes %}
-<div class="row justify-content-center">
+<div class="row justify-content-center" id="demande-list">
     {% for demande in demandes | reverse %}
     <!-- Chaque demande est affichée dans une "carte" -->
     <div class="col-md-6 col-lg-4 demande-card-wrapper">
@@ -37,8 +37,11 @@
                     <!-- Bloc motif de refus + pièce jointe -->
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span><strong>Motif de refus :</strong> {{ demande[9] if demande[9] else "N/A" }}</span>
+                        {% set piece = demande.pièce_jointe %}
                         {% if demande.pièce_jointe %}
-                        <a href="{{ url_for('static', filename='uploads/congés/' + demande.pièce_jointe) }}" target="_blank" class="btn btn-link btn-sm"><i class="bi bi-paperclip" style="font-size: 2rem;margin-left: 110px;"></i></a>
+                            <a href="{{ generate_presigned_url(piece) }}" target="_blank" class="btn btn-link btn-sm">
+                                <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
+                            </a>
                         {% else %}
                         <span class="badge text-dark d-flex align-items-center justify-content-center" id ="badgePerso">Pas de pièce jointe</span>
                         {% endif %}

@@ -5,7 +5,6 @@ from wtforms import StringField, PasswordField, validators
 class LoginForm(FlaskForm):
     email = StringField(
         'Email',
-        [validators.Email(message="Entrez un email valide")],
         render_kw={"placeholder": "Entrez votre email"}
     )
     mot_de_passe = PasswordField(

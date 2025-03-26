@@ -18,23 +18,21 @@
             transition: transform 0.3s, box-shadow 0.3s;
             animation: slideInUp 0.8s ease;
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+            margin: 10px;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .btn-primary {
-            background-color: #007bff;
-            border: none;
+            background: linear-gradient(135deg, #122b60, #166571);            border: none;
             font-weight: bold;
             transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
         .btn-primary:hover {
-            background-color: #0056b3;
+            background: linear-gradient(135deg, #0f2452, #135962);
             transform: scale(1.05);
         }
 
@@ -49,8 +47,8 @@
         }
 
         .input-group .form-control:focus {
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.7);
-            border-color: #007bff;
+            box-shadow: 0 0 10px #135962;
+            border-color: #135962;
         }
 
         .alert {
@@ -62,16 +60,19 @@
         input:focus {
             animation: pulse 0.4s infinite;
         }
+        .bg-primary{
+        background: linear-gradient(135deg, #0f2452, #135962);
 
+        }
         @keyframes pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+                box-shadow: 0 0 0 0 #0f245286;
             }
             70% {
-                box-shadow: 0 0 20px 10px rgba(0, 123, 255, 0);
+                box-shadow: 0 0 20px 10px #0f245286;
             }
             100% {
-                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+                box-shadow: 0 0 0 0 #0f245286;
             }
         }
 
@@ -90,7 +91,7 @@
         @keyframes slideInUp {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
@@ -161,7 +162,7 @@
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-10 col-lg-8">
-                        <div class="card shadow-lg border-0 rounded-4">
+                        <div class="card border-0 rounded-4">
                             <div class="card-body p-5">
                                 <h2 class="card-title text-center mb-4 fw-bold">Bienvenue 👋</h2>
                                 <p class="text-center text-muted mb-4">
@@ -177,9 +178,9 @@
                                         <label for="email" class="form-label">Email :</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-primary text-white">
-                                                <i class="bi bi-envelope" placeholder="Entrez votre adresse email"></i>
+                                                <i class="bi bi-envelope"></i>
                                             </span>
-                                            {{ form.email(class="form-control") }}
+                                            {{ form.email(class="form-control", id="email") }}
                                         </div>
                                     </div>
 
@@ -195,12 +196,12 @@
                                     </div>
                                     
                                     <!-- Liens d'aide et mot de passe oublié -->
-                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2">
-                                        <a href="{{ url_for('contact') }}" class="text-decoration-none text-primary d-flex align-items-center">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-2" style="color :#0f2452;">
+                                        <a href="{{ url_for('contact') }}" class="text-decoration-none d-flex align-items-center">
                                             <i class="bi bi-chat-left-dots me-2" style="font-size: 1.2rem;"></i>
                                             <span class="fw-semibold">Besoin d'aide ?</span>
                                         </a>
-                                        <a href="{{ url_for('reset_password') }}" class="text-decoration-none text-primary d-flex align-items-center">
+                                        <a href="{{ url_for('reset_password') }}" class="text-decoration-none d-flex align-items-center">
                                             <i class="bi bi-key-fill me-2" style="font-size: 1.2rem;"></i>
                                             <span class="fw-semibold">Mot de passe oublié ?</span>
                                         </a>
@@ -222,8 +223,20 @@
         <footer class="py-3">
             <div class="container text-center">
                 <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+                
+        </footer> 
     </div>
 
     <!-- Scripts JS (Bootstrap, script.js, SweetAlert2) -->
@@ -250,9 +263,6 @@
                 });
             });
         });
-    </script>
-
-    <script>
         // Animation d'ombre sur le focus d'un champ
         document.addEventListener('DOMContentLoaded', () => {
             const formControls = document.querySelectorAll('.form-control');
@@ -268,6 +278,25 @@
                 });
             });
         });
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            const emailInput = document.getElementById('email').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Vérifie le format email
+    
+            if (!emailRegex.test(emailInput)) {
+                event.preventDefault(); // Empêche l'envoi du formulaire
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Email invalide',
+                    text: 'Veuillez entrer une adresse email valide.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-custom-popup'
+                    }
+                });
+                return false;
+            }
+        });
     </script>
+    
 </body>
 </html>

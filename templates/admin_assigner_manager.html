@@ -15,81 +15,89 @@
     <!-- Titre principal de la page -->
     <h1 class="text-center text-white mb-4">Affecter des Employés aux Managers</h1>
 
-    <!-- Formulaire pour désigner un directeur -->
-    <div class="d-flex justify-content-center mb-4 fw-bold">
-        <form action="{{ url_for('designer_directeur') }}" method="POST" class="w-50">
-            <div class="row g-3">
-                <!-- Sélection d'un manager à promouvoir au rang de directeur -->
-                <div class="col-md-12">
-                    <label for="directeur" class="form-label text-white">Directeur :</label>
-                    <select name="manager" id="directeur" class="form-select" required>
-                        <option value="">-- Sélectionnez un Manager --</option>
-                        {% for manager in managers %}
-                            <option value="{{ manager[0] }}">{{ manager[1] }} ({{ manager[2] }})</option>
-                        {% endfor %}
-                    </select>
+    <!-- Conteneur principal pour les cartes avec une disposition en grille -->
+        <div class="row">
+            <!-- Carte pour le formulaire de désignation du directeur -->
+            <div class="col-lg-6 col-md-12 col-12">
+                <div class="card mb-4 mx-auto" style="max-width: 600px; background: rgba(255, 255, 255, 0.8);">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Désigner un Directeur</h5>
+                        <form action="{{ url_for('designer_directeur') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="directeur" class="form-label">Choisir un Manager :</label>
+                                <select name="manager" id="directeur" class="form-select">
+                                    <option value="">-- Sélectionnez un Manager --</option>
+                                    {% for manager in managers %}
+                                        <option value="{{ manager[0] }}">{{ manager[1] }} {{ manager[2] }} ({{ manager[3] }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-custom-action">Mettre à jour</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-success">Mettre à jour</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Section pour assigner des supervisions -->
-    <h3 class="text-white mb-4">Assignations de Supervision</h3>
-    <form action="{{ url_for('assigner_manager') }}" method="POST" class="mb-4">
-        <div class="row g-3">
-            <!-- Sélection du manager qui va superviser -->
-            <div class="col-md-6">
-                <label for="manager" class="form-label text-white">Manager :</label>
-                <select name="manager" id="manager" class="form-select" required>
-                    <option value="">-- Sélectionnez un Manager --</option>
-                    {% for manager in managers %}
-                        <option value="{{ manager[0] }}">{{ manager[1] }} ({{ manager[2] }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Sélection de la personne supervisée (employé ou manager, sauf directeur) -->
-            <div class="col-md-6">
-                <label for="supervise" class="form-label text-white">Supervisé :</label>
-                <select name="supervise" id="supervise" class="form-select" required>
-                    <option value="">-- Sélectionnez un Employé --</option>
-                    {% for employe in employes %}
-                        <option value="{{ employe[0] }}">{{ employe[1] }} ({{ employe[2] }})</option>
-                    {% endfor %}
-                    {% for manager in managers %}
-                        {% if manager[0] != directeur_id and manager[0] != request.form.get('manager') %}
-                            <option value="{{ manager[0] }}">{{ manager[1] }} (Manager)</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+            
+            <!-- Carte pour l'assignation des employés -->
+            <div class="col-lg-6 col-12 ">
+                <div class="card mb-4 mx-auto" style="max-width: 600px; background: rgba(255, 255, 255, 0.8);">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Assigner Supervision</h5>
+                        <form action="{{ url_for('assigner_manager') }}" method="POST">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="manager" class="form-label">Manager :</label>
+                                    <select name="manager" id="manager" class="form-select">
+                                        <option value="">-- Sélectionnez un Manager --</option>
+                                        {% for manager in managers %}
+                                            <option value="{{ manager[0] }}">{{ manager[1] }} {{ manager[2] }}({{ manager[3] }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="supervise" class="form-label">Supervisé :</label>
+                                    <select name="supervise" id="supervise" class="form-select">
+                                        <option value="">-- Sélectionnez un Employé --</option>
+                                        {% for employe in employes %}
+                                            <option value="{{ employe[0] }}">{{ employe[1] }} {{ employe[2] }} ({{ employe[3] }})</option>
+                                        {% endfor %}
+                                        {% for manager in managers %}
+                                            {% if manager[0] != directeur_id %}
+                                                <option value="{{ manager[0] }}">{{ manager[1] }} (Manager)</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-custom-action">Assigner</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="d-flex justify-content-center mt-4">
-            <button type="submit" class="btn btn-success">Assigner</button>
-        </div>
-    </form>
+
     {% if managers %}
     <!-- Liste des assignations actuelles -->
-    <h3 class="text-white mb-4">Liste des Assignations Actuelles</h3>
+    <h1 class="text-white text-center my-4">Liste des Assignations Actuelles</h1>
     <div class="d-flex flex-wrap justify-content-center">
         {% for manager in managers %}
             {% set supervised_items = assignations | selectattr("manager_id", "equalto", manager[0]) | list %}
             {% if supervised_items or manager.is_director %}
             <div class="m-3" style="width: 300px;">
-                <div class="card bg-light">
-                    <div class="card-header bg-dark text-white text-center">
-                        {{ manager[1] }} {% if manager.is_director %}(Directeur){% endif %}
-                    </div>
+                <div class="card mb-4 mx-auto" style="max-width: 600px; background: rgba(255, 255, 255, 0.8);">
                     <div class="card-body">
+                        <h3 class="card-title text-center">
+                            {{ manager[1] }} {{ manager[2] }} {% if manager.is_director %}(Directeur){% endif %}
+                        </h3>
                         {% if supervised_items %}
-                            <h5 class="card-title text-center">Supervise :</h5>
-                            <ul class="list-group list-group-flush">
+                            <ul class="list-group list-group-flush"  >
                                 {% for item in supervised_items %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ item.supervise_nom }}
+                                <li class="list-group-item d-flex justify-content-between align-items-center" style="background: rgba(255, 255, 255, 0.8);">
+                                    {{ item.supervise_nom }} {{ item.supervise_prenom }}
                                     <!-- Formulaire pour supprimer l'assignation -->
                                     <form action="{{ url_for('supprimer_assignation', manager_id=manager[0], supervise_id=item.supervise_id) }}" method="POST">
                                         <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>

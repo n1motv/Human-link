@@ -40,7 +40,7 @@
                 <!-- En-tête de la carte (avec case à cocher et titre) -->
                 <div class="card-header  align-items-center">
                     <input type="checkbox" class="checkbox-item mx-3" value="{{ arret[0] }}">
-                    <h5 class="card-title text-center fw-bold mb-0 mx-5">Arrêt de {{ arret[1] }}</h5>
+                    <h5 class="card-title text-center fw-bold mb-0 ">Arrêt de {{ arret[1] }}</h5>
                 </div>
 
                 <!-- Corps de la carte, affichant les détails de l'arrêt -->
@@ -58,9 +58,9 @@
                             <span>
                                 <strong>Motif de refus :</strong> {{ arret[7] if arret[7] else "N/A" }}
                             </span>
+                            {% set piece = arret[8] %}
                             {% if arret[8] %}
-                                <!-- Lien vers la pièce jointe -->
-                                <a href="{{ url_for('static', filename='uploads/arréts/' + arret[8]) }}" target="_blank" class="btn btn-link btn-sm">
+                                <a href="{{ generate_presigned_url(piece) }}" target="_blank" class="btn btn-link btn-sm">
                                     <i class="bi bi-paperclip" style="font-size: 2rem;"></i>
                                 </a>
                             {% else %}

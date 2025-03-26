@@ -7,100 +7,127 @@
     <title>Mon Coffre-Fort</title>
 
     <!-- Feuilles de style (Bootstrap, Icons, styles personnalisés) -->
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <!-- SweetAlert2 pour les alertes (CSS) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="../static/styles.css">
+
 </head>
 <body>
     <!-- Barre de navigation pour l'administrateur -->
     {% if role == 'admin' %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <!-- Logo pour revenir au tableau de bord admin -->
-            <a href="{{ url_for('admin_dashboard') }}">
-                <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
-            </a>
-            
-            <!-- Bouton toggle pour mobiles -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Liens de navigation -->
-            <div class="collapse navbar-collapse text-center" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
-                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
-                    <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
-
-                    <!-- Dropdown "Plus" visible en desktop (d-none d-lg-block) -->
-                    <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <!-- Liens supplémentaires -->
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
-                            <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
-                        </ul>
-                    </li>
-
-                    <!-- Les mêmes liens affichés pour les mobiles (d-lg-none) -->
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-calendar-check"></i> Déposer documents</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
-                    <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
-                </ul>
+        <!-- Barre de navigation principale -->
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid">
+                <!-- Logo principal qui redirige vers le dashboard admin -->
+                <a href="{{ url_for('admin_dashboard') }}">
+                    <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="">
+                </a>
+    
+                <!-- Bouton toggle pour les mobiles -->
+                <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                        style="width: 45px; height: 45px; object-fit: cover;">
+                </a>
+    
+                <!-- Liens de navigation -->
+                <div class="collapse navbar-collapse text-center" id="navbarNav">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center">
+                        <!-- Lien vers la page des employés -->
+                        <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_employés') }}"><i class="bi bi-person"></i> Voir les employés</a></li>
+                        
+                        <!-- Lien pour ajouter un employé -->
+                        <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('ajouter_employe_page') }}"><i class="bi bi-person-plus-fill"></i> Ajouter un employé</a></li>
+                        
+                        <!-- Lien vers le calendrier des congés -->
+                        <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_congés') }}"><i class="bi bi-calendar-check"></i> Calendrier Congés</a></li>
+                        
+                        <!-- Menu déroulant "Plus" (apparaît sur grands écrans) -->
+                        <li class="nav-item dropdown d-none d-lg-block">
+                            <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <!-- Liens supplémentaires -->
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i> Déposer documents</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                                <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
+                            </ul>
+                        </li>
+    
+                        <!-- Affichage des mêmes options en dehors du menu déroulant pour petits écrans (d-lg-none) -->
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('assigner_manager') }}"><i class="bi bi-people-fill"></i> Affecter des Employés</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_congé') }}"><i class="bi bi-envelope-fill"></i> Demandes de congés</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Demandes d'arrêts</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('coffre_fort', id_employe='admin') }}"><i class="bi bi-cloud-upload"></i></i> Déposer documents</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('afficher_demandes_prime') }}"><i class="bi bi-piggy-bank"></i> Demandes de prime</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('calendrier_teletravail') }}"><i class="bi bi-calendar-check"></i> Calendrier télétravail</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('admin_demandes_contact') }}"><i class="bi bi-chat-dots"></i> Demandes de contact</a></li>
+                        <li class="nav-item d-lg-none"><a class="nav-link mx-2" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Se déconnecter</a></li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
     <!-- Barre de navigation pour l'employé -->
     {% elif role =='employe' or role =='manager' %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <!-- Logo pour revenir à la page "mes infos" employé -->
-            <a href="{{ url_for('voir_mes_infos') }}">
-                <img id="main-logo" src="../static/logo/logo-white.png" alt="" style="width: 150px;">
-            </a>
-            <!-- Bouton toggle pour mobiles -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<!-- Barre de navigation du compte employé -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Logo complètement à gauche -->
+        <a href="{{ url_for('voir_mes_infos') }}">
+            <img id="main-logo" src="{{ url_for('static', filename='logo/logo-white.png') }}" alt="Logo" style="width: 150px;">
+        </a>
 
-            <!-- Liens de navigation employé -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <!-- Soumettre un arrêt maladie -->
+            <!-- Bouton toggle pour les mobiles -->
+        <a href="#" id="navbarToggler" class="navbar-toggler " style ="border: none;"data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+             {% set photo_key = photo %}
+             {% if photo_key and photo_key != 'default.png' %}
+                 <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle border border-light shadow-sm"
+                      style="width: 45px; height: 45px; object-fit: cover;">
+             {% else %}
+                 <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle border border-light shadow-sm"
+                      style="width: 45px; height: 45px; object-fit: cover;">
+             {% endif %}
+         </a>
+            <!-- Liens de navigation -->
+            <div class="collapse navbar-collapse text-center" id="navbarNav">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <!-- Bloc contenant "Soumettre un arrêt" et "Soumettre un congé" -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('soumettre_demande_arrêt') }}">
-                            <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
-                        </a>
+                            <a class="nav-link" href="{{ url_for('soumettre_demande_arrêt') }}">
+                                <i class="bi bi-file-earmark-medical"></i> Soumettre un arrêt
+                            </a>
                     </li>
-                    <!-- Soumettre une demande de congé -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('soumettre_demande_conge') }}">
                             <i class="bi bi-calendar-plus"></i> Soumettre un congé
                         </a>
                     </li>
-                    {% block content1 %}{% endblock %}
-
-                    <!-- Dropdown "Plus" (uniquement sur grands écrans) -->
+                    <!-- Menu déroulant "Plus" (uniquement sur grand écran) -->
                     <li class="nav-item dropdown d-none d-lg-block">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Plus
+
+                        <a href="#" class="nav-link dropdown-toggle" id="compteDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% set photo_key = photo %}
+                            {% if photo_key and photo_key != 'default.png' %}
+                                <img src="{{ generate_presigned_url(photo_key) }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='img/default.png') }}" class="rounded-circle" style="width: 40px; height: 40px;">
+                            {% endif %}
                         </a>
+
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <!-- Liens supplémentaires dans la liste déroulante -->
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('mes_demandes_d_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Voir les arrêts</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('mes_demandes_conges') }}"><i class="bi bi-calendar-check"></i> Voir les congés</a></li>
                             <li class="nav-item"><a class="nav-link mx-2" href="{{ url_for('coffre_fort') }}"><i class="bi bi-folder"></i> Voir les documents</a></li>
@@ -112,7 +139,7 @@
                         </ul>
                     </li>
 
-                    <!-- Les mêmes liens pour les petits écrans -->
+                    <!-- Les mêmes liens s'affichent en dessous pour les petits écrans (d-lg-none) -->
                     <li class="nav-item d-lg-none">
                         <a class="nav-link" href="{{ url_for('mes_demandes_d_arrêts') }}"><i class="bi bi-file-earmark-text"></i> Voir les arrêts</a>
                     </li>
@@ -141,9 +168,32 @@
             </div>
         </div>
     </nav>
+    <!-- Bouton flottant du chatbot -->
+    <div id="chatbot-floating-btn" class="chatbot-floating-btn">
+        <i class="fa fa-comment"></i>
+    </div>
+    
+    <!-- Overlay grisé (caché par défaut) -->
+    <div id="chatbot-overlay" class="chatbot-overlay"></div>
+    
+    <!-- Fenêtre de chat -->
+    <div id="chatbot-window" class="chatbot-window">
+        <div class="chatbot-header">
+        <h4>Chatbot</h4>
+        <span id="chatbot-close" class="chatbot-close">&times;</span>
+        </div>
+        <div class="chatbot-body" id="chatbot-body">
+        <!-- ... -->
+        </div>
+        <div class="chatbot-footer">
+        <input id="chatbot-input" type="text" placeholder="Écrivez votre question..." />
+        <button id="chatbot-send">Envoyer</button>
+        </div>
+    </div>
+    
     {% endif %}
 
-    <!-- Icône flottante des notifications -->
+    <!-- Icône flottante pour les notifications -->
     <div id="notification-icon" onclick="toggleNotificationPanel()">
         <i class="bi bi-bell-fill"></i>
         {% if nombre_notifications_non_lues > 0 %}
@@ -153,7 +203,7 @@
 
     <!-- Panneau des notifications -->
     <div id="notification-panel">
-        <div class="notification-header">Notifications</div>
+        <div class="notification-header">📢 Notifications</div>
         <div class="notification-list">
             {% for notification in notifications %}
                 <div class="notification-item {% if notification.is_read %}bg-light text-muted{% else %}bg-white text-dark{% endif %}">
@@ -195,93 +245,264 @@
 
     <!-- Conteneur principal -->
     <div id="main-body">
-        <!-- Section contenant la liste de documents du coffre-fort -->
         <div class="container py-5">
             <h1 class="text-center text-white mb-4">Coffre-Fort</h1>
+            
+            <!-- Conteneur pour centrer toutes les cartes -->
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <!-- Bulletins de Salaire -->
+                    <div class="card bg-white shadow-lg rounded-lg p-4 mb-4 w-100">
+                        <h2 class="text-lg font-semibold mb-3 text-success text-center">
+                            <i class="fa fa-file-invoice-dollar"></i> Bulletins de Salaire
+                        </h2>
+                        <ul class="list-group">
+                            {% for bulletin_url in bulletins | reverse %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ bulletin_url }}" target="_blank">
+                                        {{ bulletin_url.split('/')[-1] | replace('_', ' ') }}
+                                    </a>
+                                    <span class="badge bg-success">Bulletin</span>
+                                </li>
+                            {% else %}
+                                <div class="no-document-card text-center">
+                                    <div class="icon-container">
+                                        <i class="bi bi-folder-x"></i>
+                                    </div>
+                                    <h3 class="no-doc-title">Aucun document disponible</h3>
+                                </div>
+                            {% endfor %}
+                        </ul>
+                    </div>
 
-            <!-- Section des bulletins de salaire -->
-            <div class="card bg-light text-dark">
-                <div class=" card-header bg-success text-white text-center" style="border-radius: 15px; font-size: 1.5rem">
-                    <i class="bi bi-file-earmark-text-fill"></i> Bulletins de Salaire
+                    <!-- Contrats de Travail -->
+                    <div class="card bg-white shadow-lg rounded-lg p-4 mb-4 w-100">
+                        <h2 class="text-lg font-semibold mb-3 text-primary text-center">
+                            <i class="fa fa-file-contract"></i> Contrats de Travail
+                        </h2>
+                        <ul class="list-group">
+                            {% for contrat_url in contrats | reverse %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ contrat_url }}" target="_blank">
+                                        {{ contrat_url.split('/')[-1]  | replace('_', ' ') }}
+                                    </a>
+                                    <span class="badge bg-primary">Contrat</span>
+                                </li>
+                            {% else %}
+                                <div class="no-document-card text-center">
+                                    <div class="icon-container">
+                                        <i class="bi bi-folder-x"></i>
+                                    </div>
+                                    <h3 class="no-doc-title">Aucun document disponible</h3>
+                                </div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Autres Documents -->
+                    <div class="card bg-white shadow-lg rounded-lg p-4 mb-4 w-100">
+                        <h2 class="text-lg font-semibold mb-3 text-secondary text-center">
+                            <i class="fa fa-folder"></i> Autres Documents
+                        </h2>
+                        <ul class="list-group">
+                            {% for autre_url in autres | reverse %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ autre_url }}" target="_blank">
+                                        <i class="bi bi-file-earmark-text"></i> {{ autre_url.split('/')[-1] | replace('_', ' ') }}
+                                    </a>
+                                    <span class="badge bg-secondary">Document</span>
+                                </li>
+                            {% else %}
+                                <div class="no-document-card text-center">
+                                    <div class="icon-container">
+                                        <i class="bi bi-folder-x"></i>
+                                    </div>
+                                    <h3 class="no-doc-title">Aucun document disponible</h3>
+                                </div>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Bouton pour déposer un document (Centré) -->
+                    {% if session['role'] == 'admin' %}
+                    <div class="d-grid">
+                        <a href="{{ url_for('deposer_document', id_employe=employe_id) }}" class="btn btn-custom-action btn-lg">
+                            <i class="bi bi-upload"></i> Déposer un Document
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% if bulletins %}
-                    <ul class="list-group">
-                        {% for bulletin in bulletins | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/bulletins/' ~ nom ~ prenom ~ '/' ~ bulletin) }}" target="_blank">
-                                {{ bulletin }}
-                            </a>
-                            <span class="badge bg-success rounded-pill">Bulletin</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <h4 class="text-center" style="margin: 20px;">Aucun document pour le moment.</h4>
-                {% endif %}
             </div>
-
-            <!-- Section des contrats de travail -->
-            <div class="card bg-light text-dark">
-                <div class=" card-header bg-primary text-white text-center" style="border-radius: 15px; font-size: 1.5rem">
-                    <i class="bi bi-file-earmark"></i> Contrats de Travail
-                </div>
-                {% if contrats %}
-                    <ul class="list-group">
-                        {% for contrat in contrats | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/contrats/' ~ nom ~ prenom ~ '/' ~ contrat) }}" target="_blank">
-                                {{ contrat }}
-                            </a>
-                            <span class="badge bg-primary rounded-pill">Contrat</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <h4 class="text-center" style="margin: 20px;">Aucun document pour le moment.</h4>
-                {% endif %}
-            </div>
-
-            <!-- Section des autres documents -->
-            <div class="card bg-light text-dark shadow-lg border-0 rounded-4">
-                <div class=" card-header bg-secondary text-white text-center" style="border-radius: 15px; font-size: 1.5rem">
-                    <i class="bi bi-folder-fill"></i> Autres Documents
-                </div>
-                {% if autres %}
-                    <ul class="list-group">
-                        {% for autre in autres | reverse %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ url_for('static', filename='coffre_fort/autres/' ~ nom ~ prenom ~ '/' ~ autre) }}" target="_blank">
-                                {{ autre }}
-                            </a>
-                            <span class="badge bg-secondary rounded-pill">Document</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <h4 class="text-center" style="margin: 20px;">Aucun document pour le moment.</h4>
-                {% endif %}
-            </div>
-
-            <!-- Bouton pour déposer un document, visible uniquement par l'administrateur -->
-            {% if session['role'] == 'admin' %}
-            <div class="d-grid" style="margin-top: 20px;">
-                <a href="{{ url_for('deposer_document', id_employe=employe_id) }}" class="btn btn-success btn-lg">
-                    <i class="bi bi-upload"></i> Déposer un Document
-                </a>
-            </div>
-            {% endif %}
         </div>
 
         <!-- Footer -->
         <footer class="py-3">
             <div class="container text-center">
-                <p class="mb-0">&copy; 2024 Gestionnaire RH. Tous droits réservés.</p>
+                <p class="mb-0">&copy; 2024 Human Link. Tous droits réservés.</p>
+                <div id="google_translate_element"></div>
+                <script>
+                  function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                      pageLanguage: 'fr',
+                      includedLanguages: 'en,fr,es,zh-CN,it,ar,ber',
+                      layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                </script>
+                <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+                
             </div>
-        </footer>
+        </footer> 
     </div>
 
+    
     <!-- Scripts (script.js, Bootstrap bundle) -->
     <script src="../static/script.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        
+// Fonction qui ferme tous les panneaux ouverts
+function closeAllPanels() {
+  // Ferme la fenêtre du chatbot et son overlay
+  const chatWindow = document.getElementById('chatbot-window');
+  const chatOverlay = document.getElementById('chatbot-overlay');
+  if (chatWindow) chatWindow.style.display = 'none';
+  if (chatOverlay) chatOverlay.style.display = 'none';
+
+  // Ferme le panneau des notifications
+  const notifPanel = document.getElementById('notification-panel');
+  if (notifPanel) notifPanel.style.display = 'none';
+
+
+  // Ferme les popups SweetAlert si elles sont ouvertes
+  if (Swal.isVisible()) {
+    Swal.close();
+  }
+}
+
+// Écouteurs pour le bouton du chatbot
+document.addEventListener('DOMContentLoaded', function() {
+  const floatingBtn = document.getElementById('chatbot-floating-btn');
+  const chatbotWindow = document.getElementById('chatbot-window');
+  const chatbotOverlay = document.getElementById('chatbot-overlay');
+  const chatbotClose = document.getElementById('chatbot-close');
+  const chatbotSend = document.getElementById('chatbot-send');
+  const chatbotInput = document.getElementById('chatbot-input');
+  const chatbotBody = document.getElementById('chatbot-body');
+
+  let typingIndicator; // Variable globale pour l'indicateur de saisie
+
+  // Affiche l'animation "en train d'écrire"
+  function showTypingIndicator() {
+    typingIndicator = document.createElement('div');
+    typingIndicator.classList.add('message-bubble', 'message-bot', 'typing-indicator');
+    typingIndicator.innerHTML = `
+      <div class="typing-container">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    chatbotBody.appendChild(typingIndicator);
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+  }
+
+  // Retire l'indicateur
+  function hideTypingIndicator() {
+    if (typingIndicator) {
+      chatbotBody.removeChild(typingIndicator);
+      typingIndicator = null;
+    }
+  }
+
+  // Gestion de l'ouverture/fermeture du chatbot
+  floatingBtn.addEventListener('click', () => {
+    // Avant d'ouvrir, on ferme tous les autres panneaux
+    closeAllPanels();
+    // Ensuite, on toggle le chatbot
+    if (chatbotWindow.style.display === 'none' || chatbotWindow.style.display === '') {
+      chatbotWindow.style.display = 'flex';
+      chatbotOverlay.style.display = 'block';
+    } else {
+      chatbotWindow.style.display = 'none';
+      chatbotOverlay.style.display = 'none';
+    }
+  });
+
+  // Fermeture du chatbot avec la croix
+  chatbotClose.addEventListener('click', () => {
+    closeAllPanels();
+  });
+
+  // Gestion de l'envoi du message dans le chatbot
+  function sendMessage() {
+    const question = chatbotInput.value.trim();
+    if (!question) return;
+    displayMessage(question, 'user');
+    chatbotInput.value = '';
+    showTypingIndicator();
+
+    // Envoi de la requête AJAX
+    fetch('/chatbot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question })
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideTypingIndicator();
+      if (data.answer) {
+        displayMessage(data.answer, 'bot');
+      } else {
+        displayMessage("Une erreur s'est produite.", 'bot');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      hideTypingIndicator();
+      displayMessage("Impossible de contacter le serveur.", 'bot');
+    });
+  }
+
+  chatbotSend.addEventListener('click', sendMessage);
+  chatbotInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Fonction pour afficher un message dans la fenêtre de chat
+  function displayMessage(text, sender = 'bot') {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message-bubble', sender === 'user' ? 'message-user' : 'message-bot');
+    msgDiv.innerText = text;
+    chatbotBody.appendChild(msgDiv);
+    chatbotBody.scrollTop = chatbotBody.scrollHeight;
+  }
+
+  // Gestion du bouton de notification
+  const notifIcon = document.getElementById('notification-icon');
+  notifIcon.addEventListener('click', () => {
+    closeAllPanels();
+    const notifPanel = document.getElementById('notification-panel');
+    // Toggle affichage du panneau
+    if (notifPanel.style.display === 'none' || notifPanel.style.display === '') {
+      notifPanel.style.display = 'block';
+    } else {
+      notifPanel.style.display = 'none';
+    }
+  });
+
+  // Exemple : si un clic en dehors d'un panneau est détecté, fermer tous
+  document.addEventListener('click', function(event) {
+    const chatbot = document.getElementById('chatbot-window');
+    const notifPanel = document.getElementById('notification-panel');
+    if (!chatbot.contains(event.target) && !notifIcon.contains(event.target) && !floatingBtn.contains(event.target)) {
+      closeAllPanels();
+    }
+  });
+});
+    </script>
 </body>
 </html>
+

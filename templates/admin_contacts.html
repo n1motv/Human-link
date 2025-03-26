@@ -26,15 +26,15 @@
 
     <!-- Vérification s'il existe des demandes -->
     {% if demandes %}
-        <div class="row justify-content-center">
+    <div class="row justify-content-center" id="demande-list">
             {% for demande in demandes %}
             <!-- Chaque demande de contact est affichée comme une carte -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 demande-card-wrapper">
                 <div class="card demande-card" onclick="agrandirCarte(this)">
                     <!-- En-tête de la carte (checkbox + sujet) -->
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <input type="checkbox" class="checkbox-item mx-3" value="{{ demande['id'] }}">
-                        <h5 class="mx-5 fw-bold">Sujet : {{ demande['sujet'] }}</h5>
+                        <h5 class=" fw-bold">Sujet : {{ demande['sujet'] }}</h5>
                     </div>
 
                     <!-- Contenu de la carte (détails de la demande de contact) -->
