@@ -1,0 +1,34 @@
+# Dépendances et builds
+node_modules/
+dist/
+coverage/
+
+# SECRETS : ne jamais versionner
+.env
+.env.*
+!.env.example
+!.env.docker.example
+clients/*/.env
+legacy/.env.local-backup
+*.key
+
+# Données locales
+server/storage/
+server/.devdb/
+clients/*/storage/
+*.log
+logs/
+
+# Ancienne version Flask (legacy/) : fichiers générés
+legacy/__pycache__/
+legacy/*.db
+legacy/*.db.enc
+__pycache__/
+*.pyc
+
+# Divers
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+scratch-keys.txt
