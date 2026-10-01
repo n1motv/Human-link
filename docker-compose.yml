@@ -1,0 +1,64 @@
+# Déploiement d'UN client : application + MongoDB (+ HTTPS automatique avec le profil « https »).
+#
+#   1. cp -r clients/example clients/acme        # puis éditer clients/acme/client.config.json et branding/
+#   2. cd server && npm run setup                # génère les clés dans server/.env (à copier dans clients/acme/.env)
+#   3. cp .env.docker.example .env               # MONGO_PASSWORD, CLIENT_DIR, DOMAIN
+#   4. docker compose up -d --build
+#   5. docker compose exec app node dist/scripts/seed.js     # crée l'administrateur initial
+#
+# Un déploiement par client = une base MongoDB par client = isolation totale des données.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["--auth", "--bind_ip_all"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: humanlink
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?définir MONGO_PASSWORD dans .env}
+    volumes:
+      - mongo-data:/data/db
+    # Aucun port publié : seule l'application peut joindre la base.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file:
+      - ${CLIENT_DIR:-./clients/example}/.env
+    environment:
+      MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+    volumes:
+      - ${CLIENT_DIR:-./clients/example}:/client:ro
+      - app-data:/data
+    # Sans le profil https, l'application est directement exposée (à placer derrière votre propre reverse proxy TLS).
+    ports:
+      - "${APP_PORT:-4000}:4000"
+
+  caddy:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?définir DOMAIN dans .env pour le profil https}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    # Avec ce profil : mettre TRUST_PROXY=1 et APP_PORT=127.0.0.1:4000 dans .env.
+
+volumes:
+  mongo-data:
+  app-data:
+  caddy-data:

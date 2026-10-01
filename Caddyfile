@@ -1,0 +1,9 @@
+# HTTPS automatique (Let's Encrypt) + en-têtes de sécurité. Le domaine vient de DOMAIN dans .env.
+{$DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy app:4000
+}

@@ -1,0 +1,64 @@
+{
+  "$comment": "Personnalisation par client : branding, modules, règles RH, RGPD. Aucun secret ici. Redémarrer le serveur après modification (le front se met à jour sans rebuild).",
+  "company": {
+    "name": "Human Link",
+    "legalName": "Human Link SAS",
+    "supportEmail": "rh@example.com",
+    "dpoEmail": "dpo@example.com",
+    "address": "1 rue Exemple, 75000 Paris"
+  },
+  "branding": {
+    "logoUrl": "/branding/logo-dark.png",
+    "logoOnDarkUrl": "/branding/logo-white.png",
+    "showName": false,
+    "accent": "#8b5cf6",
+    "accent2": "#ec4899",
+    "defaultTheme": "dark"
+  },
+  "i18n": {
+    "defaultLanguage": "fr",
+    "languages": ["fr", "en", "ar", "it", "es", "zgh"]
+  },
+  "modules": {
+    "leaves": true,
+    "sickLeaves": true,
+    "bonuses": true,
+    "telework": true,
+    "meetings": true,
+    "vault": true,
+    "feedback": true,
+    "contact": true,
+    "chatbot": true,
+    "orgChart": true
+  },
+  "hr": {
+    "monthlyLeaveAccrual": 2.5,
+    "workingDays": [1, 2, 3, 4, 5],
+    "minimumAge": 17,
+    "defaultTeleworkMaxDays": 2,
+    "leaveAttachmentRequiredForReasons": []
+  },
+  "security": {
+    "passwordMinLength": 12,
+    "maxLoginAttempts": 5,
+    "lockMinutes": 15,
+    "accessTokenMinutes": 10,
+    "refreshTokenDays": 7,
+    "inviteTokenHours": 48,
+    "resetTokenMinutes": 30,
+    "require2faForRoles": ["admin"]
+  },
+  "gdpr": {
+    "auditLogRetentionDays": 365,
+    "notificationRetentionDays": 90,
+    "contactRequestRetentionDays": 365,
+    "feedbackRetentionMonths": 24,
+    "departedEmployeeRetentionYears": 5
+  },
+  "notifications": {
+    "maxPerUser": 100,
+    "teleworkReminderCron": "0 8 * * 1",
+    "feedbackReminderCron": "0 8 1 * *",
+    "monthlyAccrualCron": "5 0 1 * *"
+  }
+}

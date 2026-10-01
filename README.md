@@ -1,193 +1,96 @@
-# HUMAN LINK ( An advanced Human Resource Management System )
+# Human Link — gestion RH (v3)
 
-A comprehensive Human Resource Management System for employee management, leave tracking, notifications, and more. Designed for small to medium businesses with scalability in mind.
+Application de gestion des ressources humaines : congés, arrêts maladie, primes, télétravail, réunions,
+coffre-fort de documents, feedback anonyme, assistant RH multilingue, organigramme, notifications.
 
-## Key Features
+**Stack** : Node.js 22 + Express 5 + TypeScript + MongoDB (Mongoose) · React 19 + Vite + Tailwind CSS 4 · design glassmorphism clair/sombre.
 
-- 📅 Employee leave management and approval system
-- 🔔 Real-time notifications system
-- 📊 Dashboard analytics for HR metrics
-- 📝 Employee information management
-- 📧 Password reset functionality
-- 🏠 Telework management system
-- 📑 Document storage vault
-- 📆 Interactive calendar integration
-- ✅ Meeting scheduling system
-- And many other functionalities...
+> La version précédente (Flask + SQLite) est conservée dans [`legacy/`](legacy/) pour référence.
+> Script de migration des données : [docs/MIGRATION.md](docs/MIGRATION.md).
 
-## New in This Version (2.0)
+## Démarrage rapide (développement)
 
-**1.Multi-Language Chatbot with Automatic Translation**
+Prérequis : Node.js ≥ 20. MongoDB est facultatif en local : un script en lance un pour vous.
 
-- Integrated a chatbot that supports multiple languages (English, French, Arabic, Tamazight, Italian, Spanish).
+```bash
+npm run setup          # installe tout + crée server/.env avec des secrets uniques (note le mot de passe admin affiché)
+npm run dev:db         # terminal 1 — MongoDB local (sans installation, données dans server/.devdb)
+npm run seed           # crée l'administrateur   (npm run seed:demo : ajoute des comptes d'exemple)
+npm run dev:server     # terminal 2 — API sur http://localhost:4000
+npm run dev:client     # terminal 3 — interface sur http://localhost:5173
+```
 
-- If a Large Language Model (LLM) is unavailable, the system falls back to a built-in question-answer prediction engine (see exemple_questions.txt for sample queries).
+Un administrateur doit activer la **double authentification** à sa première connexion (politique configurable).
+Sans SMTP, les e-mails (liens d'activation, mot de passe oublié) s'affichent dans la console du serveur.
 
-**2.Work Environment Feedback & Analysis**
+## Organisation du dépôt
 
-- Added a monthly feedback system where employees rate various work environment factors (management, recognition, communication, etc.).
+```
+clients/<client>/      Tout ce qui change d'un client : client.config.json, branding/ (logos), .env
+server/src/
+  config/              env.ts (secrets), client.ts (config client validée)
+  models/              13 collections Mongoose (champs sensibles chiffrés)
+  modules/<domaine>/   routes d'un domaine (auth, users, leaves, sick, bonuses, telework, meetings,
+                       documents, feedback, chatbot, rgpd, org, calendar, dashboard, contact, notifications)
+  middleware/          auth, rôles, CSRF, rate limit, upload
+  utils/               crypto, mots de passe, 2FA, e-mail, notifications, audit, stockage de fichiers
+  jobs/scheduler.ts    crédit mensuel des congés, rappels, purge RGPD
+  scripts/             seed, init-env, dev-db, migrate-from-sqlite
+server/tests/          39 tests (sécurité, droits d'accès, flux métier) sur une vraie base MongoDB
+client/src/
+  app/                 routes, layout, cloche de notifications, assistant RH
+  pages/<rôle>/        écrans admin, manager, employé
+  components/          design system (ui.tsx, Modal, Calendar...)
+  locales/*.json       traductions (fr, en, ar, es, it, zgh)
+legacy/                ancienne application Flask (référence)
+docs/                  documentation détaillée
+```
 
-- Administrators can view aggregated results on a dedicated feedback dashboard, including average ratings and anonymous suggestions.
+## Un client = un dossier
 
-**3.Modern Design & Enhanced UI/UX**
-- Changing the logo
+Pour déployer chez une nouvelle entreprise, **aucun code à modifier** :
 
-- Refreshed color scheme and streamlined layout for more fluid navigation.
+```bash
+cp -r clients/example clients/acme
+# éditer clients/acme/client.config.json (nom, couleurs, modules, règles RH, durées RGPD)
+# remplacer clients/acme/branding/logo*.png
+```
 
-- Responsive design for desktop, tablet, and mobile.
+Guide complet : [docs/PERSONNALISATION.md](docs/PERSONNALISATION.md). Chaque client a sa propre base MongoDB, ses clés de
+chiffrement et son déploiement : isolation totale des données.
 
-**4.Security & AWS S3 Integration**
+## Sécurité et RGPD en bref
 
-- Database encryption & usage of Argon2 hashing (replacing bcrypt) for stronger password security.
+| Sujet | Mise en œuvre |
+|---|---|
+| Mots de passe | Argon2id, politique configurable, jamais envoyés par e-mail (lien d'activation à usage unique) |
+| Sessions | Cookies `httpOnly` + `SameSite=Strict`, JWT 10 min, refresh rotatif avec détection de vol, CSRF double-submit |
+| Authentification forte | 2FA TOTP (obligatoire par rôle), codes de secours, verrouillage après échecs |
+| Autorisations | Rôles admin/manager/employé revérifiés à chaque requête, périmètre « équipe » pour les managers |
+| Données sensibles | Salaire, n° de sécu, téléphone, adresse chiffrés AES-256-GCM en base ; fichiers chiffrés sur disque |
+| Fichiers | Type vérifié par signature binaire, stockage hors dossier public, accès contrôlé et tracé |
+| Injections | Validation zod de chaque entrée (types stricts), requêtes paramétrées Mongoose, CSP stricte |
+| RGPD | Export des données, archivage + anonymisation, rétention automatique, journal d'audit, feedback anonyme, aucune requête vers un tiers (polices hébergées, pas de traduction externe) |
 
-- All images, documents, and justifications stored securely on Amazon AWS S3 with presigned URLs.
+Détails, limites et **responsabilités du client** : [docs/SECURITE-RGPD.md](docs/SECURITE-RGPD.md).
 
-**5.Improved Code Decomposition**
+> ⚠️ **Action requise** : le fichier `.env` de l'ancienne version (clé de chiffrement, mots de passe e-mail) était versionné dans Git.
+> Il a été retiré du suivi, mais il reste dans l'**historique**. Changez ces secrets (mot de passe d'application Gmail, anciennes clés)
+> et purgez l'historique si le dépôt a été partagé ([docs/SECURITE-RGPD.md](docs/SECURITE-RGPD.md#secrets-de-lancienne-version)).
 
-- Separated large files into smaller modules for maintainability (helpers.py, db_setup.py, s3_utils.py, etc.).
+## Commandes
 
-- Clearer structure and naming conventions.
+| Commande | Rôle |
+|---|---|
+| `npm test` | tests serveur + cohérence des traductions + typage client |
+| `npm run build` | compile le front puis le serveur |
+| `npm run typecheck` | typage TypeScript des deux projets |
+| `docker compose up -d --build` | déploiement (voir [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)) |
 
-**6.Bug Fixes & Task Automation**
+## Documentation
 
-- Addressed known issues from the previous release.
-
-- Added automated tasks (e.g., monthly feedback reminders, weekly telework notifications) using APScheduler.
-
-**7.Internationalization (i18n) & Translation**
-
-- Added partial or full translations for English, Arabic, Tamazight, Italian, and Spanish.
-
-- The application automatically detects the user’s preferred language in certain modules (or allows a manual switch).
-
-## Installation
-
-### Prerequisites
-- Python 3.9+
-- SQLite3
-- SMTP email credentials (for email functionality)
-- AWS S3 bucket & credentials
-
-### Setup Steps
-
-1. **Clone Repository**
-   ```bash
-   git clone https://github.com/n1motv/human-link.git
-   cd human-link
-   ```
-2. **Create Virtual Environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  #On Windows: venv\Scripts\activate
-   ```
-3. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Install Dependencies**
-   
-   Create .env file:
-   ```ini
-   SECRET_KEY=your-secret-key
-   MAIL_USERNAME=your-email@gmail.com
-   MAIL_PASSWORD=your-email-password   # For mail authentification with the server
-   AWS_ACCESS_KEY_ID=your-aws-access-key
-   AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-   S3_BUCKET_NAME=your-s3-bucket
-   LLM_API_URL=optional-llm-endpoint
-   MODEL_NAME=optional-llm-model
-
-   ```
-
-5. **Run Application**
-
-   ```bash
-   python app.py
-   ```
-
-## 📖 Usage
-
-### 🛠️ Roles Overview
-
-| Role      | Access Level                                     |
-|-----------|-------------------------------------------------|
-| **Admin**  | Full system access                             |
-| **Manager** | Team management, leave approvals             |
-| **Employee** | Personal dashboard, leave requests         |
-
-### 🔄 Key Workflows
-
-#### **Admin**:
-- Manage all employee records
-- Configure system settings
-- Handle license management
-- Access advanced analytics
-- View advanced analytics and feedback results
-
-#### **Manager**:
-- Approve/reject leave requests
-- Submit bonus requests
-- Manage team schedules
-- Track team attendance
-
-#### **Employee**:
-- Submit leave requests
-- Update personal information
-- View payslips
-- Manage telework days
-- Chatbot Q&A for quick HR questions
-
----
-
-## 📜 License
-
-This software is provided under a **custom license**:
-
-### ✅ **Free Use**:
-✔️ Personal use  
-✔️ Small businesses (**<10 employees**)  
-✔️ Non-profit organizations  
-
-### 🛑 **Paid License Required**:
-❌ Enterprises (**>10 employees**)  
-❌ Government agencies  
-❌ Commercial resellers  
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork** the repository  
-2. Create your feature branch:  
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. Commit your changes:  
-   ```bash
-   git commit -m "Add some AmazingFeature"
-   ```
-4. Push to the branch:  
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-5. Open a Pull Request 🚀
-
-## 📢 Contact & Support
-
-For **technical support** or **licensing inquiries**:
-
-📧 **Email**: ezzaouimohamedamine@gmail.com  
-🔗 **LinkedIn** : [linkedin.com/in/mohamed-amine-ez-zaoui](https://www.linkedin.com/in/mohamed-amine-ez-zaoui/)  
-💼 **GitHub** : [github.com/n1motv](https://github.com/n1motv)
-
----
-
-## ⚠️ Important Notice
-
-This software is provided **"as-is"** without warranty.  
-🚨 **Always back up your data before deployment.**
-
-   
-   
+- [Personnalisation par client](docs/PERSONNALISATION.md) — config, logos, modules, langues, règles RH
+- [Sécurité et RGPD](docs/SECURITE-RGPD.md) — mesures, procédures, checklist client
+- [Déploiement et exploitation](docs/DEPLOIEMENT.md) — Docker, HTTPS, sauvegardes, mises à jour
+- [Migration depuis l'ancienne version](docs/MIGRATION.md)
+- [Développement](docs/DEVELOPPEMENT.md) — architecture, ajouter un module ou une langue
