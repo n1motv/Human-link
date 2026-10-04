@@ -1,9 +1,9 @@
 // Crée le compte administrateur initial (idempotent). Usage : npm run seed
-// Avec --demo, crée aussi un petit jeu de données de démonstration (mot de passe : voir sortie).
+// Avec --demo, crée aussi un jeu de données de démonstration complet (voir seed-demo.ts ; mot de passe : voir sortie).
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
-import { Supervision } from '../models/Supervision.js';
 import { User, type UserAttrs, type UserDoc } from '../models/User.js';
+import { seedDemo } from './seed-demo.js';
 import { currentMonth } from '../utils/dates.js';
 import { hashPassword } from '../utils/password.js';
 import { randomToken } from '../utils/crypto.js';
@@ -27,13 +27,13 @@ console.log(`Administrateur prêt : ${env.ADMIN_EMAIL} (la double authentificati
 
 if (demo) {
   const pwd = `Demo-${randomToken(6)}9`;
-  const common = { pays: 'France', nationalite: 'Française', typeContrat: 'CDI' as const, dateEmbauche: '2022-03-01', soldeConge: 12, teleworkMax: 2 };
-  const dir = await makeUser({ ...common, matricule: '000101D', nom: 'Martin', prenom: 'Claire', email: 'claire.martin@demo.local', role: 'manager', isDirector: true, poste: 'Directrice', departement: 'Direction', dateNaissance: '1980-04-12', salaire: 7200 }, pwd);
-  const mgr = await makeUser({ ...common, matricule: '000102M', nom: 'Bernard', prenom: 'Karim', email: 'karim.bernard@demo.local', role: 'manager', poste: 'Responsable technique', departement: 'Technique', dateNaissance: '1985-09-23', salaire: 5200 }, pwd);
-  const e1 = await makeUser({ ...common, matricule: '000103E', nom: 'Lopez', prenom: 'Sofia', email: 'sofia.lopez@demo.local', role: 'employe', poste: 'Développeuse', departement: 'Technique', dateNaissance: '1993-01-30', salaire: 3800 }, pwd);
-  const e2 = await makeUser({ ...common, matricule: '000104E', nom: 'Rossi', prenom: 'Luca', email: 'luca.rossi@demo.local', role: 'employe', poste: 'Designer', departement: 'Technique', dateNaissance: '1995-06-18', salaire: 3400 }, pwd);
-  for (const [m, s] of [[dir, mgr], [mgr, e1], [mgr, e2]] as const) await Supervision.updateOne({ superviseId: s._id }, { managerId: m._id, superviseId: s._id }, { upsert: true });
-  console.log(`\nComptes de démonstration (mot de passe commun : ${pwd})\n  claire.martin@demo.local (directrice), karim.bernard@demo.local (manager), sofia.lopez@demo.local, luca.rossi@demo.local`);
+  await seedDemo(pwd, process.argv.includes('--reset-demo'));
+  console.log(`Comptes de démonstration, mot de passe commun : ${pwd}
+  Directrice : claire.martin@demo.local
+  Managers : karim.bernard@demo.local (Technique), julie.petit@demo.local (Marketing)
+  Employés : sofia.lopez@, luca.rossi@, nadia.haddad@, thomas.dubois@, emma.roux@demo.local
+  Invité : hugo.lambert@demo.local · Archivé : paul.garnier@demo.local
+  (relancer avec --reset-demo pour repartir de zéro ; les managers doivent activer la 2FA à la première connexion)`);
 }
 
 await mongoose.disconnect();
