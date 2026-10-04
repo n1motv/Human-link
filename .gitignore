@@ -32,3 +32,6 @@ Thumbs.db
 .vscode/
 .idea/
 scratch-keys.txt
+
+# Graphe de connaissances généré (graphify) : se régénère avec `graphify update .`
+graphify-out/
