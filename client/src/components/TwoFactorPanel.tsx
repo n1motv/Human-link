@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
 import { useToast } from '../lib/toast';
 import { Button, Field, Input } from './ui';
+import { OtpInput, type OtpStatus } from './OtpInput';
 
 interface Props {
   /** Appelé quand la 2FA vient d'être activée et que les codes de secours ont été vus. */
@@ -28,6 +29,7 @@ export function TwoFactorPanel({ onEnabled }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [disabling, setDisabling] = useState(false);
   const [password, setPassword] = useState('');
+  const [otpStatus, setOtpStatus] = useState<OtpStatus>('idle');
 
   const fail = (e: unknown) => setError(e instanceof ApiError ? (e.code === 'INVALID_2FA_CODE' ? t('auth.invalidCode') : e.message) : t('common.error'));
 
@@ -43,16 +45,21 @@ export function TwoFactorPanel({ onEnabled }: Props) {
     }
   };
 
-  const enable = async () => {
+  const enable = async (value = code) => {
     setBusy(true);
     setError(null);
+    setOtpStatus('checking');
     try {
-      const r = await api.post<{ recoveryCodes: string[] }>('/auth/2fa/enable', { code: code.trim() });
+      const r = await api.post<{ recoveryCodes: string[] }>('/auth/2fa/enable', { code: value.trim() });
+      setOtpStatus('success');
+      await new Promise((ok) => setTimeout(ok, 800));
       setCodes(r.recoveryCodes);
       setSetup(null);
       setCode('');
+      setOtpStatus('idle');
       await refresh();
     } catch (e) {
+      setOtpStatus('error');
       fail(e);
     } finally {
       setBusy(false);
@@ -62,14 +69,19 @@ export function TwoFactorPanel({ onEnabled }: Props) {
   const disable = async () => {
     setBusy(true);
     setError(null);
+    setOtpStatus('checking');
     try {
       await api.post('/auth/2fa/disable', { password, code: code.trim() });
+      setOtpStatus('success');
+      await new Promise((ok) => setTimeout(ok, 700));
       toast.success(t('security.disabled'));
       setDisabling(false);
       setPassword('');
       setCode('');
+      setOtpStatus('idle');
       await refresh();
     } catch (e) {
+      setOtpStatus('error');
       fail(e);
     } finally {
       setBusy(false);
@@ -126,12 +138,32 @@ export function TwoFactorPanel({ onEnabled }: Props) {
             <Field label={t('auth.password')}>
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
             </Field>
-            <Field label={t('auth.code')}>
-              <Input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" maxLength={6} placeholder="123456" />
-            </Field>
+            <div>
+              <span className="mb-2 block text-xs font-semibold text-muted">{t('auth.code')}</span>
+              <OtpInput
+                label={t('auth.code')}
+                value={code}
+                status={otpStatus}
+                onSettle={() => {
+                  setCode('');
+                  setOtpStatus('idle');
+                }}
+                onChange={(v) => {
+                  setCode(v);
+                  if (otpStatus === 'error') setOtpStatus('idle');
+                }}
+              />
+            </div>
             <div className="flex gap-2">
-              <Button onClick={() => setDisabling(false)}>{t('common.cancel')}</Button>
-              <Button variant="danger" loading={busy} onClick={disable} icon={<ShieldOff size={16} />}>
+              <Button
+                onClick={() => {
+                  setDisabling(false);
+                  setCode('');
+                  setOtpStatus('idle');
+                  setError(null);
+                }}
+              >{t('common.cancel')}</Button>
+              <Button variant="danger" loading={busy} disabled={code.length !== 6 || !password} onClick={disable} icon={<ShieldOff size={16} />}>
                 {t('security.disable')}
               </Button>
             </div>
@@ -163,10 +195,25 @@ export function TwoFactorPanel({ onEnabled }: Props) {
           </div>
         </div>
         {error && <p role="alert" className="text-sm text-bad">{error}</p>}
-        <Field label={t('auth.code')}>
-          <Input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" maxLength={6} placeholder="123456" autoFocus autoComplete="one-time-code" />
-        </Field>
-        <Button variant="primary" loading={busy} disabled={code.length !== 6} onClick={enable}>
+        <div>
+          <span className="mb-2 block text-xs font-semibold text-muted">{t('auth.code')}</span>
+          <OtpInput
+            label={t('auth.code')}
+            value={code}
+            status={otpStatus}
+            autoFocus
+            onChange={(v) => {
+              setCode(v);
+              if (otpStatus === 'error') setOtpStatus('idle');
+            }}
+            onComplete={(v) => void enable(v)}
+            onSettle={() => {
+              setCode('');
+              setOtpStatus('idle');
+            }}
+          />
+        </div>
+        <Button variant="primary" loading={busy} disabled={code.length !== 6} onClick={() => enable()}>
           {t('security.confirm')}
         </Button>
       </div>

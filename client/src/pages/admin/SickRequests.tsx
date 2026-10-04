@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, Paperclip, ShieldAlert, Stethoscope, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
-import { RefuseDialog } from '../../components/DecisionDialog';
+import { ConfirmDialog, RefuseDialog } from '../../components/DecisionDialog';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Button, Card, Empty, ErrorState, PageHeader, Spinner, TableWrap, Tabs } from '../../components/ui';
 import { api, downloadFile } from '../../lib/api';
@@ -18,6 +18,7 @@ export default function SickRequests() {
   const lang = i18n.language;
   const [filter, setFilter] = useState<Filter>('en attente');
   const [refusing, setRefusing] = useState<Sick | null>(null);
+  const [approving, setApproving] = useState<Sick | null>(null);
   const q = useQuery({ queryKey: ['sick', 'all', filter], queryFn: () => api.get<{ items: Sick[] }>(`/sick-leaves${filter === 'all' ? '' : `?statut=${encodeURIComponent(filter)}`}`) });
   const decide = useAction(
     ({ id, decision, motifRefus }: { id: string; decision: 'accepte' | 'refuse'; motifRefus?: string }) => api.post(`/sick-leaves/${id}/decision`, { decision, motifRefus }),
@@ -96,7 +97,7 @@ export default function SickRequests() {
                       )}
                       {s.statut === 'en attente' && (
                         <>
-                          <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => decide.mutate({ id: s.id, decision: 'accepte' })}>
+                          <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => setApproving(s)}>
                             {t('decision.approve')}
                           </Button>
                           <Button size="sm" variant="danger" icon={<X size={14} />} onClick={() => setRefusing(s)}>
@@ -112,6 +113,15 @@ export default function SickRequests() {
           </table>
         </TableWrap>
       )}
+      <ConfirmDialog
+        open={!!approving}
+        icon={<Check size={22} />}
+        title={t('confirm.approveTitle')}
+        message={t('confirm.approveMsg', { name: `${approving?.user?.prenom ?? ''} ${approving?.user?.nom ?? ''}`.trim() })}
+        confirmLabel={t('decision.approve')}
+        onClose={() => setApproving(null)}
+        onConfirm={() => decide.mutateAsync({ id: approving!.id, decision: 'accepte' })}
+      />
       <RefuseDialog open={!!refusing} onClose={() => setRefusing(null)} onConfirm={(motifRefus) => decide.mutateAsync({ id: refusing!.id, decision: 'refuse', motifRefus })} />
     </>
   );

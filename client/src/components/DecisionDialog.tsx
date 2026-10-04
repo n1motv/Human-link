@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { CircleHelp, TriangleAlert } from 'lucide-react';
+import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { Button, Field, Textarea } from './ui';
 import { Modal } from './Modal';
@@ -55,11 +57,14 @@ interface ConfirmProps {
   message: string;
   confirmLabel: string;
   danger?: boolean;
+  /** Icône affichée dans la pastille ; par défaut un triangle d'alerte (danger) ou un point d'interrogation. */
+  icon?: ReactNode;
   onClose: () => void;
   onConfirm: () => Promise<unknown> | void;
 }
 
-export function ConfirmDialog({ open, title, message, confirmLabel, danger, onClose, onConfirm }: ConfirmProps) {
+/** Fenêtre de confirmation commune : pastille d'icône colorée, message clair, action principale explicite. */
+export function ConfirmDialog({ open, title, message, confirmLabel, danger, icon, onClose, onConfirm }: ConfirmProps) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const run = async () => {
@@ -74,18 +79,25 @@ export function ConfirmDialog({ open, title, message, confirmLabel, danger, onCl
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={busy ? () => undefined : onClose}
       title={title}
       footer={
         <>
-          <Button onClick={onClose}>{t('common.cancel')}</Button>
+          <Button onClick={onClose} disabled={busy}>
+            {t('common.cancel')}
+          </Button>
           <Button variant={danger ? 'danger' : 'primary'} loading={busy} onClick={run}>
             {confirmLabel}
           </Button>
         </>
       }
     >
-      <p className="text-sm text-muted">{message}</p>
+      <div className="flex items-start gap-4">
+        <span className={clsx('grid h-12 w-12 shrink-0 place-items-center rounded-2xl', danger ? 'bg-bad/15 text-bad' : 'bg-accent/15 text-accent')}>
+          {icon ?? (danger ? <TriangleAlert size={22} aria-hidden /> : <CircleHelp size={22} aria-hidden />)}
+        </span>
+        <p className="pt-1 text-sm leading-relaxed text-muted">{message}</p>
+      </div>
     </Modal>
   );
 }

@@ -38,7 +38,7 @@ export default function Dashboard() {
   const s = q.data!;
 
   const months = s.leavesByMonth.map((count, i) => ({
-    m: new Intl.DateTimeFormat(i18n.language === 'zgh' ? 'fr' : i18n.language, { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, i, 1))),
+    m: new Intl.DateTimeFormat(i18n.language, { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, i, 1))),
     count,
   }));
   const presence = [
@@ -97,7 +97,7 @@ export default function Dashboard() {
                 <CartesianGrid stroke="var(--grid)" vertical={false} />
                 <XAxis dataKey="m" stroke="var(--fg-subtle)" tickLine={false} axisLine={false} fontSize={12} />
                 <YAxis stroke="var(--fg-subtle)" tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'var(--glass)' }} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgb(var(--accent-rgb) / 0.1)', radius: 10 }} />
                 <Bar dataKey="count" name={t('dashboard.acceptedLeaves')} fill="url(#bar)" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -147,7 +147,7 @@ export default function Dashboard() {
                   <CartesianGrid stroke="var(--grid)" horizontal={false} />
                   <XAxis type="number" allowDecimals={false} stroke="var(--fg-subtle)" tickLine={false} axisLine={false} fontSize={12} />
                   <YAxis type="category" dataKey="name" width={110} stroke="var(--fg-muted)" tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'var(--glass)' }} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgb(var(--accent-rgb) / 0.1)', radius: 10 }} />
                   <Bar dataKey="count" name={t('dashboard.employees')} fill="var(--accent)" radius={[0, 8, 8, 0]} barSize={18} />
                 </BarChart>
               </ResponsiveContainer>

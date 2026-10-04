@@ -26,7 +26,15 @@
     "notFound": "This page could not be found.",
     "goHome": "Back to home",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "language": "Language",
+    "pickDate": "Pick a date",
+    "clear": "Clear",
+    "today": "Today",
+    "thisMonth": "This month",
+    "done": "Done",
+    "hours": "Hour",
+    "minutes": "Min"
   },
   "nav": {
     "home": "Home",
@@ -141,7 +149,11 @@
     "resetDone": "Password changed. You can now sign in.",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
-    "badLink": "This link is invalid or has expired. Please request a new one."
+    "badLink": "This link is invalid or has expired. Please request a new one.",
+    "tagline": "Leave, documents and your team: your whole HR space in one place.",
+    "useRecovery": "Use a recovery code",
+    "useApp": "Use the app code",
+    "recoveryCode": "Recovery code"
   },
   "home": {
     "hello": "Hello {{name}} 👋",
@@ -272,7 +284,8 @@
   },
   "calendar": {
     "mySubtitle": "Your leave, sick leave, telework and meetings.",
-    "teamSubtitle": "One color per person."
+    "teamSubtitle": "One color per person.",
+    "people": "People shown"
   },
   "legend": {
     "leave": "Leave",
@@ -545,7 +558,9 @@
     "anonymized": "Data anonymized.",
     "reset2fa": "Reset 2FA",
     "reset2faConfirm": "{{name}}'s two-factor authentication will be disabled and their sessions closed. They will have to set it up again at next sign-in.",
-    "reset2faDone": "2FA reset."
+    "reset2faDone": "2FA reset.",
+    "restoreConfirm": "{{name}} will regain access to the application.",
+    "resendConfirm": "A new activation email will be sent to {{name}}."
   },
   "org": {
     "subtitle": "Who supervises whom.",
@@ -574,5 +589,33 @@
     "target": "Target",
     "empty": "No entries",
     "total": "{{count}} entries"
+  },
+  "palette": {
+    "placeholder": "Go to a page or run an action…",
+    "empty": "No results",
+    "pages": "Pages",
+    "actions": "Actions",
+    "open": "Search (Ctrl K)"
+  },
+  "confirm": {
+    "assignTitle": "Assign this manager?",
+    "assignMsg": "{{manager}} will supervise {{person}}. They will be notified.",
+    "unassignTitle": "Remove this assignment?",
+    "unassignMsg": "{{manager}} will no longer supervise {{person}}.",
+    "unassignBtn": "Remove",
+    "directorTitle": "Appoint this director?",
+    "directorMsg": "{{name}} will become director: their requests go straight to HR.",
+    "approveTitle": "Approve this request?",
+    "approveMsg": "{{name}}'s request will be approved and they will be notified.",
+    "acceptInviteTitle": "Accept the invitation?",
+    "acceptInviteMsg": "You confirm you will attend “{{title}}”.",
+    "declineInviteTitle": "Decline the invitation?",
+    "declineInviteMsg": "You will not attend “{{title}}”."
+  },
+  "session": {
+    "welcome": "Welcome back, {{name}}",
+    "preparing": "Getting your workspace ready…",
+    "bye": "See you soon, {{name}}",
+    "byeHint": "Your session was closed securely."
   }
 }

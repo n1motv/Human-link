@@ -61,7 +61,7 @@ export default function Team() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {q.data!.team.map((m) => (
-            <Card key={m.id} className="glass-hover rise">
+            <Card key={m.id} className="glass-hover">
               <div className="flex items-start gap-4">
                 <Avatar id={m.id} prenom={m.prenom} nom={m.nom} hasPhoto={!!m.photoFileId} size={52} />
                 <div className="min-w-0 flex-1">

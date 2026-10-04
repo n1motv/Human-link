@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,21 +7,26 @@ import { Eye, EyeOff, KeyRound, LogIn } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthShell } from '../../components/AuthShell';
 import { Button, Field, Input } from '../../components/ui';
+import { OtpInput, type OtpStatus } from '../../components/OtpInput';
 import { HOME } from '../../app/nav';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { useSessionFlow } from '../../app/SessionFlow';
 import type { User } from '../../lib/types';
 
 type LoginResponse = { twoFactorRequired: true; challenge: string } | { user: User; pending2fa: boolean };
 
 export default function Login() {
   const { t } = useTranslation();
-  const { user, setSession } = useAuth();
-  const nav = useNavigate();
+  const { user } = useAuth();
+  const { signIn } = useSessionFlow();
   const from = (useLocation().state as { from?: string } | null)?.from;
   const [show, setShow] = useState(false);
   const [challenge, setChallenge] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [otp, setOtp] = useState('');
+  const [otpStatus, setOtpStatus] = useState<OtpStatus>('idle');
+  const [recovery, setRecovery] = useState(false);
 
   const schema = z.object({ email: z.email(t('validation.email')), password: z.string().min(1, t('validation.required')), code: z.string().optional() });
   type F = z.infer<typeof schema>;
@@ -29,15 +34,32 @@ export default function Login() {
 
   if (user) return <Navigate to={from ?? HOME[user.role]} replace />;
 
-  const done = (r: { user: User; pending2fa: boolean }) => {
-    setSession(r.user, r.pending2fa);
-    nav(r.pending2fa ? '/setup-2fa' : (from ?? HOME[r.user.role]), { replace: true });
+  const done = (r: { user: User; pending2fa: boolean }) => void signIn(r, from);
+
+  const reason = (e: unknown) => {
+    const code = e instanceof ApiError ? e.code : '';
+    if (code === 'CHALLENGE_EXPIRED') setChallenge(null);
+    return code === 'INVALID_2FA_CODE' ? t('auth.invalidCode') : code === 'RATE_LIMITED' ? t('auth.tooMany') : e instanceof ApiError && e.status < 500 ? t('auth.invalidCredentials') : t('common.error');
+  };
+
+  const verifyOtp = async (code: string) => {
+    setError(null);
+    setOtpStatus('checking');
+    try {
+      const r = await api.post<{ user: User; pending2fa: boolean }>('/auth/2fa/login', { challenge, code }, { noRefresh: true });
+      setOtpStatus('success');
+      setTimeout(() => done(r), 700);
+    } catch (e) {
+      setOtpStatus('error');
+      setError(reason(e));
+    }
   };
 
   const onSubmit = async (v: F) => {
     setError(null);
     try {
       if (challenge) {
+        if (!recovery) return void (await verifyOtp(otp));
         done(await api.post('/auth/2fa/login', { challenge, code: v.code?.trim() ?? '' }, { noRefresh: true }));
         return;
       }
@@ -45,9 +67,7 @@ export default function Login() {
       if ('twoFactorRequired' in r) setChallenge(r.challenge);
       else done(r);
     } catch (e) {
-      const code = e instanceof ApiError ? e.code : '';
-      if (code === 'CHALLENGE_EXPIRED') setChallenge(null);
-      setError(code === 'INVALID_2FA_CODE' ? t('auth.invalidCode') : code === 'RATE_LIMITED' ? t('auth.tooMany') : e instanceof ApiError && e.status < 500 ? t('auth.invalidCredentials') : t('common.error'));
+      setError(reason(e));
     }
   };
 
@@ -69,9 +89,34 @@ export default function Login() {
             {error}
           </p>
         )}
-        {challenge ? (
-          <Field label={t('auth.code')} hint={t('auth.codeHint')}>
-            <Input {...register('code')} inputMode="text" autoComplete="one-time-code" autoFocus placeholder="123456" />
+        {challenge && !recovery ? (
+          <div>
+            <span className="mb-2 block text-xs font-semibold text-muted">{t('auth.code')}</span>
+            <OtpInput
+              label={t('auth.code')}
+              value={otp}
+              status={otpStatus}
+              autoFocus
+              onChange={(v) => {
+                setOtp(v);
+                if (otpStatus === 'error') setOtpStatus('idle');
+              }}
+              onComplete={(v) => void verifyOtp(v)}
+              onSettle={() => {
+                setOtp('');
+                setOtpStatus('idle');
+              }}
+            />
+            <button type="button" className="mt-3 text-sm font-semibold text-accent hover:underline" onClick={() => setRecovery(true)}>
+              {t('auth.useRecovery')}
+            </button>
+          </div>
+        ) : challenge ? (
+          <Field label={t('auth.recoveryCode')} hint={t('auth.codeHint')}>
+            <Input {...register('code')} inputMode="text" autoComplete="off" autoFocus />
+            <button type="button" className="mt-3 block text-sm font-semibold text-accent hover:underline" onClick={() => setRecovery(false)}>
+              {t('auth.useApp')}
+            </button>
           </Field>
         ) : (
           <>
@@ -88,11 +133,17 @@ export default function Login() {
             </Field>
           </>
         )}
-        <Button type="submit" variant="primary" className="w-full" loading={formState.isSubmitting} icon={challenge ? <KeyRound size={16} /> : <LogIn size={16} />}>
+        <Button type="submit" variant="primary" className="w-full" loading={formState.isSubmitting || otpStatus === 'checking'} disabled={challenge !== null && !recovery && otp.length !== 6} icon={challenge ? <KeyRound size={16} /> : <LogIn size={16} />}>
           {challenge ? t('auth.verify') : t('auth.login')}
         </Button>
         {challenge && (
-          <button type="button" className="w-full text-center text-sm text-muted hover:text-fg" onClick={() => setChallenge(null)}>
+          <button type="button" className="w-full text-center text-sm text-muted hover:text-fg" onClick={() => {
+              setChallenge(null);
+              setOtp('');
+              setOtpStatus('idle');
+              setRecovery(false);
+              setError(null);
+            }}>
             {t('common.back')}
           </button>
         )}

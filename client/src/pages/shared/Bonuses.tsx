@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Gift, Plus, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { RefuseDialog } from '../../components/DecisionDialog';
+import { ConfirmDialog, RefuseDialog } from '../../components/DecisionDialog';
 import { Modal } from '../../components/Modal';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Button, Card, Empty, ErrorState, Field, Input, PageHeader, Select, Spinner, TableWrap, Textarea } from '../../components/ui';
@@ -73,6 +73,7 @@ export default function Bonuses({ role }: { role: 'admin' | 'manager' }) {
   const lang = i18n.language;
   const [open, setOpen] = useState(false);
   const [refusing, setRefusing] = useState<Bonus | null>(null);
+  const [approving, setApproving] = useState<Bonus | null>(null);
   const q = useQuery({ queryKey: ['bonuses'], queryFn: () => api.get<{ items: Bonus[] }>('/bonuses') });
   const decide = useAction(
     ({ id, decision, motifRefus }: { id: string; decision: 'accepte' | 'refuse'; motifRefus?: string }) => api.post(`/bonuses/${id}/decision`, { decision, motifRefus }),
@@ -138,7 +139,7 @@ export default function Bonuses({ role }: { role: 'admin' | 'manager' }) {
                     <td>
                       {b.statut === 'en attente' && (
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => decide.mutate({ id: b.id, decision: 'accepte' })}>
+                          <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => setApproving(b)}>
                             {t('decision.approve')}
                           </Button>
                           <Button size="sm" variant="danger" icon={<X size={14} />} onClick={() => setRefusing(b)}>
@@ -155,6 +156,15 @@ export default function Bonuses({ role }: { role: 'admin' | 'manager' }) {
         </TableWrap>
       )}
       <NewBonus open={open} onClose={() => setOpen(false)} />
+      <ConfirmDialog
+        open={!!approving}
+        icon={<Check size={22} />}
+        title={t('confirm.approveTitle')}
+        message={t('confirm.approveMsg', { name: `${approving?.employe?.prenom ?? ''} ${approving?.employe?.nom ?? ''}`.trim() })}
+        confirmLabel={t('decision.approve')}
+        onClose={() => setApproving(null)}
+        onConfirm={() => decide.mutateAsync({ id: approving!.id, decision: 'accepte' })}
+      />
       <RefuseDialog open={!!refusing} onClose={() => setRefusing(null)} onConfirm={(motifRefus) => decide.mutateAsync({ id: refusing!.id, decision: 'refuse', motifRefus })} />
     </>
   );

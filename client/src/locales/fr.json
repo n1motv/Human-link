@@ -26,7 +26,15 @@
     "notFound": "Cette page est introuvable.",
     "goHome": "Retour à l'accueil",
     "previous": "Précédent",
-    "next": "Suivant"
+    "next": "Suivant",
+    "language": "Langue",
+    "pickDate": "Choisir une date",
+    "clear": "Effacer",
+    "today": "Aujourd'hui",
+    "thisMonth": "Ce mois",
+    "done": "OK",
+    "hours": "Heure",
+    "minutes": "Min"
   },
   "nav": {
     "home": "Accueil",
@@ -141,7 +149,11 @@
     "resetDone": "Mot de passe modifié. Vous pouvez vous connecter.",
     "newPassword": "Nouveau mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
-    "badLink": "Ce lien est invalide ou a expiré. Demandez-en un nouveau."
+    "badLink": "Ce lien est invalide ou a expiré. Demandez-en un nouveau.",
+    "tagline": "Congés, documents et équipe : tout votre espace RH au même endroit.",
+    "useRecovery": "Utiliser un code de secours",
+    "useApp": "Utiliser le code de l'application",
+    "recoveryCode": "Code de secours"
   },
   "home": {
     "hello": "Bonjour {{name}} 👋",
@@ -272,7 +284,8 @@
   },
   "calendar": {
     "mySubtitle": "Vos congés, arrêts, télétravail et réunions.",
-    "teamSubtitle": "Une couleur par personne."
+    "teamSubtitle": "Une couleur par personne.",
+    "people": "Personnes affichées"
   },
   "legend": {
     "leave": "Congé",
@@ -382,7 +395,7 @@
     "step3": "Saisissez le code à 6 chiffres affiché pour confirmer.",
     "manualKey": "Clé de configuration manuelle :",
     "confirm": "Confirmer et activer",
-    "recoveryHint": "Conservez ces codes de secours en lieu sûr. Chacun ne fonctionne qu'une fois si vous perdez votre téléphone.",
+    "recoveryHint": "Conservez ces codes de secours en lieu sûr : si vous perdez votre téléphone, chacun ne fonctionne qu'une seule fois.",
     "savedCodes": "J'ai enregistré mes codes",
     "setupTitle": "Sécurisez votre compte",
     "setupHint": "Votre rôle exige la double authentification avant de continuer."
@@ -545,7 +558,9 @@
     "anonymized": "Données anonymisées.",
     "reset2fa": "Réinitialiser la 2FA",
     "reset2faConfirm": "La double authentification de {{name}} sera désactivée et ses sessions fermées. La personne devra la reconfigurer à sa prochaine connexion.",
-    "reset2faDone": "2FA réinitialisée."
+    "reset2faDone": "2FA réinitialisée.",
+    "restoreConfirm": "{{name}} retrouvera l'accès à l'application.",
+    "resendConfirm": "Un nouvel e-mail d'activation sera envoyé à {{name}}."
   },
   "org": {
     "subtitle": "Qui supervise qui.",
@@ -574,5 +589,33 @@
     "target": "Cible",
     "empty": "Aucune entrée",
     "total": "{{count}} entrée(s)"
+  },
+  "palette": {
+    "placeholder": "Aller à une page ou lancer une action…",
+    "empty": "Aucun résultat",
+    "pages": "Pages",
+    "actions": "Actions",
+    "open": "Rechercher (Ctrl K)"
+  },
+  "confirm": {
+    "assignTitle": "Assigner ce manager ?",
+    "assignMsg": "{{manager}} supervisera {{person}}. Cette personne sera notifiée.",
+    "unassignTitle": "Retirer l'assignation ?",
+    "unassignMsg": "{{manager}} ne supervisera plus {{person}}.",
+    "unassignBtn": "Retirer",
+    "directorTitle": "Désigner ce directeur ?",
+    "directorMsg": "{{name}} deviendra directeur : ses demandes seront transmises directement aux RH.",
+    "approveTitle": "Accepter la demande ?",
+    "approveMsg": "La demande de {{name}} sera acceptée et la personne sera notifiée.",
+    "acceptInviteTitle": "Accepter l'invitation ?",
+    "acceptInviteMsg": "Vous confirmez votre présence à « {{title}} ».",
+    "declineInviteTitle": "Décliner l'invitation ?",
+    "declineInviteMsg": "Vous indiquez que vous ne participerez pas à « {{title}} »."
+  },
+  "session": {
+    "welcome": "Bon retour, {{name}}",
+    "preparing": "Préparation de votre espace…",
+    "bye": "À bientôt, {{name}}",
+    "byeHint": "Votre session est fermée en toute sécurité."
   }
 }

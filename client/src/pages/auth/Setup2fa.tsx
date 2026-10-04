@@ -5,11 +5,13 @@ import { AuthShell } from '../../components/AuthShell';
 import { TwoFactorPanel } from '../../components/TwoFactorPanel';
 import { HOME } from '../../app/nav';
 import { useAuth } from '../../lib/auth';
+import { useSessionFlow } from '../../app/SessionFlow';
 
 /** Page imposée par la politique du client tant que la 2FA n'est pas activée (ex. comptes administrateur). */
 export default function Setup2fa() {
   const { t } = useTranslation();
-  const { user, pending2fa, logout } = useAuth();
+  const { user, pending2fa } = useAuth();
+  const { signOut } = useSessionFlow();
   const nav = useNavigate();
   if (!user) return <Navigate to="/login" replace />;
 
@@ -20,10 +22,7 @@ export default function Setup2fa() {
       footer={
         <button
           className="inline-flex items-center gap-2 font-semibold text-accent hover:underline"
-          onClick={async () => {
-            await logout();
-            nav('/login', { replace: true });
-          }}
+          onClick={() => void signOut()}
         >
           <LogOut size={14} /> {t('auth.logout')}
         </button>

@@ -21,7 +21,7 @@ export function VaultList({ files, onDelete }: { files: VaultFile[]; onDelete?: 
         const list = files.filter((f) => f.category === cat);
         return (
           <section key={cat} className="glass p-5">
-            <h3 className="mb-3 flex items-center justify-between text-sm font-bold uppercase tracking-wider text-subtle">
+            <h3 className="mb-3 flex items-center justify-between text-base font-bold text-muted">
               {t(`vault.cat.${cat}`)} <span className="badge badge-accent">{list.length}</span>
             </h3>
             {list.length === 0 ? (

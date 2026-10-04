@@ -1,8 +1,10 @@
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../lib/api';
+import { DatePicker } from './DatePicker';
+import { usePending } from '../lib/progress';
 
 /* ---------- Boutons ---------- */
 interface BtnProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -55,12 +57,12 @@ export function Field({ label, error, hint, required, children, className }: Fie
 }
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(function Input({ invalid, className, ...p }, ref) {
+  // Dates : sélecteur maison (même API que <input type="date|month|datetime-local">).
+  if (p.type === 'date' || p.type === 'month' || p.type === 'datetime-local') return <DatePicker ref={ref} invalid={invalid} className={className} {...p} type={p.type as 'date' | 'month' | 'datetime-local'} />;
   return <input ref={ref} aria-invalid={invalid || undefined} className={clsx('field', className)} {...p} />;
 });
 
-export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }>(function Select({ invalid, className, ...p }, ref) {
-  return <select ref={ref} aria-invalid={invalid || undefined} className={clsx('field', className)} {...p} />;
-});
+export { Select } from './Select';
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }>(function Textarea({ invalid, className, ...p }, ref) {
   return <textarea ref={ref} aria-invalid={invalid || undefined} className={clsx('field', className)} {...p} />;
@@ -71,8 +73,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+        <h1 className="text-3xl font-bold sm:text-4xl">{title}</h1>
+        {subtitle && <p className="mt-1.5 max-w-prose text-sm text-muted sm:text-base">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -85,10 +87,17 @@ export function Card({ children, className, strong }: { children: ReactNode; cla
 
 export function Spinner({ label }: { label?: string }) {
   const { t } = useTranslation();
+  usePending();
   return (
-    <div className="flex items-center justify-center gap-2 py-16 text-muted" role="status">
-      <Loader2 className="animate-spin" size={20} />
-      <span className="text-sm">{label ?? t('common.loading')}</span>
+    <div role="status" aria-busy="true" className="space-y-4 py-2">
+      <span className="sr-only">{label ?? t('common.loading')}</span>
+      <div className="skeleton h-9 w-56" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="skeleton h-28" style={{ animationDelay: `${i * 80}ms` }} />
+        ))}
+      </div>
+      <div className="skeleton h-64" />
     </div>
   );
 }
@@ -121,12 +130,12 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
 export function StatTile({ label, value, hint, icon, tone }: { label: string; value: ReactNode; hint?: string; icon?: ReactNode; tone?: 'accent' | 'ok' | 'warn' | 'info' }) {
   const toneCls = { accent: 'text-accent', ok: 'text-ok', warn: 'text-warn', info: 'text-info' }[tone ?? 'accent'];
   return (
-    <div className="glass glass-hover rise p-5">
+    <div className="glass glass-hover p-5">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-subtle">{label}</p>
-        {icon && <span className={clsx('grid h-9 w-9 place-items-center rounded-xl bg-glass', toneCls)}>{icon}</span>}
+        <p className="text-sm font-medium text-muted">{label}</p>
+        {icon && <span className={clsx('grid h-10 w-10 place-items-center rounded-xl', toneCls)} style={{ background: 'color-mix(in srgb, currentColor 14%, transparent)' }}>{icon}</span>}
       </div>
-      <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight">{value}</p>
+      <p className="font-display mt-4 text-4xl font-bold tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
     </div>
   );

@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
-import { Spinner } from '../components/ui';
+import { AppSplash } from '../components/AppSplash';
+import { RouteProgress } from '../components/RouteProgress';
 import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
 import type { PublicConfig, Role } from '../lib/types';
@@ -50,7 +51,7 @@ const Audit = page(() => import('../pages/admin/Audit'));
 function Protected() {
   const { user, loading, pending2fa } = useAuth();
   const loc = useLocation();
-  if (loading) return <Spinner />;
+  if (loading) return <AppSplash />;
   if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
   // Politique du client : certains rôles doivent activer la 2FA avant toute autre action.
   if (pending2fa && loc.pathname !== '/setup-2fa') return <Navigate to="/setup-2fa" replace />;
@@ -70,7 +71,7 @@ function RequireModule({ name, children }: { name: keyof PublicConfig['modules']
 
 function Root() {
   const { user, loading } = useAuth();
-  if (loading) return <Spinner />;
+  if (loading) return <AppSplash />;
   return <Navigate to={user ? HOME[user.role] : '/login'} replace />;
 }
 
@@ -86,7 +87,8 @@ const staff = (el: ReactNode, module?: keyof PublicConfig['modules']) => (
 
 export function App() {
   return (
-    <Suspense fallback={<Spinner />}>
+    <Suspense fallback={<AppSplash />}>
+      <RouteProgress />
       <Routes>
         <Route path="/" element={<Root />} />
         <Route path="/login" element={<Login />} />

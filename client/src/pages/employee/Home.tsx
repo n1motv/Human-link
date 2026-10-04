@@ -97,7 +97,7 @@ export default function Home() {
             {u.departement && <p className="mt-4 text-sm text-muted">{u.departement}</p>}
           </Card>
           <Card>
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-subtle">{t('home.quick')}</h2>
+            <h2 className="mb-3 text-base font-bold text-muted">{t('home.quick')}</h2>
             <div className="grid gap-2">
               {quick.map((q) => (
                 <Link key={q.to} to={q.to} className="btn justify-start">

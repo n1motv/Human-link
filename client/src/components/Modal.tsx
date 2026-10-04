@@ -53,8 +53,8 @@ export function Modal({ open, title, onClose, children, footer, wide }: Props) {
 
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 grid place-items-center p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden />
+    <div className="fixed inset-0 z-50 grid place-items-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden onMouseDown={onClose} />
       <div
         ref={panel}
         role="dialog"

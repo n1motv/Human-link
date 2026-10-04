@@ -85,7 +85,7 @@ export default function Profile() {
             </div>
           </Card>
           <Card>
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-subtle">{t('profile.employment')}</h2>
+            <h2 className="mb-3 text-base font-bold text-muted">{t('profile.employment')}</h2>
             <dl className="space-y-2.5 text-sm">
               {[
                 [t('profile.matricule'), u.matricule],

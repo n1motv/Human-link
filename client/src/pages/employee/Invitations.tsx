@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Video, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ConfirmDialog } from '../../components/DecisionDialog';
 import { Button, Card, Empty, ErrorState, PageHeader, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { fmtDateTime } from '../../lib/format';
@@ -17,6 +19,7 @@ interface Invitation {
 export default function Invitations() {
   const { t, i18n } = useTranslation();
   const q = useQuery({ queryKey: ['meetings', 'invitations'], queryFn: () => api.get<{ items: Invitation[] }>('/meetings/invitations') });
+  const [pending, setPending] = useState<{ m: Invitation; response: 'Accepted' | 'Rejected' } | null>(null);
   const respond = useAction(({ id, response }: { id: string; response: 'Accepted' | 'Rejected' }) => api.post(`/meetings/${id}/respond`, { response }), {
     success: t('meetings.answered'),
     invalidate: [['meetings'], ['calendar']],
@@ -51,10 +54,10 @@ export default function Invitations() {
                 </div>
                 {m.status === 'en attente' && !past ? (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => respond.mutate({ id: m.id, response: 'Accepted' })}>
+                    <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => setPending({ m, response: 'Accepted' })}>
                       {t('meetings.accept')}
                     </Button>
-                    <Button size="sm" variant="danger" icon={<X size={14} />} onClick={() => respond.mutate({ id: m.id, response: 'Rejected' })}>
+                    <Button size="sm" variant="danger" icon={<X size={14} />} onClick={() => setPending({ m, response: 'Rejected' })}>
                       {t('meetings.decline')}
                     </Button>
                   </div>
@@ -68,6 +71,16 @@ export default function Invitations() {
           })}
         </ul>
       )}
+      <ConfirmDialog
+        open={!!pending}
+        danger={pending?.response === 'Rejected'}
+        icon={pending?.response === 'Accepted' ? <Check size={22} /> : <X size={22} />}
+        title={pending?.response === 'Accepted' ? t('confirm.acceptInviteTitle') : t('confirm.declineInviteTitle')}
+        message={t(pending?.response === 'Accepted' ? 'confirm.acceptInviteMsg' : 'confirm.declineInviteMsg', { title: pending?.m.title ?? '' })}
+        confirmLabel={pending?.response === 'Accepted' ? t('meetings.accept') : t('meetings.decline')}
+        onClose={() => setPending(null)}
+        onConfirm={() => respond.mutateAsync({ id: pending!.m.id, response: pending!.response })}
+      />
     </>
   );
 }

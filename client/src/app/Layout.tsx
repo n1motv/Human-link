@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Languages, LogOut, Menu, Moon, ShieldCheck, Sun, X } from 'lucide-react';
+import { Suspense, useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { LogOut, Menu, Moon, Search, ShieldCheck, Sun, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../components/Avatar';
-import { useAuth, useUser } from '../lib/auth';
+import { LanguageMenu } from '../components/LanguageMenu';
+import { api } from '../lib/api';
+import { Spinner } from '../components/ui';
+import { useUser } from '../lib/auth';
 import { useConfig } from '../lib/config';
-import { LANGUAGE_NAMES } from '../lib/i18n';
 import { useTheme } from '../lib/theme';
 import { COMMON_NAV, NAV, type NavItem } from './nav';
 import { NotificationBell } from './NotificationBell';
 import { ChatWidget } from './ChatWidget';
+import { CommandPalette } from './CommandPalette';
+import { useSessionFlow } from './SessionFlow';
 
 function Brand() {
   const cfg = useConfig();
@@ -19,7 +24,7 @@ function Brand() {
   return (
     <div className="flex items-center gap-3 px-2">
       {!broken && <img src={src} alt="" className="h-9 w-auto max-w-[120px] object-contain" onError={() => setBroken(true)} />}
-      {(cfg.branding.showName || broken) && <span className="gradient-text text-lg font-extrabold tracking-tight">{cfg.company.name}</span>}
+      {(cfg.branding.showName || broken) && <span className="gradient-text font-display text-xl font-extrabold">{cfg.company.name}</span>}
     </div>
   );
 }
@@ -29,10 +34,22 @@ function SideLinks({ onNavigate }: { onNavigate?: () => void }) {
   const user = useUser();
   const { modules } = useConfig();
   const enabled = (i: NavItem) => !i.module || modules[i.module];
+  const stats = useQuery({
+    queryKey: ['dashboard', 'admin'],
+    queryFn: () => api.get<{ pending: { leaves: number; sick: number; bonuses: number } }>('/dashboard/admin'),
+    enabled: user.role === 'admin',
+    staleTime: 60_000,
+  });
+  const pending: Record<string, number | undefined> = {
+    '/admin/leaves': stats.data?.pending.leaves,
+    '/admin/sick': stats.data?.pending.sick,
+    '/admin/bonuses': stats.data?.pending.bonuses,
+  };
   const link = (i: NavItem) => (
     <NavLink key={i.to} to={i.to} end={i.end} onClick={onNavigate} className="nav-link">
       <i.icon size={18} aria-hidden />
-      <span className="truncate">{t(i.label)}</span>
+      <span className="flex-1 truncate">{t(i.label)}</span>
+      {!!pending[i.to] && <span className="badge badge-warn !px-1.5 !py-0" aria-label={`${pending[i.to]}`}>{pending[i.to]}</span>}
     </NavLink>
   );
   return (
@@ -42,36 +59,13 @@ function SideLinks({ onNavigate }: { onNavigate?: () => void }) {
         if (!items.length) return null;
         return (
           <div key={idx} className="space-y-1">
-            {g.title && <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-subtle">{t(g.title)}</p>}
+            {g.title && <p className="px-3 pb-1 text-xs font-semibold text-subtle">{t(g.title)}</p>}
             {items.map(link)}
           </div>
         );
       })}
       <div className="space-y-1 border-t border-line pt-4">{COMMON_NAV.filter(enabled).map(link)}</div>
     </nav>
-  );
-}
-
-function LanguageMenu() {
-  const { i18n } = useTranslation();
-  const { i18n: cfg } = useConfig();
-  if (cfg.languages.length < 2) return null;
-  return (
-    <label className="relative">
-      <span className="sr-only">Langue</span>
-      <Languages size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-      <select
-        value={cfg.languages.includes(i18n.language) ? i18n.language : 'fr'}
-        onChange={(e) => void i18n.changeLanguage(e.target.value)}
-        className="field !min-h-10 w-auto !rounded-full !py-1 !ps-9 !pe-3 text-sm"
-      >
-        {cfg.languages.map((l) => (
-          <option key={l} value={l}>
-            {LANGUAGE_NAMES[l] ?? l}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 
@@ -88,20 +82,32 @@ export function ThemeToggle() {
 export function Layout() {
   const { t } = useTranslation();
   const user = useUser();
-  const { logout } = useAuth();
-  const nav = useNavigate();
+  const { signOut } = useSessionFlow();
   const loc = useLocation();
   const [open, setOpen] = useState(false);
+  const [palette, setPalette] = useState(false);
   const { modules } = useConfig();
+  const { company } = useConfig();
 
   useEffect(() => {
     setOpen(false);
-  }, [loc.pathname]);
+    window.scrollTo({ top: 0 });
+    const item = [...NAV[user.role].flatMap((g) => g.items), ...COMMON_NAV].find((i) => i.to === loc.pathname);
+    document.title = item ? `${t(item.label)} · ${company.name}` : company.name;
+  }, [loc.pathname, user.role, company.name, t]);
 
-  const doLogout = async () => {
-    await logout();
-    nav('/login', { replace: true });
-  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPalette((p) => !p);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const doLogout = () => void signOut();
 
   return (
     <div className="min-h-screen lg:ps-72">
@@ -152,6 +158,11 @@ export function Layout() {
             <button className="btn btn-icon lg:hidden" onClick={() => setOpen(true)} aria-label={t('common.menu')}>
               <Menu size={18} />
             </button>
+            <button onClick={() => setPalette(true)} className="btn !justify-start gap-2 !px-3 text-muted sm:min-w-64" aria-label={t('palette.open')} title={t('palette.open')}>
+              <Search size={16} aria-hidden />
+              <span className="hidden flex-1 text-start font-normal sm:inline">{t('common.search')}</span>
+              <kbd className="hidden rounded-md border border-line px-1.5 py-0.5 text-xs font-normal text-subtle sm:inline">Ctrl K</kbd>
+            </button>
             <div className="flex-1" />
             <LanguageMenu />
             <ThemeToggle />
@@ -162,8 +173,10 @@ export function Layout() {
           </div>
         </header>
 
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-3 py-6 outline-none sm:px-6 sm:py-8">
-          <Outlet />
+        <main id="main" key={loc.pathname} tabIndex={-1} className="page-in mx-auto w-full max-w-7xl flex-1 px-3 py-6 outline-none sm:px-6 sm:py-8">
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <footer className="px-6 pb-6 text-center text-xs text-subtle">
@@ -173,6 +186,7 @@ export function Layout() {
         </footer>
       </div>
 
+      <CommandPalette open={palette} onClose={() => setPalette(false)} />
       {modules.chatbot && user.role !== 'admin' && <ChatWidget />}
     </div>
   );

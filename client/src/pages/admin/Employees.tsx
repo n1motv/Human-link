@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { Archive, Eraser, KeyRound, MailPlus, Pencil, Plus, RotateCcw, Search, ShieldCheck, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -107,7 +107,7 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
         {isNew && <p className="rounded-xl border border-line bg-glass px-3 py-2 text-sm text-muted">{t('employees.inviteHint')}</p>}
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-subtle">{t('employees.identity')}</legend>
+          <legend className="mb-2 text-sm font-bold text-muted">{t('employees.identity')}</legend>
           <Field label={t('profile.firstName')} required>
             <Input {...register('prenom', { required: true })} />
           </Field>
@@ -155,7 +155,7 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
         </fieldset>
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-subtle">{t('profile.employment')}</legend>
+          <legend className="mb-2 text-sm font-bold text-muted">{t('profile.employment')}</legend>
           <Field label={t('employees.job')}>
             <Input {...register('poste')} />
           </Field>
@@ -191,18 +191,25 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
   );
 }
 
-type Action = { kind: 'archive' | 'anonymize' | 'reset2fa'; user: Row } | null;
+type Action = { kind: 'archive' | 'anonymize' | 'reset2fa' | 'restore' | 'resend'; user: Row } | null;
+const SAFE: string[] = ['restore', 'resend'];
 
 export default function Employees() {
   const { t, i18n } = useTranslation();
   const [search, setSearch] = useState('');
+  const [term, setTerm] = useState('');
+  useEffect(() => {
+    const h = setTimeout(() => setTerm(search.trim()), 300);
+    return () => clearTimeout(h);
+  }, [search]);
   const [status, setStatus] = useState('');
   const [edit, setEdit] = useState<string | 'new' | null>(null);
   const [action, setAction] = useState<Action>(null);
 
   const q = useQuery({
-    queryKey: ['users', search, status],
-    queryFn: () => api.get<{ items: Row[]; total: number }>(`/users?limit=200${search ? `&q=${encodeURIComponent(search)}` : ''}${status ? `&status=${status}` : ''}`),
+    queryKey: ['users', term, status],
+    queryFn: () => api.get<{ items: Row[]; total: number }>(`/users?limit=200${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
+    placeholderData: keepPreviousData,
   });
   const archive = useAction((id: string) => api.delete(`/users/${id}`), { success: t('employees.archived'), invalidate: [['users']] });
   const anonymize = useAction((id: string) => api.post(`/users/${id}/anonymize`), { success: t('employees.anonymized'), invalidate: [['users']] });
@@ -298,13 +305,13 @@ export default function Employees() {
                         </button>
                       )}
                       {u.status === 'invited' && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.resend')} title={t('employees.resend')} onClick={() => invite.mutate(u.id)}>
+                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.resend')} title={t('employees.resend')} onClick={() => setAction({ kind: 'resend', user: u })}>
                           <MailPlus size={16} />
                         </button>
                       )}
                       {u.status === 'archived' ? (
                         <>
-                          <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.restore')} title={t('employees.restore')} onClick={() => restore.mutate(u.id)}>
+                          <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.restore')} title={t('employees.restore')} onClick={() => setAction({ kind: 'restore', user: u })}>
                             <RotateCcw size={16} />
                           </button>
                           <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('employees.anonymize')} title={t('employees.anonymize')} onClick={() => setAction({ kind: 'anonymize', user: u })}>
@@ -328,14 +335,16 @@ export default function Employees() {
       {edit && <EmployeeForm key={edit} editId={edit} onClose={() => setEdit(null)} />}
       <ConfirmDialog
         open={!!action}
-        danger
+        danger={!SAFE.includes(action?.kind ?? '')}
+        icon={action?.kind === 'restore' ? <RotateCcw size={22} /> : action?.kind === 'resend' ? <MailPlus size={22} /> : undefined}
         title={t(`employees.${action?.kind ?? 'archive'}`)}
         message={action ? t(`employees.${action.kind}Confirm`, { name: `${action.user.prenom} ${action.user.nom}` }) : ''}
         confirmLabel={t(`employees.${action?.kind ?? 'archive'}`)}
         onClose={() => setAction(null)}
         onConfirm={() => {
           const id = action!.user.id;
-          return action!.kind === 'anonymize' ? anonymize.mutateAsync(id) : action!.kind === 'reset2fa' ? reset2fa.mutateAsync(id) : archive.mutateAsync(id);
+          const k = action!.kind;
+          return k === 'anonymize' ? anonymize.mutateAsync(id) : k === 'reset2fa' ? reset2fa.mutateAsync(id) : k === 'restore' ? restore.mutateAsync(id) : k === 'resend' ? invite.mutateAsync(id) : archive.mutateAsync(id);
         }}
       />
     </>

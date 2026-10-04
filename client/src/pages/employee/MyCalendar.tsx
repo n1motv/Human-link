@@ -6,7 +6,8 @@ import { ErrorState, PageHeader } from '../../components/ui';
 import { api } from '../../lib/api';
 import type { CalendarEvent } from '../../lib/types';
 
-const COLORS = { leave: '#16a34a', sick: '#d97706', telework: '#2563eb', meeting: '#db2777' } as const;
+// Calendrier personnel : une seule personne, donc une couleur par type d'événement (tons assez sombres pour un texte blanc lisible).
+const COLORS = { leave: '#15803d', sick: '#b45309', telework: '#1d4ed8', meeting: '#be185d' } as const;
 
 export default function MyCalendar() {
   const { t } = useTranslation();

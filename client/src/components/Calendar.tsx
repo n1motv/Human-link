@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import { readableOn } from '../lib/branding';
 import { addDaysIso, todayIso } from '../lib/format';
 
 export interface CalItem {
@@ -27,7 +28,7 @@ const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(
 /** Calendrier mensuel léger : pas de dépendance externe, adaptatif, compatible RTL. */
 export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Props) {
   const { i18n } = useTranslation();
-  const lang = i18n.language === 'zgh' ? 'fr' : i18n.language;
+  const lang = i18n.language;
   const [selected, setSelected] = useState<string | null>(null);
   const y = month.getFullYear();
   const m = month.getMonth();
@@ -70,7 +71,7 @@ export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Pr
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wider text-subtle">
+      <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-subtle">
         {weekdays.map((w) => (
           <div key={w} className="py-1">
             {w}
@@ -97,7 +98,7 @@ export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Pr
               </span>
               <div className="mt-1 hidden space-y-0.5 sm:block">
                 {list.slice(0, 3).map((it) => (
-                  <div key={it.id + day} className="truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium text-white" style={{ background: it.color }}>
+                  <div key={it.id + day} className="truncate rounded-md px-1.5 py-0.5 text-xs font-semibold leading-snug" style={{ background: it.color, color: readableOn(it.color) }} title={it.label}>
                     {it.label}
                   </div>
                 ))}

@@ -6,6 +6,7 @@ import { App } from './app/App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConfigProvider } from './lib/config';
 import { AuthProvider } from './lib/auth';
+import { SessionFlowProvider } from './app/SessionFlow';
 import { ThemeProvider } from './lib/theme';
 import { ToastProvider } from './lib/toast';
 import { applyBranding } from './lib/branding';
@@ -42,9 +43,11 @@ async function boot() {
               <ToastProvider>
                 <AuthProvider>
                   <BrowserRouter>
-                    <ErrorBoundary>
-                      <App />
-                    </ErrorBoundary>
+                    <SessionFlowProvider>
+                      <ErrorBoundary>
+                        <App />
+                      </ErrorBoundary>
+                    </SessionFlowProvider>
                   </BrowserRouter>
                 </AuthProvider>
               </ToastProvider>

@@ -26,7 +26,15 @@
     "notFound": "No se encuentra esta página.",
     "goHome": "Volver al inicio",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "language": "Idioma",
+    "pickDate": "Elegir una fecha",
+    "clear": "Borrar",
+    "today": "Hoy",
+    "thisMonth": "Este mes",
+    "done": "Listo",
+    "hours": "Hora",
+    "minutes": "Min"
   },
   "nav": {
     "home": "Inicio",
@@ -141,7 +149,11 @@
     "resetDone": "Contraseña cambiada. Ya puedes iniciar sesión.",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar contraseña",
-    "badLink": "Este enlace no es válido o ha caducado. Solicita uno nuevo."
+    "badLink": "Este enlace no es válido o ha caducado. Solicita uno nuevo.",
+    "tagline": "Vacaciones, documentos y equipo: todo tu espacio de RR. HH. en un solo lugar.",
+    "useRecovery": "Usar un código de recuperación",
+    "useApp": "Usar el código de la aplicación",
+    "recoveryCode": "Código de recuperación"
   },
   "home": {
     "hello": "Hola {{name}} 👋",
@@ -272,7 +284,8 @@
   },
   "calendar": {
     "mySubtitle": "Tus vacaciones, bajas, teletrabajo y reuniones.",
-    "teamSubtitle": "Un color por persona."
+    "teamSubtitle": "Un color por persona.",
+    "people": "Personas mostradas"
   },
   "legend": {
     "leave": "Vacaciones",
@@ -545,7 +558,9 @@
     "anonymized": "Datos anonimizados.",
     "reset2fa": "Restablecer la 2FA",
     "reset2faConfirm": "La autenticación en dos pasos de {{name}} se desactivará y se cerrarán sus sesiones. Deberá configurarla de nuevo en su próximo inicio de sesión.",
-    "reset2faDone": "2FA restablecida."
+    "reset2faDone": "2FA restablecida.",
+    "restoreConfirm": "{{name}} recuperará el acceso a la aplicación.",
+    "resendConfirm": "Se enviará un nuevo correo de activación a {{name}}."
   },
   "org": {
     "subtitle": "Quién supervisa a quién.",
@@ -574,5 +589,33 @@
     "target": "Objetivo",
     "empty": "Ninguna entrada",
     "total": "{{count}} entrada(s)"
+  },
+  "palette": {
+    "placeholder": "Ir a una página o ejecutar una acción…",
+    "empty": "Sin resultados",
+    "pages": "Páginas",
+    "actions": "Acciones",
+    "open": "Buscar (Ctrl K)"
+  },
+  "confirm": {
+    "assignTitle": "¿Asignar este responsable?",
+    "assignMsg": "{{manager}} supervisará a {{person}}. Se le notificará.",
+    "unassignTitle": "¿Quitar la asignación?",
+    "unassignMsg": "{{manager}} dejará de supervisar a {{person}}.",
+    "unassignBtn": "Quitar",
+    "directorTitle": "¿Nombrar a este director?",
+    "directorMsg": "{{name}} será director: sus solicitudes irán directamente a RR. HH.",
+    "approveTitle": "¿Aprobar la solicitud?",
+    "approveMsg": "La solicitud de {{name}} será aprobada y se le notificará.",
+    "acceptInviteTitle": "¿Aceptar la invitación?",
+    "acceptInviteMsg": "Confirmas tu asistencia a «{{title}}».",
+    "declineInviteTitle": "¿Rechazar la invitación?",
+    "declineInviteMsg": "Indicas que no asistirás a «{{title}}»."
+  },
+  "session": {
+    "welcome": "Bienvenido de nuevo, {{name}}",
+    "preparing": "Preparando tu espacio…",
+    "bye": "Hasta pronto, {{name}}",
+    "byeHint": "Tu sesión se ha cerrado de forma segura."
   }
 }

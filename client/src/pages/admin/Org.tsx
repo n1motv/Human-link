@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Crown, Link2, Network, Trash2, UserX } from 'lucide-react';
+import { Crown, Link2, Link2Off, Network, Trash2, UserX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
+import { ConfirmDialog } from '../../components/DecisionDialog';
 import { Button, Card, ErrorState, Field, PageHeader, Select, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAction } from '../../lib/hooks';
@@ -55,6 +56,7 @@ export default function Org() {
   const [managerId, setManagerId] = useState('');
   const [superviseId, setSuperviseId] = useState('');
   const [directorId, setDirectorId] = useState('');
+  const [ask, setAsk] = useState<{ kind: 'assign' | 'unassign' | 'director'; a?: string; b?: string } | null>(null);
   const refresh = [['org']] as const;
 
   const assign = useAction(() => api.post('/org/supervisions', { managerId, superviseId }), {
@@ -67,6 +69,12 @@ export default function Org() {
 
   if (people.isLoading || sup.isLoading || tree.isLoading) return <Spinner />;
   if (people.isError || sup.isError || tree.isError) return <ErrorState error={people.error ?? sup.error ?? tree.error} />;
+
+  const nameOf = (id?: string) => {
+    const u = people.data!.items.find((p) => p.id === id);
+    return u ? `${u.prenom} ${u.nom}` : '';
+  };
+  const askName = (id?: string) => nameOf(id) || sup.data!.assignments.flatMap((x) => [x.manager, x.supervise]).map((u) => ({ id: u.id, n: `${u.prenom} ${u.nom}` })).find((u) => u.id === id)?.n || '';
 
   const all = people.data!.items.filter((p) => p.role !== 'admin');
   const managers = all.filter((p) => p.role === 'manager');
@@ -103,7 +111,7 @@ export default function Org() {
                   ))}
                 </Select>
               </Field>
-              <Button variant="primary" disabled={!managerId || !superviseId} loading={assign.isPending} onClick={() => assign.mutate()}>
+              <Button variant="primary" disabled={!managerId || !superviseId} loading={assign.isPending} onClick={() => setAsk({ kind: 'assign' })}>
                 {t('org.assignBtn')}
               </Button>
             </div>
@@ -125,7 +133,7 @@ export default function Org() {
                   </option>
                 ))}
               </Select>
-              <Button disabled={!directorId} loading={setDirector.isPending} onClick={() => setDirector.mutate()}>
+              <Button disabled={!directorId} loading={setDirector.isPending} onClick={() => setAsk({ kind: 'director' })}>
                 {t('org.designate')}
               </Button>
             </div>
@@ -143,7 +151,7 @@ export default function Org() {
                     <span className="min-w-0 flex-1 truncate">
                       <strong>{a.manager.prenom} {a.manager.nom}</strong> <span className="text-subtle">→</span> {a.supervise.prenom} {a.supervise.nom}
                     </span>
-                    <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('common.delete')} onClick={() => unassign.mutate({ m: a.manager.id, s: a.supervise.id })}>
+                    <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('common.delete')} onClick={() => setAsk({ kind: 'unassign', a: a.manager.id, b: a.supervise.id })}>
                       <Trash2 size={15} />
                     </button>
                   </li>
@@ -187,6 +195,22 @@ export default function Org() {
           )}
         </Card>
       </div>
+      <ConfirmDialog
+        open={!!ask}
+        danger={ask?.kind === 'unassign'}
+        icon={ask?.kind === 'assign' ? <Link2 size={22} /> : ask?.kind === 'director' ? <Crown size={22} /> : <Link2Off size={22} />}
+        title={t(`confirm.${ask?.kind ?? 'assign'}Title`)}
+        message={
+          ask?.kind === 'assign'
+            ? t('confirm.assignMsg', { manager: nameOf(managerId), person: nameOf(superviseId) })
+            : ask?.kind === 'director'
+              ? t('confirm.directorMsg', { name: nameOf(directorId) })
+              : t('confirm.unassignMsg', { manager: askName(ask?.a), person: askName(ask?.b) })
+        }
+        confirmLabel={ask?.kind === 'assign' ? t('org.assignBtn') : ask?.kind === 'director' ? t('org.designate') : t('confirm.unassignBtn')}
+        onClose={() => setAsk(null)}
+        onConfirm={() => (ask!.kind === 'assign' ? assign.mutateAsync() : ask!.kind === 'director' ? setDirector.mutateAsync() : unassign.mutateAsync({ m: ask!.a!, s: ask!.b! }))}
+      />
     </>
   );
 }
