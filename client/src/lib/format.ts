@@ -17,9 +17,8 @@ export function fmtMoney(n: number | undefined | null, lang: string): string {
 
 export const fmtNumber = (n: number, lang: string) => new Intl.NumberFormat(intlLocale(lang), { maximumFractionDigits: 2 }).format(n);
 
-/** Le tamazight n'a pas toujours de données Intl dans le navigateur : repli sur le français. */
-function intlLocale(lang: string): string {
-  return lang === 'zgh' ? 'fr' : lang;
+export function intlLocale(lang: string): string {
+  return lang;
 }
 
 export const todayIso = () => new Date().toISOString().slice(0, 10);

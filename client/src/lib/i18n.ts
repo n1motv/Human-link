@@ -5,7 +5,6 @@ import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import es from '../locales/es.json';
 import it from '../locales/it.json';
-import zgh from '../locales/zgh.json';
 
 /** Noms de langues affichés dans leur propre langue. */
 export const LANGUAGE_NAMES: Record<string, string> = {
@@ -14,7 +13,6 @@ export const LANGUAGE_NAMES: Record<string, string> = {
   ar: 'العربية',
   es: 'Español',
   it: 'Italiano',
-  zgh: 'ⵜⴰⵎⴰⵣⵉⵖⵜ',
 };
 export const RTL = new Set(['ar']);
 
@@ -31,7 +29,7 @@ export function initI18n(defaultLang: string, allowed: string[]) {
   const stored = read();
   const lng = stored && allowed.includes(stored) ? stored : allowed.includes(defaultLang) ? defaultLang : 'fr';
   void i18n.use(initReactI18next).init({
-    resources: { fr: { translation: fr }, en: { translation: en }, ar: { translation: ar }, es: { translation: es }, it: { translation: it }, zgh: { translation: zgh } },
+    resources: { fr: { translation: fr }, en: { translation: en }, ar: { translation: ar }, es: { translation: es }, it: { translation: it } },
     lng,
     fallbackLng: 'fr', // toute clé non traduite s'affiche en français plutôt que vide
     interpolation: { escapeValue: false }, // React échappe déjà

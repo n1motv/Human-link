@@ -31,8 +31,6 @@ for (const l of full) {
   }
   for (const k of Object.keys(t)) if (!(k in fr)) (console.error(`✗ [${l}] clé inconnue : ${k}`), bad++);
 }
-const zgh = load('zgh');
-console.log(`ℹ zgh (tamazight) : ${Object.keys(zgh).length}/${Object.keys(fr).length} clés traduites (le reste s'affiche en français)`);
 if (bad) {
   console.error(`\n${bad} problème(s) de traduction.`);
   process.exit(1);

@@ -24,7 +24,7 @@ le navigateur recharge la configuration à chaque visite (pas de rebuild du fron
 | | `showName` | `true` : affiche le nom à côté du logo (inutile si le logo contient déjà le nom) |
 | | `accent`, `accent2` | Dégradé principal des boutons, graphiques, éléments actifs (format `#rrggbb`) |
 | | `defaultTheme` | `dark` ou `light` au premier chargement (l'utilisateur peut changer) |
-| `i18n` | `languages`, `defaultLanguage` | Langues proposées (`fr en ar es it zgh`) |
+| `i18n` | `languages`, `defaultLanguage` | Langues proposées (`fr en ar es it`) |
 | `modules` | `leaves`, `sickLeaves`, `bonuses`, `telework`, `meetings`, `vault`, `feedback`, `contact`, `chatbot`, `orgChart` | `false` désactive le module : entrée de menu, page et — pour les modules qui ont des routes dédiées — routes API (404). `orgChart` ne masque que la page Organisation |
 | `hr` | `monthlyLeaveAccrual` | Jours crédités par mois (2,5 par défaut) |
 | | `workingDays` | Jours ouvrés, 0 = dimanche … 6 = samedi (`[1,2,3,4,5]`) ; sert au décompte des congés et au télétravail |
@@ -56,8 +56,6 @@ s'affiche en français.
 - **Vocabulaire propre à un client** (ex. « Congés » → « Absences ») : modifier la valeur dans les fichiers de langue utilisés.
 - **Ajouter une langue** : voir [DEVELOPPEMENT.md](DEVELOPPEMENT.md#ajouter-une-langue).
 - `npm run i18n:check` (lancé par `npm test` et `npm run build`) échoue si une langue complète a des clés manquantes ou des variables incohérentes.
-- **Tamazight (`zgh`)** : le fichier ne contient volontairement que quelques termes. Il doit être complété par un locuteur natif
-  (copier les clés de `fr.json`). En attendant, l'interface s'affiche en français pour les textes manquants.
 - **Arabe** : l'interface passe automatiquement en lecture de droite à gauche.
 
 ## Règles métier spécifiques à un client

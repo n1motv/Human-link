@@ -17,7 +17,7 @@
   },
   "i18n": {
     "defaultLanguage": "fr",
-    "languages": ["fr", "en", "ar", "it", "es", "zgh"]
+    "languages": ["fr", "en", "ar", "it", "es"]
   },
   "modules": {
     "leaves": true,

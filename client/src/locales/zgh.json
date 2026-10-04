@@ -1,9 +1,0 @@
-{
-  "_note": "Tamazight (Tifinagh) : traduction à compléter par un locuteur natif. Toute clé absente s'affiche en français. Copiez les clés de fr.json ici pour les traduire.",
-  "home": {
-    "hello": "ⴰⵣⵓⵍ {{name}} 👋"
-  },
-  "contact": {
-    "sent": "ⵜⴰⵏⵎⵎⵉⵔⵜ !"
-  }
-}

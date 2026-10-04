@@ -15,7 +15,7 @@ Prérequis : Node.js ≥ 20. MongoDB est facultatif en local : un script en lanc
 ```bash
 npm run setup          # installe tout + crée server/.env avec des secrets uniques (note le mot de passe admin affiché)
 npm run dev:db         # terminal 1 — MongoDB local (sans installation, données dans server/.devdb)
-npm run seed           # crée l'administrateur   (npm run seed:demo : ajoute des comptes d'exemple)
+npm run seed           # crée l'administrateur   (npm run seed:demo : jeu de démonstration complet ; seed:demo:reset le recrée)
 npm run dev:server     # terminal 2 — API sur http://localhost:4000
 npm run dev:client     # terminal 3 — interface sur http://localhost:5173
 ```
@@ -41,7 +41,7 @@ client/src/
   app/                 routes, layout, cloche de notifications, assistant RH
   pages/<rôle>/        écrans admin, manager, employé
   components/          design system (ui.tsx, Modal, Calendar...)
-  locales/*.json       traductions (fr, en, ar, es, it, zgh)
+  locales/*.json       traductions (fr, en, ar, es, it)
 legacy/                ancienne application Flask (référence)
 docs/                  documentation détaillée
 ```
