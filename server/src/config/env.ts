@@ -1,5 +1,18 @@
 import 'dotenv/config';
 import { z } from 'zod';
+import { applyFileSecrets } from './secrets.js';
+
+// Secrets fournis par fichier (Docker secrets) : <NOM>_FILE remplace <NOM> avant la validation.
+try {
+  applyFileSecrets();
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.error(`
+Configuration invalide :
+  - ${(err as Error).message}
+`);
+  process.exit(1);
+}
 
 /**
  * Variables d'environnement (secrets + infrastructure).

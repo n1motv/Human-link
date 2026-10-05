@@ -34,3 +34,9 @@ graphify-out/
 # Instances lancées en local (pid, journaux) et colis livrés aux clients
 .instances/
 ship/
+
+# Secrets Docker générés par npm run secrets:gen
+secrets/
+
+# Rapports du scan ZAP
+.zap/zap-report.*

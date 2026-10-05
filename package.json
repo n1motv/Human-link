@@ -6,6 +6,7 @@
   "scripts": {
     "install:all": "npm --prefix server install && npm --prefix client install",
     "instances": "node scripts/instances.mjs",
+    "secrets:gen": "node scripts/gen-secrets.mjs",
     "ship": "node scripts/ship-instance.mjs",
     "setup": "npm run install:all && npm --prefix server run setup",
     "dev:db": "npm --prefix server run dev:db",

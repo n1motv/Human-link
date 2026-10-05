@@ -23,6 +23,23 @@ docker compose exec app node dist/scripts/seed.js   # crée l'administrateur ini
 - **HTTPS est obligatoire en production** (cookies `Secure`).
 - Mise à jour : `git pull && docker compose --profile https up -d --build`. Les migrations de schéma ne sont pas nécessaires (MongoDB) ; les index sont synchronisés au démarrage.
 
+### Variante : Docker secrets (clés hors de l'environnement)
+
+Avec `docker-compose.yml`, les clés se trouvent dans le `.env` du client et donc dans l'environnement du conteneur (visibles par `docker inspect`).
+`docker-compose.secrets.yml` les fournit à la place comme **fichiers** montés dans `/run/secrets/`, lus par l'application via `<NOM>_FILE` :
+
+```bash
+npm run secrets:gen                                   # ./secrets/ : jwt_secret, field_encryption_key, file_encryption_key, pseudonym_key, mongo_password, mongodb_uri (--admin ajoute admin_password)
+cp clients/acme/.env.example clients/acme/.env        # sans les clés : seulement APP_URL, SMTP_HOST, ADMIN_EMAIL, ...
+CLIENT_DIR=./clients/acme docker compose -f docker-compose.secrets.yml --profile https up -d --build
+docker compose -f docker-compose.secrets.yml exec app node dist/scripts/seed.js
+```
+
+- Les fichiers sont en lecture seule pour leur propriétaire et exclus de git (`secrets/`). **Sauvegardez `field_encryption_key` et `file_encryption_key`** dans un coffre : sans elles, les données chiffrées sont perdues.
+- Secrets acceptés en `<NOM>_FILE` : `JWT_SECRET`, `FIELD_ENCRYPTION_KEY`, `FILE_ENCRYPTION_KEY`, `PSEUDONYM_KEY`, `FIELD_ENCRYPTION_KEYS_OLD`, `FILE_ENCRYPTION_KEYS_OLD`, `SMTP_PASS`, `ADMIN_PASSWORD`, `MONGODB_URI`. Si la variable et son fichier existent tous les deux, le fichier l'emporte.
+- Même mécanisme hors Docker : Kubernetes (secrets montés), Vault Agent, systemd `LoadCredential=` (`JWT_SECRET_FILE=%d/jwt` dans l'unité).
+- Rotation d'une clé : voir [SECURITE-RGPD.md](SECURITE-RGPD.md#rotation-des-clés-de-chiffrement) ; remplacer le fichier de secret et déclarer l'ancienne clé dans `FIELD_ENCRYPTION_KEYS_OLD` (variable ou fichier).
+
 ## Option B — Sans Docker
 
 ```bash

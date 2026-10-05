@@ -47,6 +47,10 @@ propres traitements (registre, base légale, information des salariés, contrats
 - **Antivirus ClamAV** (optionnel) : avec `CLAMAV_HOST`, chaque fichier est analysé avant d'être stocké ; un fichier infecté est refusé (`INFECTED_FILE`). Si ClamAV est injoignable, les fichiers sont acceptés
   et l'incident journalisé, sauf avec `CLAMAV_REQUIRED=true` (alors refus `503`). Démarrer le démon : `docker compose --profile antivirus up -d clamav` puis `CLAMAV_HOST=clamav` dans le `.env` du client
   (le premier démarrage télécharge les signatures, quelques minutes).
+- **Secrets hors de l'environnement** : variante `docker-compose.secrets.yml` (Docker secrets, fichiers montés dans `/run/secrets/`, variables `<NOM>_FILE`) : voir [DEPLOIEMENT.md](DEPLOIEMENT.md).
+- **Scan de sécurité automatique** : la CI lance OWASP ZAP (baseline : analyse passive + araignée AJAX) sur l'application démarrée avec une base vide et des clés jetables. Les règles
+  critiques (CSP absente, anti-clickjacking, `nosniff`, fuite de version serveur, cookies sans `SameSite` ou sans `Secure`) font **échouer** la CI ; les autres sont signalées dans le rapport
+  (artefact `rapport-zap`). Réglage : `.zap/rules.tsv`. Ce scan est passif : il ne remplace pas un test d'intrusion ni un scan actif sur un environnement de recette.
 - **Clés versionnées** : chaque valeur chiffrée porte l'identifiant de sa clé (`enc:v2:<kid>:…`, fichiers `HLF2`), ce qui permet de changer de clé sans arrêt (voir « Rotation des clés »).
 - **Validation** de toute entrée avec zod (types stricts, champs inconnus supprimés) : une injection NoSQL (`{"$ne":null}`) est rejetée en 400.
   Les saisies de recherche sont échappées avant d'être utilisées dans une expression régulière.

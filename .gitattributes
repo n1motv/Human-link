@@ -1,3 +1,5 @@
 # Scripts shell exécutés sous Linux : fins de ligne LF obligatoires, même depuis Windows.
 *.sh text eol=lf
 *.mjs text eol=lf
+*.tsv text eol=lf
+*.yml text eol=lf
