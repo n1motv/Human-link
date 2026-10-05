@@ -3,6 +3,5 @@
 **/.env
 **/storage
 **/.devdb
-legacy
 .git
 *.log

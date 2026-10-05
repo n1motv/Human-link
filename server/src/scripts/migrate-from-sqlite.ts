@@ -1,7 +1,7 @@
 /**
  * Migration de l'ancienne version (Flask + SQLite chiffré Fernet) vers MongoDB.
  *
- *   npm run migrate:sqlite -- --db ../legacy/rh_data.db.enc --key <ancienne SECRET_KEY> [--files <dossier>] [--dry-run]
+ *   npm run migrate:sqlite -- --db <chemin>/rh_data.db.enc --key <ancienne SECRET_KEY> [--files <dossier>] [--dry-run]
  *
  * - Les mots de passe Argon2 sont repris tels quels : les utilisateurs gardent leur mot de passe.
  * - Le feedback est ré-anonymisé (plus aucun lien avec l'utilisateur).

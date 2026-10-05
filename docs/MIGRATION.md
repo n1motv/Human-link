@@ -4,8 +4,8 @@ Le script `server/src/scripts/migrate-from-sqlite.ts` lit l'ancienne base (chiff
 
 ```bash
 cd server
-npm run migrate:sqlite -- --db ../legacy/rh_data.db.enc --key "<ancienne SECRET_KEY>" --dry-run   # simple lecture, rien n'est écrit
-npm run migrate:sqlite -- --db ../legacy/rh_data.db.enc --key "<ancienne SECRET_KEY>"
+npm run migrate:sqlite -- --db <chemin>/rh_data.db.enc --key "<ancienne SECRET_KEY>" --dry-run   # simple lecture, rien n'est écrit
+npm run migrate:sqlite -- --db <chemin>/rh_data.db.enc --key "<ancienne SECRET_KEY>"
 ```
 
 Options : `--files <dossier>` importe les documents du coffre-fort depuis une copie locale du bucket S3
@@ -36,7 +36,7 @@ Options : `--files <dossier>` importe les documents du coffre-fort depuis une co
 
 1. Se connecter avec un compte migré pour vérifier ; les administrateurs doivent activer la **2FA** à leur première connexion.
 2. Le script est **idempotent par utilisateur** : si un e-mail existe déjà, ses données liées sont ignorées (aucun doublon).
-3. Supprimer l'ancienne base, `legacy/.env.local-backup` et les copies locales du bucket S3 ; révoquer les anciennes clés AWS et le mot de passe d'application Gmail
+3. Supprimer l'ancienne base, toute sauvegarde de l'ancien `.env` et les copies locales du bucket S3 ; révoquer les anciennes clés AWS et le mot de passe d'application Gmail
    (voir [SECURITE-RGPD.md](SECURITE-RGPD.md#secrets-de-lancienne-version)).
 4. Les crédits de congés mensuels reprennent selon `dernierMoisMaj` (aucun double crédit).
 

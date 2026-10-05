@@ -89,10 +89,9 @@ indicatives** : à valider avec le client.
 
 ## Secrets de l'ancienne version
 
-Le fichier `.env` de la version Flask était **versionné dans Git**. Il a été retiré du suivi (`git rm --cached`) et sauvegardé localement dans
-`legacy/.env.local-backup` (ignoré par Git), mais il reste dans l'historique des commits. À faire :
+Le fichier `.env` de la version Flask était **versionné dans Git**. Il a été retiré du suivi (`git rm --cached`) et le dossier `legacy/` (dont sa copie locale de sauvegarde) a été supprimé de la branche principale, mais le fichier reste dans l'historique des commits. À faire :
 
 1. **Changer immédiatement** le mot de passe d'application Gmail (`MAIL_PASSWORD_APP`) et tout secret qu'il contenait ; l'ancienne `SECRET_KEY` (Fernet) ne doit plus être utilisée.
 2. Si le dépôt a été partagé ou publié, **purger l'historique** (`git filter-repo --path .env --invert-paths`, ou BFG Repo-Cleaner) puis forcer le push et demander
    aux collaborateurs de re-cloner. Considérer les secrets comme compromis dans tous les cas.
-3. Supprimer `legacy/.env.local-backup` une fois la migration terminée.
+3. Vérifier qu'aucune copie de l'ancien `.env` ne subsiste (poste local, sauvegardes, messageries).

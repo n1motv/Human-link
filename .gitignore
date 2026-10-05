@@ -9,7 +9,6 @@ coverage/
 !.env.example
 !.env.docker.example
 clients/*/.env
-legacy/.env.local-backup
 *.key
 
 # Données locales
@@ -19,10 +18,6 @@ clients/*/storage/
 *.log
 logs/
 
-# Ancienne version Flask (legacy/) : fichiers générés
-legacy/__pycache__/
-legacy/*.db
-legacy/*.db.enc
 __pycache__/
 *.pyc
 
@@ -35,3 +30,7 @@ scratch-keys.txt
 
 # Graphe de connaissances généré (graphify) : se régénère avec `graphify update .`
 graphify-out/
+
+# Instances lancées en local (pid, journaux) et colis livrés aux clients
+.instances/
+ship/

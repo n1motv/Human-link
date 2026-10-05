@@ -5,7 +5,7 @@ coffre-fort de documents, feedback anonyme, assistant RH multilingue, organigram
 
 **Stack** : Node.js 22 + Express 5 + TypeScript + MongoDB (Mongoose) · React 19 + Vite + Tailwind CSS 4 · design glassmorphism clair/sombre.
 
-> La version précédente (Flask + SQLite) est conservée dans [`legacy/`](legacy/) pour référence.
+> La version précédente (Flask + SQLite) a été retirée de la branche principale ; elle reste consultable sur le tag git `v2-flask-archive` (`git checkout v2-flask-archive`).
 > Script de migration des données : [docs/MIGRATION.md](docs/MIGRATION.md).
 
 ## Démarrage rapide (développement)
@@ -42,7 +42,6 @@ client/src/
   pages/<rôle>/        écrans admin, manager, employé
   components/          design system (ui.tsx, Modal, Calendar...)
   locales/*.json       traductions (fr, en, ar, es, it)
-legacy/                ancienne application Flask (référence)
 docs/                  documentation détaillée
 ```
 
@@ -91,6 +90,7 @@ Détails, limites et **responsabilités du client** : [docs/SECURITE-RGPD.md](do
 
 - [Personnalisation par client](docs/PERSONNALISATION.md) — config, logos, modules, langues, règles RH
 - [Sécurité et RGPD](docs/SECURITE-RGPD.md) — mesures, procédures, checklist client
+- [Instances par client](docs/INSTANCES.md) — lancer plusieurs clients en parallèle, en livrer un (`npm run instances`, `npm run ship`)
 - [Déploiement et exploitation](docs/DEPLOIEMENT.md) — Docker, HTTPS, sauvegardes, mises à jour
 - [Migration depuis l'ancienne version](docs/MIGRATION.md)
 - [Développement](docs/DEVELOPPEMENT.md) — architecture, ajouter un module ou une langue
