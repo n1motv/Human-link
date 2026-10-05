@@ -24,7 +24,9 @@
     "pretypecheck": "npm run sync:shared --silent",
     "pretest": "npm run sync:shared --silent",
     "gen:openapi": "tsx src/scripts/gen-openapi.ts",
-    "pregen:openapi": "npm run sync:shared --silent"
+    "pregen:openapi": "npm run sync:shared --silent",
+    "e2e:server": "tsx src/scripts/e2e-server.ts",
+    "pree2e:server": "npm run sync:shared --silent"
   },
   "dependencies": {
     "argon2": "^0.45.1",

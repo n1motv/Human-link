@@ -69,3 +69,51 @@ npm run typecheck
   La CI (workflow « Tests visuels ») compare aux références **Linux** ; tant qu'elles n'existent pas, elle l'indique et ne bloque pas.
   Pour les créer ou les mettre à jour : GitHub, onglet Actions, « Tests visuels », « Run workflow » sur la branche, case **update** cochée ; les images sont alors enregistrées sur la branche.
 - Un changement d'interface voulu fait échouer ces tests : relire les images « diff », puis `test:visual:update` (Windows) et relancer le workflow avec « update » (Linux).
+
+## Parcours de bout en bout
+
+`client/e2e/flows/parcours.spec.ts` pilote un vrai navigateur sur la vraie application : le front compilé et l'API servis par `server/src/scripts/e2e-server.ts`, avec une base MongoDB jetable en mémoire et quatre comptes connus (administrateur avec 2FA, manager, deux employés). Rien n'est simulé.
+
+```bash
+npm --prefix client run test:e2e              # compile le front, démarre le serveur de test, joue les 6 parcours
+PW_CHANNEL=chrome npm --prefix client run test:e2e   # sous Windows avec Chrome installé
+```
+
+Parcours : connexion (refus puis succès) ; 2FA (code périmé refusé, bon code accepté) ; congé demandé, accepté par le manager puis par l'administrateur ; congé refusé avec motif obligatoire ; contrôle d'accès (pages et API) ; recherche d'un employé côté serveur et rattachement à un manager.
+Ils s'enchaînent sur la même base. La CI les lance dans le job « Parcours de bout en bout » ; en cas d'échec, le rapport et les traces (`npx playwright show-trace`) sont joints au job.
+Les tests visuels (`test:visual`) sont distincts : API simulée, captures comparées.
+
+## Style de code
+
+```bash
+npm run lint          # ESLint : React, hooks, accessibilité (jsx-a11y) ; zéro alerte tolérée
+npm run format        # Prettier sur tout le dépôt (format:check pour seulement vérifier)
+```
+
+`npm install` à la racine installe un crochet git (husky) : avant chaque commit, lint-staged corrige et formate les fichiers modifiés, et le commit est refusé s'il reste une erreur.
+La CI refait les deux contrôles. Le commit de mise en forme initial est ignoré par `git blame` (`.git-blame-ignore-revs`, activé par `git config blame.ignoreRevsFile .git-blame-ignore-revs`).
+
+## Contrat de données partagé (`shared/`)
+
+`shared/src/index.ts` décrit les données de l'API : listes de valeurs (rôles, statuts…), schémas zod des corps de requête et des réponses, types TypeScript qui en découlent.
+
+- Le **client** les importe par l'alias `@shared` (`client/src/lib/types.ts` ne contient plus que des ré-exports).
+- Le **serveur** utilise les mêmes corps de requête (`schemas.loginBody`, `schemas.leaveCreateBody`…). `shared/sync.mjs` en copie la source dans `server/src/_shared/` (dossier généré, non versionné, relancé par `npm run sync:shared` et avant chaque `dev`, `test`, `build`, `typecheck`) : tsc ne compile que `server/src`.
+- Les schémas sont fabriqués avec le zod de chacun (`createSchemas(z)`) : deux copies de zod ne se reconnaissent pas, `shared/` n'en importe donc que les types.
+- **Garde-fou** : `server/tests/contract.test.ts` valide les vraies réponses de l'API contre ces schémas ; les tests du client et les données simulées des tests visuels y sont aussi confrontés. Ajouter un champ à une réponse sans mettre à jour `shared/` fait échouer les tests.
+
+## Documentation de l'API (OpenAPI)
+
+`docs/openapi.json` est générée depuis le code : méthodes, chemins, authentification et rôles autorisés sont lus dans les routeurs Express ; les corps, paramètres et réponses des routes principales viennent des schémas partagés (`server/src/openapi/annotations.ts`).
+
+```bash
+npm --prefix server run gen:openapi    # régénère docs/openapi.json (sans base ni .env)
+```
+
+- Un test échoue si le fichier n'est plus à jour, si une annotation vise une route disparue, ou si un fichier `*.routes.ts` n'est pas monté (`server/src/routes.ts` est la liste unique des routes).
+- En développement (hors production et hors tests) : `http://localhost:4000/api/docs` (page de lecture avec filtre) et `/api/openapi.json`.
+- Une route sans annotation figure quand même dans la spécification, avec son titre par défaut : ajouter son entrée dans `annotations.ts` pour décrire ses données.
+
+## Page de styles
+
+En développement, `http://localhost:5173/styleguide` montre les composants (boutons, champs, listes, dates, code 2FA, confirmations, badges, cartes, états) dans leurs différents états, côte à côte en thème sombre et clair. La page n'existe pas dans le build de production.

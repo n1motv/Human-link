@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:visual": "playwright test",
+    "test:e2e": "playwright test -c playwright.e2e.config.ts",
     "test:visual:update": "playwright test --update-snapshots",
     "i18n:check": "node scripts/check-i18n.mjs"
   },

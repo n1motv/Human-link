@@ -29,6 +29,37 @@ jobs:
       - name: Prettier
         run: npm run format:check
 
+  e2e:
+    name: Parcours de bout en bout (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - run: npm ci
+        working-directory: client
+      - run: npx playwright install --with-deps chromium
+        working-directory: client
+      - name: Parcours (vraie application, base MongoDB jetable)
+        run: npm run test:e2e
+        working-directory: client
+      - name: Rapport et traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-e2e
+          path: |
+            client/playwright-report
+            client/test-results
+          if-no-files-found: ignore
+
   server:
     name: Serveur (typage, tests, build, audit)
     runs-on: ubuntu-latest
