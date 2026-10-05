@@ -1,21 +1,21 @@
 # Image de production : compile le front et le back, puis n'embarque que le nécessaire.
 # Build : docker build -t human-link .
 
-FROM node:22-slim AS client-build
+FROM node:26-slim AS client-build
 WORKDIR /app/client
 COPY client/package.json client/package-lock.json ./
 RUN npm ci
 COPY client ./
 RUN npm run build
 
-FROM node:22-slim AS server-build
+FROM node:26-slim AS server-build
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci
 COPY server ./
 RUN npm run build && npm prune --omit=dev
 
-FROM node:22-slim
+FROM node:26-slim
 ENV NODE_ENV=production \
     PORT=4000 \
     SERVE_CLIENT=true \
