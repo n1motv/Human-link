@@ -11,9 +11,9 @@ import { api } from '../../lib/api';
 import { useConfig } from '../../lib/config';
 import { fmtDate } from '../../lib/format';
 import { useAction, useErrorText } from '../../lib/hooks';
-import type { Role, User } from '../../lib/types';
+import type { Role, User, UserRow } from '../../lib/types';
 
-type Row = Pick<User, 'id' | 'matricule' | 'nom' | 'prenom' | 'email' | 'role' | 'poste' | 'departement' | 'status' | 'isDirector' | 'dateEmbauche' | 'photoFileId' | 'twoFactor'>;
+type Row = UserRow;
 
 interface FormValues {
   nom: string;

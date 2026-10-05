@@ -5,8 +5,9 @@ import { User } from '../../models/User.js';
 import { clientConfig } from '../../config/client.js';
 import { authOf, requireAuth, requireRole } from '../../middleware/auth.js';
 import { upload } from '../../middleware/upload.js';
+import { schemas } from '../../shared.js';
 import { audit } from '../../utils/audit.js';
-import { countWorkingDays, isoDate, today } from '../../utils/dates.js';
+import { countWorkingDays, today } from '../../utils/dates.js';
 import { badRequest, conflict, forbidden, notFound, parse } from '../../utils/errors.js';
 import { notify, notifyAdmins } from '../../utils/notify.js';
 import { assertCanAccessUser, displayName, managedIds, managerOf } from '../access.js';
@@ -19,12 +20,7 @@ leavesRouter.use(requireAuth());
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identifiant invalide');
 const userBrief = 'nom prenom email departement photoFileId';
 
-const createSchema = z.object({
-  raison: z.string().trim().min(1).max(120),
-  dateDebut: isoDate,
-  dateFin: isoDate,
-  description: z.string().trim().max(2000).optional(),
-});
+const createSchema = schemas.leaveCreateBody; // corps partagé avec le client
 
 leavesRouter.post('/', requireRole('employe', 'manager'), upload.single('attachment'), async (req, res) => {
   const auth = authOf(req);
@@ -94,7 +90,7 @@ leavesRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
 leavesRouter.post('/:id/decision', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() }), req.body);
+  const body = parse(schemas.leaveDecisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
 
   const leave = await LeaveRequest.findById(id);

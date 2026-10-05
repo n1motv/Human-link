@@ -1,9 +1,10 @@
 import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mongoose';
 import { applyJsonTransform, encryptedNumber, encryptedString } from './plugins.js';
 
-export const ROLES = ['admin', 'manager', 'employe'] as const;
-export type Role = (typeof ROLES)[number];
-export const CONTRACTS = ['CDI', 'CDD', 'Alternance', 'Stage', 'Freelance'] as const;
+import { CONTRACTS, ROLES, USER_STATUSES, type Role } from '../shared.js';
+
+// Listes de valeurs partagées avec le client (shared/src/index.ts) : une seule définition.
+export { CONTRACTS, ROLES, type Role };
 
 const userSchema = new Schema(
   {
@@ -14,7 +15,7 @@ const userSchema = new Schema(
     passwordHash: { type: String, select: false },
     role: { type: String, enum: ROLES, default: 'employe', index: true },
     isDirector: { type: Boolean, default: false },
-    status: { type: String, enum: ['invited', 'active', 'archived', 'anonymized'], default: 'invited', index: true },
+    status: { type: String, enum: USER_STATUSES, default: 'invited', index: true },
 
     poste: { type: String, trim: true, maxlength: 120 },
     departement: { type: String, trim: true, maxlength: 120, index: true },

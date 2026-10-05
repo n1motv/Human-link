@@ -13,7 +13,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node"],
+    // shared/src n'a pas de node_modules : ses types zod se résolvent avec la copie du client.
+    "paths": { "@shared": ["../shared/src/index.ts"], "zod": ["./node_modules/zod"] }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "../shared/src"]
 }

@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { schemas } from '../src/lib/schemas';
 
 /** Logo de test : un SVG en ligne, pour vérifier aussi l'affichage du logo sans dépendre du serveur. */
 const LOGO =
@@ -69,9 +70,13 @@ const TEAM_PENDING = [
 
 /** Route (sans le préfixe /api) → réponse. Toute autre requête répond 404 : un appel imprévu se voit tout de suite. */
 function routes(role: Role | null): Record<string, unknown> {
+  // Les données simulées doivent respecter le même contrat que les vraies réponses du serveur (shared/src/index.ts).
+  schemas.publicConfig.parse(CONFIG);
   const base: Record<string, unknown> = { '/config': CONFIG, '/auth/csrf': { ok: true } };
   if (!role) return base;
   const me = user(role);
+  schemas.user.parse(me);
+  schemas.list(schemas.leave).parse({ items: [...LEAVES_MINE, ...TEAM_PENDING] });
   return {
     ...base,
     '/auth/me': { user: me, pending2fa: false },

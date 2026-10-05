@@ -17,7 +17,14 @@
     "gen:keys": "tsx src/scripts/gen-keys.ts",
     "rotate-keys": "tsx src/scripts/rotate-keys.ts",
     "migrate:sqlite": "tsx src/scripts/migrate-from-sqlite.ts",
-    "setup": "tsx src/scripts/init-env.ts"
+    "setup": "tsx src/scripts/init-env.ts",
+    "sync:shared": "node ../shared/sync.mjs src/_shared",
+    "predev": "npm run sync:shared --silent",
+    "prebuild": "npm run sync:shared --silent",
+    "pretypecheck": "npm run sync:shared --silent",
+    "pretest": "npm run sync:shared --silent",
+    "gen:openapi": "tsx src/scripts/gen-openapi.ts",
+    "pregen:openapi": "npm run sync:shared --silent"
   },
   "dependencies": {
     "argon2": "^0.45.1",

@@ -1,10 +1,7 @@
-import { z } from 'zod';
+import { schemas } from '../shared.js';
 
-/** Les dates métier sont des chaînes AAAA-MM-JJ : pas de fuseau horaire, comparables lexicographiquement. */
-export const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date attendue au format AAAA-MM-JJ')
-  .refine((s) => !Number.isNaN(toUtc(s).getTime()) && fmt(toUtc(s)) === s, 'Date invalide');
+/** Les dates métier sont des chaînes AAAA-MM-JJ : pas de fuseau horaire, comparables lexicographiquement. Schéma partagé avec le client. */
+export const isoDate = schemas.dateOnly;
 
 export function toUtc(s: string): Date {
   return new Date(`${s}T00:00:00.000Z`);

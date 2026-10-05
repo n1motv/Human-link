@@ -18,7 +18,7 @@ interface Options {
  * un compte archivé, un rôle modifié ou une révocation de sessions prennent effet immédiatement.
  */
 export function requireAuth(opts: Options = {}): RequestHandler {
-  return async (req, _res, next) => {
+  const handler: RequestHandler = async (req, _res, next) => {
     const token = req.cookies?.[ACCESS_COOKIE] as string | undefined;
     if (!token) throw unauthorized();
     const claims = await verifyAccessToken(token);
@@ -34,14 +34,16 @@ export function requireAuth(opts: Options = {}): RequestHandler {
     req.auth = { userId: String(user._id), role: user.role, email: user.email, isDirector: user.isDirector, pending2fa };
     next();
   };
+  return Object.assign(handler, { requiresAuth: true as const }); // repère lu par la génération de la documentation de l'API (openapi/spec.ts)
 }
 
 /** Contrôle d'accès par rôle (à placer après requireAuth). */
 export function requireRole(...roles: Role[]): RequestHandler {
-  return (req, _res, next) => {
+  const handler: RequestHandler = (req, _res, next) => {
     if (!req.auth || !roles.includes(req.auth.role)) throw forbidden();
     next();
   };
+  return Object.assign(handler, { allowedRoles: roles }); // idem : les rôles autorisés figurent dans la documentation
 }
 
 export function authOf(req: Request) {

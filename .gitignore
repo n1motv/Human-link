@@ -45,3 +45,6 @@ secrets/
 # Tests visuels Playwright
 client/playwright-report/
 client/test-results/
+
+# Copie générée de shared/src pour le serveur (shared/sync.mjs)
+server/src/_shared/

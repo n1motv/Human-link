@@ -124,19 +124,19 @@ usersRouter.post('/me/photo', upload.single('photo'), async (req, res) => {
 
 // ---------- Administration des utilisateurs ----------
 
+/** Paramètres de la liste : recherche et filtres côté serveur, pagination. Exporté pour la documentation de l'API. */
+export const listQuery = z.object({
+  q: z.string().max(80).optional(),
+  role: z.enum(ROLES).optional(),
+  notRole: z.enum(ROLES).optional(),
+  unsupervised: z.enum(['true']).optional(),
+  status: z.enum(['invited', 'active', 'archived']).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
+
 usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
-  const q = parse(
-    z.object({
-      q: z.string().max(80).optional(),
-      role: z.enum(ROLES).optional(),
-      notRole: z.enum(ROLES).optional(),
-      unsupervised: z.enum(['true']).optional(),
-      status: z.enum(['invited', 'active', 'archived']).optional(),
-      page: z.coerce.number().int().min(1).default(1),
-      limit: z.coerce.number().int().min(1).max(200).default(100),
-    }),
-    req.query,
-  );
+  const q = parse(listQuery, req.query);
   const auth = authOf(req);
   const filter: Record<string, unknown> = { status: { $ne: 'anonymized' } };
   if (q.role) filter.role = q.role;

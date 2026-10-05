@@ -2,6 +2,8 @@
 # Build : docker build -t human-link .
 
 FROM node:22-slim AS client-build
+# Contrat de données partagé (types et schémas) : importé par le client (alias @shared) et copié dans le serveur à la compilation.
+COPY shared /app/shared
 WORKDIR /app/client
 COPY client/package.json client/package-lock.json ./
 RUN npm ci
@@ -9,6 +11,7 @@ COPY client ./
 RUN npm run build
 
 FROM node:22-slim AS server-build
+COPY shared /app/shared
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci

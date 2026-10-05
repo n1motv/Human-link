@@ -6,7 +6,19 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/test-results/**', '**/playwright-report/**', 'graphify-out/**', 'clients/**', '.instances/**', 'server/.devdb/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
+      'graphify-out/**',
+      'clients/**',
+      '.instances/**',
+      'server/.devdb/**',
+      'server/src/_shared/**',
+    ],
+  },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -49,7 +61,7 @@ export default tseslint.config(
 
   // Serveur, scripts et configuration : Node.
   {
-    files: ['server/**/*.ts', 'scripts/**/*.mjs', 'client/*.ts', 'client/scripts/**', 'client/e2e/**'],
+    files: ['server/**/*.ts', 'shared/**/*.mjs', 'scripts/**/*.mjs', 'client/*.ts', 'client/scripts/**', 'client/e2e/**'],
     languageOptions: { globals: globals.node },
   },
 );

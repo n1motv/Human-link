@@ -1,0 +1,7 @@
+{
+  "name": "human-link-shared",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Contrat de données partagé serveur / client (schémas zod, types). Aucune dépendance d'exécution : voir src/index.ts."
+}

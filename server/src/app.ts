@@ -5,29 +5,14 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
-import { env, isProd } from './config/env.js';
+import { env, isProd, isTest } from './config/env.js';
 import { publicConfig, clientConfig } from './config/client.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { docsRouter } from './openapi/docs.routes.js';
+import { API_MOUNTS, PUBLIC_MOUNTS } from './routes.js';
 import { errorHandler, notFoundHandler } from './utils/errors.js';
 import { logger } from './utils/logger.js';
-import { authRouter } from './modules/auth/auth.routes.js';
-import { bonusesRouter } from './modules/bonuses/bonuses.routes.js';
-import { calendarRouter } from './modules/calendar/calendar.routes.js';
-import { chatbotRouter } from './modules/chatbot/chatbot.routes.js';
-import { contactRouter } from './modules/contact/contact.routes.js';
-import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
-import { documentsRouter } from './modules/documents/documents.routes.js';
-import { feedbackRouter } from './modules/feedback/feedback.routes.js';
-import { monitoringRouter } from './modules/monitoring/monitoring.routes.js';
-import { leavesRouter } from './modules/leaves/leaves.routes.js';
-import { meetingsRouter } from './modules/meetings/meetings.routes.js';
-import { notificationsRouter } from './modules/notifications/notifications.routes.js';
-import { orgRouter } from './modules/org/org.routes.js';
-import { rgpdRouter } from './modules/rgpd/rgpd.routes.js';
-import { sickRouter } from './modules/sick/sick.routes.js';
-import { teleworkRouter } from './modules/telework/telework.routes.js';
-import { usersRouter } from './modules/users/users.routes.js';
 
 export function createApp() {
   const app = express();
@@ -74,29 +59,16 @@ export function createApp() {
     res.json(publicConfig());
   });
 
+  // Documentation de l'API (OpenAPI + page de lecture) : développement uniquement, jamais en production.
+  if (!isProd && !isTest) app.use('/api', docsRouter);
+
   // Avant la protection CSRF : un rapport d'erreur doit pouvoir partir même si la session ou le jeton sont absents.
-  app.use('/api/client-errors', monitoringRouter);
+  for (const m of PUBLIC_MOUNTS) app.use(m.prefix, m.router);
 
   app.use('/api', apiLimiter, csrfProtection);
 
-  const mod = clientConfig.modules;
-  app.use('/api/auth', authRouter);
-  app.use('/api/users', usersRouter);
-  app.use('/api/org', orgRouter);
-  app.use('/api/notifications', notificationsRouter);
-  app.use('/api/rgpd', rgpdRouter);
-  app.use('/api/dashboard', dashboardRouter);
-  app.use('/api/calendar', calendarRouter);
   // Modules activables par client (client.config.json → modules) : une route désactivée n'existe tout simplement pas.
-  if (mod.leaves) app.use('/api/leaves', leavesRouter);
-  if (mod.sickLeaves) app.use('/api/sick-leaves', sickRouter);
-  if (mod.bonuses) app.use('/api/bonuses', bonusesRouter);
-  if (mod.telework) app.use('/api/telework', teleworkRouter);
-  if (mod.meetings) app.use('/api/meetings', meetingsRouter);
-  if (mod.vault) app.use('/api/documents', documentsRouter);
-  if (mod.feedback) app.use('/api/feedback', feedbackRouter);
-  if (mod.contact) app.use('/api/contact', contactRouter);
-  if (mod.chatbot) app.use('/api/chatbot', chatbotRouter);
+  for (const m of API_MOUNTS) if (!m.module || clientConfig.modules[m.module]) app.use(m.prefix, m.router);
 
   app.use('/api', notFoundHandler);
 

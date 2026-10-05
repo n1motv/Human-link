@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { User, toPublicUser, type UserDoc } from '../../models/User.js';
 import { clientConfig } from '../../config/client.js';
+import { schemas } from '../../shared.js';
 import { env } from '../../config/env.js';
 import { authOf, requireAuth } from '../../middleware/auth.js';
 import { issueCsrfCookie } from '../../middleware/csrf.js';
@@ -87,7 +88,7 @@ authRouter.get('/csrf', (_req, res) => {
 });
 
 authRouter.post('/login', authLimiter, async (req, res) => {
-  const body = parse(z.object({ email, password: z.string().min(1).max(200) }), req.body);
+  const body = parse(schemas.loginBody, req.body);
   const ip = clientIp(req);
   // Freinage par couple IP + compte : s'applique aussi aux comptes inexistants (aucune différence observable).
   assertLoginAllowed(res, ip, body.email);
@@ -119,7 +120,7 @@ authRouter.post('/login', authLimiter, async (req, res) => {
 });
 
 authRouter.post('/2fa/login', authLimiter, async (req, res) => {
-  const body = parse(z.object({ challenge: z.string().max(2000), code: z.string().min(6).max(20) }), req.body);
+  const body = parse(schemas.twoFactorBody, req.body);
   const userId = await verifyTwoFactorChallenge(body.challenge);
   if (!userId) throw unauthorized('Vérification expirée, reconnectez-vous', 'CHALLENGE_EXPIRED');
   const ip = clientIp(req);

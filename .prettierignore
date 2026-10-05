@@ -9,3 +9,5 @@ package-lock.json
 **/package-lock.json
 *.png
 *.md
+server/src/_shared
+docs/openapi.json
