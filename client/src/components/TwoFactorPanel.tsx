@@ -5,7 +5,7 @@ import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useConfig } from '../lib/config';
 import { useToast } from '../lib/toast';
-import { Button, Field, Input } from './ui';
+import { Button, Field, FormActions, Input } from './ui';
 import { OtpInput, type OtpStatus } from './OtpInput';
 
 interface Props {
@@ -100,7 +100,7 @@ export function TwoFactorPanel({ onEnabled }: Props) {
             <li key={c}>{c}</li>
           ))}
         </ul>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           <Button
             icon={<Copy size={16} />}
             onClick={() => {
@@ -154,7 +154,7 @@ export function TwoFactorPanel({ onEnabled }: Props) {
                 }}
               />
             </div>
-            <div className="flex gap-2">
+            <FormActions>
               <Button
                 onClick={() => {
                   setDisabling(false);
@@ -166,12 +166,14 @@ export function TwoFactorPanel({ onEnabled }: Props) {
               <Button variant="danger" loading={busy} disabled={code.length !== 6 || !password} onClick={disable} icon={<ShieldOff size={16} />}>
                 {t('security.disable')}
               </Button>
-            </div>
+            </FormActions>
           </div>
         ) : (
-          <Button variant="danger" onClick={() => setDisabling(true)} icon={<ShieldOff size={16} />}>
-            {t('security.disable')}
-          </Button>
+          <FormActions>
+            <Button variant="danger" onClick={() => setDisabling(true)} icon={<ShieldOff size={16} />}>
+              {t('security.disable')}
+            </Button>
+          </FormActions>
         )}
       </div>
     );
@@ -213,9 +215,11 @@ export function TwoFactorPanel({ onEnabled }: Props) {
             }}
           />
         </div>
-        <Button variant="primary" loading={busy} disabled={code.length !== 6} onClick={() => enable()}>
-          {t('security.confirm')}
-        </Button>
+        <FormActions>
+          <Button variant="primary" loading={busy} disabled={code.length !== 6} onClick={() => enable()}>
+            {t('security.confirm')}
+          </Button>
+        </FormActions>
       </div>
     );
   }
@@ -224,9 +228,11 @@ export function TwoFactorPanel({ onEnabled }: Props) {
     <div className="space-y-4">
       <p className="text-sm text-muted">{mandatory ? t('security.required') : t('security.intro')}</p>
       {error && <p role="alert" className="text-sm text-bad">{error}</p>}
-      <Button variant="primary" loading={busy} onClick={start} icon={<Smartphone size={16} />}>
-        {t('security.enable')}
-      </Button>
+      <FormActions>
+        <Button variant="primary" loading={busy} onClick={start} icon={<Smartphone size={16} />}>
+          {t('security.enable')}
+        </Button>
+      </FormActions>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { CheckCircle2, Mail, MapPin, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthShell } from '../../components/AuthShell';
-import { Button, Card, Field, Input, PageHeader, Textarea } from '../../components/ui';
+import { Button, Card, Field, FormActions, Input, PageHeader, Textarea } from '../../components/ui';
 import { api, ApiError } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useConfig } from '../../lib/config';
@@ -89,9 +89,11 @@ function ContactForm({ authenticated }: { authenticated: boolean }) {
         </label>
       </div>
       <p className="text-xs text-subtle">{t('contact.gdpr')}</p>
-      <Button type="submit" variant="primary" loading={formState.isSubmitting} icon={<Send size={16} />}>
-        {t('contact.send')}
-      </Button>
+      <FormActions>
+        <Button type="submit" variant="primary" loading={formState.isSubmitting} icon={<Send size={16} />}>
+          {t('contact.send')}
+        </Button>
+      </FormActions>
     </form>
   );
 }

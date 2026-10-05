@@ -6,7 +6,7 @@ import { Download, KeyRound, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PasswordStrength } from '../../components/PasswordStrength';
 import { TwoFactorPanel } from '../../components/TwoFactorPanel';
-import { Button, Card, Field, Input, PageHeader } from '../../components/ui';
+import { Button, Card, Field, FormActions, Input, PageHeader } from '../../components/ui';
 import { api, ApiError, downloadFile } from '../../lib/api';
 import { useConfig } from '../../lib/config';
 import { useToast } from '../../lib/toast';
@@ -52,9 +52,11 @@ function ChangePassword() {
         <Input type="password" autoComplete="new-password" {...register('confirm')} />
       </Field>
       <p className="text-xs text-subtle">{t('security.logoutOthers')}</p>
-      <Button type="submit" variant="primary" loading={formState.isSubmitting} icon={<Lock size={16} />}>
-        {t('security.changePassword')}
-      </Button>
+      <FormActions>
+        <Button type="submit" variant="primary" loading={formState.isSubmitting} icon={<Lock size={16} />}>
+          {t('security.changePassword')}
+        </Button>
+      </FormActions>
     </form>
   );
 }
@@ -79,9 +81,11 @@ export default function Security() {
         <Card className="lg:col-span-2">
           <h2 className="mb-1 text-lg font-bold">{t('privacy.myDataTitle')}</h2>
           <p className="mb-4 text-sm text-muted">{t('privacy.myDataHint')}</p>
-          <Button icon={<Download size={16} />} onClick={() => downloadFile('/rgpd/export', 'mes-donnees.json').catch(() => toast.error(t('common.error')))}>
-            {t('privacy.export')}
-          </Button>
+          <FormActions>
+            <Button icon={<Download size={16} />} onClick={() => downloadFile('/rgpd/export', 'mes-donnees.json').catch(() => toast.error(t('common.error')))}>
+              {t('privacy.export')}
+            </Button>
+          </FormActions>
         </Card>
       </div>
     </>

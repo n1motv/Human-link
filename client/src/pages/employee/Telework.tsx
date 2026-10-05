@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, Wifi } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, ErrorState, PageHeader, Spinner } from '../../components/ui';
+import { Button, Card, ErrorState, FormActions, PageHeader, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { fmtDate } from '../../lib/format';
 import { useAction } from '../../lib/hooks';
@@ -69,11 +69,11 @@ export default function Telework() {
           })}
         </div>
         {!exact && <p className="mt-4 text-sm text-warn">{t('telework.needExact', { count: max })}</p>}
-        <div className="mt-6">
+        <FormActions className="mt-6">
           <Button variant="primary" disabled={!exact} loading={save.isPending} onClick={() => save.mutate()}>
             {t('common.save')}
           </Button>
-        </div>
+        </FormActions>
       </Card>
     </>
   );

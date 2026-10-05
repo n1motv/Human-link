@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Camera } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
-import { Button, Card, ErrorState, Field, Input, PageHeader, Spinner } from '../../components/ui';
+import { Button, Card, ErrorState, Field, FormActions, Input, PageHeader, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtMoney } from '../../lib/format';
@@ -143,9 +143,11 @@ export default function Profile() {
                 </Field>
               )}
             </div>
-            <Button type="submit" variant="primary" loading={save.isPending}>
-              {t('common.save')}
-            </Button>
+            <FormActions>
+              <Button type="submit" variant="primary" loading={save.isPending}>
+                {t('common.save')}
+              </Button>
+            </FormActions>
           </form>
         </Card>
       </div>

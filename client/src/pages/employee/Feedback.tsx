@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, EyeOff, Star } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, ErrorState, PageHeader, Spinner, Textarea } from '../../components/ui';
+import { Button, Card, ErrorState, FormActions, PageHeader, Spinner, Textarea } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAction } from '../../lib/hooks';
 
@@ -80,12 +80,12 @@ export default function Feedback() {
           </label>
           <Textarea id="suggestion" value={suggestion} onChange={(e) => setSuggestion(e.target.value)} maxLength={2000} placeholder={t('feedback.suggestionPlaceholder')} />
         </div>
-        <div className="mt-6 flex items-center gap-3">
+        <FormActions className="mt-6 flex-col">
           <Button variant="primary" disabled={!complete} loading={send.isPending} onClick={() => send.mutate()}>
             {t('feedback.send')}
           </Button>
           {!complete && <span className="text-xs text-muted">{t('feedback.rateAll')}</span>}
-        </div>
+        </FormActions>
       </Card>
     </>
   );

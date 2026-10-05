@@ -4,7 +4,7 @@ import { Crown, Link2, Link2Off, Network, Trash2, UserX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/DecisionDialog';
-import { Button, Card, ErrorState, Field, PageHeader, Select, Spinner } from '../../components/ui';
+import { Button, Card, ErrorState, Field, FormActions, PageHeader, Select, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAction } from '../../lib/hooks';
 import type { Brief, User } from '../../lib/types';
@@ -111,9 +111,11 @@ export default function Org() {
                   ))}
                 </Select>
               </Field>
-              <Button variant="primary" disabled={!managerId || !superviseId} loading={assign.isPending} onClick={() => setAsk({ kind: 'assign' })}>
-                {t('org.assignBtn')}
-              </Button>
+              <FormActions>
+                <Button variant="primary" disabled={!managerId || !superviseId} loading={assign.isPending} onClick={() => setAsk({ kind: 'assign' })}>
+                  {t('org.assignBtn')}
+                </Button>
+              </FormActions>
             </div>
           </Card>
 
