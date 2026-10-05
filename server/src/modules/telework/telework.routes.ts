@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { schemas } from '../../shared.js';
 import { z } from 'zod';
 import { Telework } from '../../models/Telework.js';
 import { User } from '../../models/User.js';
@@ -12,6 +13,9 @@ import { CONFLICT_MESSAGES, findConflict } from '../absences/absences.service.js
 
 export const teleworkRouter = Router();
 teleworkRouter.use(requireAuth());
+
+/** Corps du choix des jours de télétravail de la semaine prochaine. */
+export const teleworkDatesBody = z.object({ dates: z.array(isoDate).max(7) });
 
 /** Jours ouvrés de la semaine prochaine (lundi → vendredi par défaut, selon la config du client). */
 function nextWeekDays(): string[] {
@@ -31,7 +35,7 @@ teleworkRouter.get('/next-week', requireRole('employe', 'manager'), async (req, 
 /** Remplace les jours de télétravail de la semaine prochaine. */
 teleworkRouter.put('/next-week', requireRole('employe', 'manager'), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(z.object({ dates: z.array(isoDate).max(7) }), req.body);
+  const body = parse(teleworkDatesBody, req.body);
   const user = await User.findById(auth.userId);
   if (!user) throw notFound();
   const allowed = new Set(nextWeekDays());
@@ -54,7 +58,7 @@ teleworkRouter.put('/next-week', requireRole('employe', 'manager'), async (req, 
 /** Calendrier du télétravail : admin = tout le monde, manager = son équipe. */
 teleworkRouter.get('/calendar', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
-  const q = parse(z.object({ from: isoDate, to: isoDate }), req.query);
+  const q = parse(schemas.dateRangeQuery, req.query);
   const filter: Record<string, unknown> = { date: { $gte: q.from, $lte: q.to } };
   if (auth.role === 'manager') filter.userId = { $in: await managedIds(auth.userId) };
   const rows = await Telework.find(filter).populate('userId', 'nom prenom email').sort({ date: 1 });

@@ -39,6 +39,15 @@ describe('documentation de l’API générée (Q-13)', () => {
     expect(users.parameters!.map((p) => p.name)).toEqual(expect.arrayContaining(['q', 'role', 'notRole', 'unsupervised', 'status', 'page', 'limit']));
   });
 
+  it('toute route est décrite : une nouvelle route doit recevoir son annotation (src/openapi/annotations.ts)', () => {
+    const missing = Object.entries(spec.paths).flatMap(([p, m]) =>
+      Object.entries(m as Record<string, { 'x-documented'?: boolean }>)
+        .filter(([, op]) => !op['x-documented'])
+        .map(([method]) => `${method.toUpperCase()} ${p}`),
+    );
+    expect(missing).toEqual([]);
+  });
+
   it('chaque opération prévoit une réponse d’erreur', () => {
     for (const { key, op } of ops) expect(op.responses.default, key).toBeDefined();
   });

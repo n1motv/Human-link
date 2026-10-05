@@ -11,7 +11,8 @@ import { verifyAccessToken } from '../../utils/tokens.js';
 
 export const contactRouter = Router();
 
-const schema = z.object({
+/** Corps du formulaire de contact. */
+export const contactBody = z.object({
   nom: z.string().trim().max(80).optional(),
   prenom: z.string().trim().max(80).optional(),
   email: z.email().max(254).optional(),
@@ -24,7 +25,7 @@ const schema = z.object({
 
 /** Formulaire ouvert aux visiteurs comme aux employés connectés (identité alors reprise du compte). */
 contactRouter.post('/', publicFormLimiter, async (req, res) => {
-  const body = parse(schema, req.body);
+  const body = parse(contactBody, req.body);
   if (body.website) {
     res.status(201).json({ ok: true }); // robot : on fait semblant d'accepter
     return;

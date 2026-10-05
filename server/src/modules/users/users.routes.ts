@@ -62,6 +62,15 @@ const adminFields = {
   teleworkMax: z.coerce.number().int().min(0).max(5).optional(),
 };
 
+/** Corps de la mise à jour de mon profil. */
+export const profileUpdateBody = z.object({ ...profileFields, email: adminFields.email.optional(), currentPassword: z.string().max(200).optional() }).partial();
+
+/** Corps de la création d’un compte (administrateur). */
+export const userCreateBody = z.object({ ...profileFields, ...adminFields });
+
+/** Corps de la modification d’un compte (administrateur). */
+export const userUpdateBody = z.object({ ...profileFields, ...adminFields, password: z.string().optional() }).partial();
+
 function checkAge(dateNaissance?: string) {
   if (dateNaissance && ageOn(dateNaissance) < clientConfig.hr.minimumAge) {
     throw badRequest(`L'employé doit avoir au moins ${clientConfig.hr.minimumAge} ans`, 'TOO_YOUNG');
@@ -91,7 +100,7 @@ usersRouter.get('/me/profile', async (req, res) => {
 });
 
 usersRouter.patch('/me/profile', async (req, res) => {
-  const body = parse(z.object({ ...profileFields, email: adminFields.email.optional(), currentPassword: z.string().max(200).optional() }).partial(), req.body);
+  const body = parse(profileUpdateBody, req.body);
   checkAge(body.dateNaissance);
   const user = await loadUser(authOf(req).userId);
 
@@ -166,7 +175,7 @@ usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
 });
 
 usersRouter.post('/', requireRole('admin'), async (req, res) => {
-  const body = parse(z.object({ ...profileFields, ...adminFields }), req.body);
+  const body = parse(userCreateBody, req.body);
   checkAge(body.dateNaissance);
   if (await User.exists({ email: body.email })) throw conflict('Cet e-mail est déjà assigné à un autre employé', 'EMAIL_TAKEN');
   const user = await User.create({
@@ -196,7 +205,7 @@ usersRouter.get('/:id', async (req, res) => {
 
 usersRouter.patch('/:id', requireRole('admin'), async (req, res) => {
   const { id } = parse(z.object({ id: z.string().regex(/^[a-f\d]{24}$/i) }), req.params);
-  const body = parse(z.object({ ...profileFields, ...adminFields, password: z.string().optional() }).partial(), req.body);
+  const body = parse(userUpdateBody, req.body);
   checkAge(body.dateNaissance);
   const auth = authOf(req);
   const user = await loadUser(id);

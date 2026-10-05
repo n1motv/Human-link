@@ -17,11 +17,52 @@
           "auth"
         ],
         "operationId": "post_auth_2fa_disable",
-        "summary": "POST /api/auth/2fa/disable",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Désactiver la 2FA",
+        "description": "Mot de passe et code exigés ; refusé pour les rôles qui l’imposent. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6
+                  }
+                },
+                "required": [
+                  "password",
+                  "code"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -42,7 +83,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/2fa/enable": {
@@ -51,11 +92,50 @@
           "auth"
         ],
         "operationId": "post_auth_2fa_enable",
-        "summary": "POST /api/auth/2fa/enable",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Activer la 2FA avec un premier code",
+        "description": "Renvoie les codes de secours, affichés une seule fois. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recoveryCodes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "recoveryCodes"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -76,7 +156,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/2fa/login": {
@@ -276,11 +356,31 @@
           "auth"
         ],
         "operationId": "post_auth_2fa_setup",
-        "summary": "POST /api/auth/2fa/setup",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Commencer la configuration de la 2FA",
+        "description": "Renvoie le secret et le QR code à scanner. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string"
+                    },
+                    "qrDataUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "secret",
+                    "qrDataUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -301,7 +401,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/activate": {
@@ -310,11 +410,52 @@
           "auth"
         ],
         "operationId": "post_auth_activate",
-        "summary": "POST /api/auth/activate",
+        "summary": "Activer un compte invité en choisissant son mot de passe",
         "description": "Public.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 200
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -327,7 +468,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/change-password": {
@@ -336,11 +477,51 @@
           "auth"
         ],
         "operationId": "post_auth_change_password",
-        "summary": "POST /api/auth/change-password",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Changer mon mot de passe",
+        "description": "Les autres sessions sont fermées. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -361,7 +542,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/csrf": {
@@ -412,11 +593,48 @@
           "auth"
         ],
         "operationId": "post_auth_forgot_password",
-        "summary": "POST /api/auth/forgot-password",
-        "description": "Public.",
+        "summary": "Demander un lien de réinitialisation",
+        "description": "Même réponse que l’e-mail existe ou non. Public.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -429,7 +647,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/login": {
@@ -857,11 +1075,47 @@
           "auth"
         ],
         "operationId": "post_auth_not_me",
-        "summary": "POST /api/auth/not-me",
-        "description": "Public.",
+        "summary": "« Ce n’était pas moi » : fermer les sessions et forcer un nouveau mot de passe",
+        "description": "Public : le jeton du lien reçu par e-mail fait foi. Public.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -874,7 +1128,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/refresh": {
@@ -883,11 +1137,151 @@
           "auth"
         ],
         "operationId": "post_auth_refresh",
-        "summary": "POST /api/auth/refresh",
-        "description": "Public.",
+        "summary": "Renouveler la session (cookie hl_rt)",
+        "description": "Appelé automatiquement par le navigateur ; les jetons de renouvellement tournent à chaque appel. Public.",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -900,7 +1294,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/reset-password": {
@@ -909,11 +1303,52 @@
           "auth"
         ],
         "operationId": "post_auth_reset_password",
-        "summary": "POST /api/auth/reset-password",
+        "summary": "Choisir un nouveau mot de passe avec le jeton reçu",
         "description": "Public.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 200
+                  },
+                  "password": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "token",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -926,7 +1361,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/sessions": {
@@ -935,11 +1370,71 @@
           "auth"
         ],
         "operationId": "get_auth_sessions",
-        "summary": "GET /api/auth/sessions",
+        "summary": "Mes appareils connectés",
         "description": "Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "browser": {
+                            "type": "string"
+                          },
+                          "os": {
+                            "type": "string"
+                          },
+                          "device": {
+                            "type": "string",
+                            "enum": [
+                              "desktop",
+                              "mobile",
+                              "tablet"
+                            ]
+                          },
+                          "ipMasked": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "lastActiveAt": {
+                            "type": "string"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "browser",
+                          "os",
+                          "device",
+                          "createdAt",
+                          "lastActiveAt",
+                          "current"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -960,18 +1455,38 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       },
       "delete": {
         "tags": [
           "auth"
         ],
         "operationId": "delete_auth_sessions",
-        "summary": "DELETE /api/auth/sessions",
+        "summary": "Fermer toutes mes autres sessions",
         "description": "Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "closed": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "closed"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -992,7 +1507,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/auth/sessions/{id}": {
@@ -1001,7 +1516,7 @@
           "auth"
         ],
         "operationId": "delete_auth_sessions_id",
-        "summary": "DELETE /api/auth/sessions/{id}",
+        "summary": "Fermer une session",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -1015,7 +1530,27 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "current": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "current"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1036,7 +1571,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/bonuses": {
@@ -1046,7 +1581,7 @@
         ],
         "operationId": "get_bonuses",
         "summary": "Demandes de prime",
-        "description": "Rôles autorisés : admin, manager. Authentification requise (cookie de session).",
+        "description": "Un manager voit celles qu’il a émises. Rôles autorisés : admin, manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
             "description": "Succès",
@@ -1214,11 +1749,67 @@
           "bonuses"
         ],
         "operationId": "post_bonuses",
-        "summary": "POST /api/bonuses",
+        "summary": "Proposer une prime pour quelqu’un de son équipe",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "employeId": {
+                    "type": "string",
+                    "pattern": "^[a-f\\d]{24}$"
+                  },
+                  "montant": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1000000
+                  },
+                  "motif": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "employeId",
+                  "montant",
+                  "motif"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bonus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "bonus"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1242,7 +1833,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -1254,7 +1845,7 @@
           "bonuses"
         ],
         "operationId": "post_bonuses_id_decision",
-        "summary": "POST /api/bonuses/{id}/decision",
+        "summary": "Accepter ou refuser une prime",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -1266,9 +1857,61 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "accepte",
+                      "refuse"
+                    ]
+                  },
+                  "motifRefus": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "decision"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bonus": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "bonus"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1292,7 +1935,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -1304,11 +1947,85 @@
           "calendar"
         ],
         "operationId": "get_calendar_leaves",
-        "summary": "GET /api/calendar/leaves",
+        "summary": "Congés acceptés de l’équipe (manager) ou de tous (administrateur)",
         "description": "Rôles autorisés : admin, manager. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          },
+                          "prenom": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "start": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          },
+                          "end": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          },
+                          "raison": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "nom",
+                          "prenom",
+                          "email",
+                          "start",
+                          "end",
+                          "raison"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1332,7 +2049,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin",
           "manager"
@@ -1455,14 +2172,75 @@
           "chatbot"
         ],
         "operationId": "post_chatbot",
-        "summary": "POST /api/chatbot",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Poser une question à l’assistant RH",
+        "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "question": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "lang": {
+                    "default": "fr",
+                    "type": "string",
+                    "enum": [
+                      "fr",
+                      "en",
+                      "es",
+                      "it",
+                      "ar"
+                    ]
+                  }
+                },
+                "required": [
+                  "question"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "answer": {
+                      "type": "string"
+                    },
+                    "intent": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sensitive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "answer",
+                    "intent",
+                    "sensitive"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
           },
           "default": {
             "description": "Erreur",
@@ -1480,7 +2258,11 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true,
+        "x-roles": [
+          "employe",
+          "manager"
+        ]
       }
     },
     "/api/client-errors": {
@@ -1806,11 +2588,67 @@
           "contact"
         ],
         "operationId": "get_contact",
-        "summary": "GET /api/contact",
+        "summary": "Messages reçus",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "userId": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          },
+                          "prenom": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "telephone": {
+                            "type": "string"
+                          },
+                          "sujet": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "email",
+                          "sujet",
+                          "message",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1834,7 +2672,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -1844,11 +2682,78 @@
           "contact"
         ],
         "operationId": "post_contact",
-        "summary": "POST /api/contact",
-        "description": "Public.",
+        "summary": "Envoyer un message à l’équipe RH",
+        "description": "Ouvert aux visiteurs ; limité en débit ; champ piège `website` contre les robots. Public.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "prenom": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "telephone": {
+                    "type": "string",
+                    "maxLength": 30
+                  },
+                  "sujet": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 4000
+                  },
+                  "website": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "sujet",
+                  "message"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "default": {
             "description": "Erreur",
@@ -1861,7 +2766,7 @@
             }
           }
         },
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/contact/{id}": {
@@ -1870,7 +2775,7 @@
           "contact"
         ],
         "operationId": "delete_contact_id",
-        "summary": "DELETE /api/contact/{id}",
+        "summary": "Supprimer un message",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -1884,7 +2789,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1908,7 +2829,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -1920,55 +2841,114 @@
           "dashboard"
         ],
         "operationId": "get_dashboard_admin",
-        "summary": "GET /api/dashboard/admin",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Tableau de bord administrateur",
+        "description": "Agrégats seulement (aucun salaire individuel) ; la consultation est tracée. Rôles autorisés : admin. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
-          },
-          "401": {
-            "description": "Non authentifié ou session expirée"
-          },
-          "default": {
-            "description": "Erreur",
+            "description": "Succès",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "totalEmployees": {
+                      "type": "number"
+                    },
+                    "totalDepartments": {
+                      "type": "number"
+                    },
+                    "acceptedLeaves": {
+                      "type": "number"
+                    },
+                    "averageSalary": {
+                      "type": "number"
+                    },
+                    "leavesByMonth": {
+                      "minItems": 12,
+                      "maxItems": 12,
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "byDepartment": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "count"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "today": {
+                      "type": "object",
+                      "properties": {
+                        "onSite": {
+                          "type": "number"
+                        },
+                        "remote": {
+                          "type": "number"
+                        },
+                        "absent": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "onSite",
+                        "remote",
+                        "absent"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "pending": {
+                      "type": "object",
+                      "properties": {
+                        "leaves": {
+                          "type": "number"
+                        },
+                        "sick": {
+                          "type": "number"
+                        },
+                        "bonuses": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "leaves",
+                        "sick",
+                        "bonuses"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "viewer": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "totalEmployees",
+                    "totalDepartments",
+                    "acceptedLeaves",
+                    "averageSalary",
+                    "leavesByMonth",
+                    "byDepartment",
+                    "today",
+                    "pending",
+                    "viewer"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
-          }
-        },
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "x-documented": false
-      }
-    },
-    "/api/documents/{id}": {
-      "delete": {
-        "tags": [
-          "documents"
-        ],
-        "operationId": "delete_documents_id",
-        "summary": "DELETE /api/documents/{id}",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Succès"
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -1992,20 +2972,20 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
       }
     },
-    "/api/documents/{id}/download": {
-      "get": {
+    "/api/documents/{id}": {
+      "delete": {
         "tags": [
           "documents"
         ],
-        "operationId": "get_documents_id_download",
-        "summary": "GET /api/documents/{id}/download",
-        "description": "Authentification requise (cookie de session).",
+        "operationId": "delete_documents_id",
+        "summary": "Supprimer un document du coffre",
+        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -2018,7 +2998,81 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/documents/{id}/download": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "operationId": "get_documents_id_download",
+        "summary": "Télécharger un document (déchiffré à la volée)",
+        "description": "Réservé au propriétaire et à l’administrateur ; chaque téléchargement est tracé. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fichier",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2039,7 +3093,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/documents/mine": {
@@ -2137,8 +3191,8 @@
           "documents"
         ],
         "operationId": "get_documents_user_id",
-        "summary": "GET /api/documents/user/{id}",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Coffre-fort d’un employé",
+        "description": "Consultation tracée dans le journal d’audit. Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -2151,7 +3205,62 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "bulletin",
+                              "contrat",
+                              "autre"
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "month": {
+                            "type": "number"
+                          },
+                          "year": {
+                            "type": "number"
+                          },
+                          "size": {
+                            "type": "number"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "category",
+                          "label",
+                          "size",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2175,7 +3284,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -2185,8 +3294,8 @@
           "documents"
         ],
         "operationId": "post_documents_user_id",
-        "summary": "POST /api/documents/user/{id}",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Déposer un document dans le coffre d’un employé",
+        "description": "PDF, JPEG ou PNG, 10 Mo au plus ; chiffré au repos et analysé par l’antivirus s’il est configuré. Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -2197,9 +3306,75 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "bulletin",
+                      "contrat",
+                      "autre"
+                    ]
+                  },
+                  "month": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  },
+                  "year": {
+                    "type": "integer",
+                    "minimum": 1990,
+                    "maximum": 2100
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "file"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2223,7 +3398,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -2235,11 +3410,113 @@
           "feedback"
         ],
         "operationId": "post_feedback",
-        "summary": "POST /api/feedback",
-        "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "summary": "Donner mon avis du mois (anonyme)",
+        "description": "Rien ne relie l’avis à son auteur. Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ratings": {
+                    "type": "object",
+                    "properties": {
+                      "env": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "management": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "worklife": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "comm": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "recognition": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "training": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "equipment": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "team": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "meetings": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      },
+                      "transparency": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                      }
+                    },
+                    "required": [
+                      "env",
+                      "management",
+                      "worklife",
+                      "comm",
+                      "recognition",
+                      "training",
+                      "equipment",
+                      "team",
+                      "meetings",
+                      "transparency"
+                    ]
+                  },
+                  "suggestion": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "ratings"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2263,7 +3540,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "employe",
           "manager"
@@ -2276,11 +3553,64 @@
           "feedback"
         ],
         "operationId": "get_feedback_results",
-        "summary": "GET /api/feedback/results",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Résultats agrégés du mois",
+        "description": "Sous 3 réponses, les suggestions libres sont masquées (anti ré-identification). Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "2026-10",
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "month": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "averages": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "suggestionsHidden": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "month",
+                    "total",
+                    "averages",
+                    "suggestions",
+                    "suggestionsHidden"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2304,7 +3634,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -2316,11 +3646,38 @@
           "feedback"
         ],
         "operationId": "get_feedback_status",
-        "summary": "GET /api/feedback/status",
+        "summary": "Avis du mois : déjà donné ? critères",
         "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "month": {
+                      "type": "string"
+                    },
+                    "alreadySubmitted": {
+                      "type": "boolean"
+                    },
+                    "criteria": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "month",
+                    "alreadySubmitted",
+                    "criteria"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2344,7 +3701,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "employe",
           "manager"
@@ -2607,6 +3964,10 @@
                   "description": {
                     "type": "string",
                     "maxLength": 2000
+                  },
+                  "attachment": {
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [
@@ -2783,7 +4144,7 @@
           "leaves"
         ],
         "operationId": "delete_leaves_id",
-        "summary": "DELETE /api/leaves/{id}",
+        "summary": "Retirer ma demande en attente",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -2797,7 +4158,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2818,7 +4195,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/leaves/{id}/attachment": {
@@ -2827,7 +4204,7 @@
           "leaves"
         ],
         "operationId": "get_leaves_id_attachment",
-        "summary": "GET /api/leaves/{id}/attachment",
+        "summary": "Justificatif d’une demande",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -2841,7 +4218,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Fichier",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -2862,7 +4247,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/leaves/{id}/decision": {
@@ -2912,7 +4297,133 @@
         },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leave": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "userId": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "nom": {
+                                  "type": "string"
+                                },
+                                "prenom": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "departement": {
+                                  "type": "string"
+                                },
+                                "poste": {
+                                  "type": "string"
+                                },
+                                "photoFileId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nom",
+                                "prenom"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "raison": {
+                          "type": "string"
+                        },
+                        "dateDebut": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "dateFin": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "nombreJours": {
+                          "type": "number"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "statut": {
+                          "type": "string",
+                          "enum": [
+                            "en attente",
+                            "accepte",
+                            "refuse"
+                          ]
+                        },
+                        "statutManager": {
+                          "type": "string",
+                          "enum": [
+                            "en attente",
+                            "accepte",
+                            "refuse"
+                          ]
+                        },
+                        "statutAdmin": {
+                          "type": "string",
+                          "enum": [
+                            "en attente",
+                            "accepte",
+                            "refuse"
+                          ]
+                        },
+                        "motifRefus": {
+                          "type": "string"
+                        },
+                        "attachmentFileId": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "raison",
+                        "dateDebut",
+                        "dateFin",
+                        "nombreJours",
+                        "statut",
+                        "statutManager",
+                        "statutAdmin",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "leave"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3112,11 +4623,68 @@
           "meetings"
         ],
         "operationId": "post_meetings",
-        "summary": "POST /api/meetings",
+        "summary": "Organiser une réunion",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "dateTime": {},
+                  "invitees": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-f\\d]{24}$"
+                    }
+                  }
+                },
+                "required": [
+                  "title",
+                  "dateTime",
+                  "invitees"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "meeting": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "meeting"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3140,7 +4708,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3152,7 +4720,7 @@
           "meetings"
         ],
         "operationId": "delete_meetings_id",
-        "summary": "DELETE /api/meetings/{id}",
+        "summary": "Annuler une réunion que j’organise",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -3166,7 +4734,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3190,7 +4774,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3202,7 +4786,7 @@
           "meetings"
         ],
         "operationId": "post_meetings_id_respond",
-        "summary": "POST /api/meetings/{id}/respond",
+        "summary": "Répondre à une invitation",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -3214,9 +4798,47 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "response": {
+                    "type": "string",
+                    "enum": [
+                      "Accepted",
+                      "Rejected"
+                    ]
+                  }
+                },
+                "required": [
+                  "response"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3237,7 +4859,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/meetings/invitable": {
@@ -3246,11 +4868,59 @@
           "meetings"
         ],
         "operationId": "get_meetings_invitable",
-        "summary": "GET /api/meetings/invitable",
+        "summary": "Personnes invitables : mon équipe et les autres managers",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          },
+                          "prenom": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "departement": {
+                            "type": "string"
+                          },
+                          "poste": {
+                            "type": "string"
+                          },
+                          "photoFileId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "nom",
+                          "prenom"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3274,7 +4944,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3286,11 +4956,91 @@
           "meetings"
         ],
         "operationId": "get_meetings_invitations",
-        "summary": "GET /api/meetings/invitations",
+        "summary": "Mes invitations",
         "description": "Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "dateTime": {
+                            "type": "string"
+                          },
+                          "organizer": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "nom": {
+                                    "type": "string"
+                                  },
+                                  "prenom": {
+                                    "type": "string"
+                                  },
+                                  "email": {
+                                    "type": "string"
+                                  },
+                                  "departement": {
+                                    "type": "string"
+                                  },
+                                  "poste": {
+                                    "type": "string"
+                                  },
+                                  "photoFileId": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "nom",
+                                  "prenom"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "dateTime",
+                          "organizer",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3311,7 +5061,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/meetings/organized": {
@@ -3320,11 +5070,63 @@
           "meetings"
         ],
         "operationId": "get_meetings_organized",
-        "summary": "GET /api/meetings/organized",
+        "summary": "Réunions que j’organise, avec le décompte des réponses",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "dateTime": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "invited": {
+                            "type": "number"
+                          },
+                          "accepted": {
+                            "type": "number"
+                          },
+                          "rejected": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "dateTime",
+                          "status",
+                          "invited",
+                          "accepted",
+                          "rejected"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3348,7 +5150,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3457,7 +5259,7 @@
           "notifications"
         ],
         "operationId": "delete_notifications_id",
-        "summary": "DELETE /api/notifications/{id}",
+        "summary": "Supprimer une de mes notifications",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -3471,7 +5273,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3492,7 +5310,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/notifications/read-all": {
@@ -3501,11 +5319,27 @@
           "notifications"
         ],
         "operationId": "post_notifications_read_all",
-        "summary": "POST /api/notifications/read-all",
+        "summary": "Tout marquer comme lu",
         "description": "Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3526,7 +5360,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/notifications/unread-count": {
@@ -3585,11 +5419,46 @@
           "org"
         ],
         "operationId": "put_org_director",
-        "summary": "PUT /api/org/director",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Désigner le directeur",
+        "description": "Il ne peut y en avoir qu’un. Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "managerId": {
+                    "type": "string",
+                    "pattern": "^[a-f\\d]{24}$"
+                  }
+                },
+                "required": [
+                  "managerId"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3613,7 +5482,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3625,11 +5494,141 @@
           "org"
         ],
         "operationId": "get_org_supervisions",
-        "summary": "GET /api/org/supervisions",
+        "summary": "Rattachements manager / personne et directeur",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "assignments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "manager": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              },
+                              "prenom": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "departement": {
+                                "type": "string"
+                              },
+                              "poste": {
+                                "type": "string"
+                              },
+                              "photoFileId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nom",
+                              "prenom"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "supervise": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "nom": {
+                                "type": "string"
+                              },
+                              "prenom": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "departement": {
+                                "type": "string"
+                              },
+                              "poste": {
+                                "type": "string"
+                              },
+                              "photoFileId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "nom",
+                              "prenom"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "manager",
+                          "supervise"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "director": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "nom": {
+                              "type": "string"
+                            },
+                            "prenom": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "departement": {
+                              "type": "string"
+                            },
+                            "poste": {
+                              "type": "string"
+                            },
+                            "photoFileId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "nom",
+                            "prenom"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "assignments",
+                    "director"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3653,7 +5652,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3663,11 +5662,51 @@
           "org"
         ],
         "operationId": "post_org_supervisions",
-        "summary": "POST /api/org/supervisions",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Rattacher une personne à un manager",
+        "description": "Une personne n’a qu’un seul manager ; les cycles sont refusés. Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "managerId": {
+                    "type": "string",
+                    "pattern": "^[a-f\\d]{24}$"
+                  },
+                  "superviseId": {
+                    "type": "string",
+                    "pattern": "^[a-f\\d]{24}$"
+                  }
+                },
+                "required": [
+                  "managerId",
+                  "superviseId"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3691,7 +5730,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3703,7 +5742,7 @@
           "org"
         ],
         "operationId": "delete_org_supervisions_managerId_superviseId",
-        "summary": "DELETE /api/org/supervisions/{managerId}/{superviseId}",
+        "summary": "Supprimer un rattachement",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -3725,7 +5764,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3749,7 +5804,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3761,11 +5816,85 @@
           "org"
         ],
         "operationId": "get_org_team",
-        "summary": "GET /api/org/team",
+        "summary": "Mon équipe",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "team": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "matricule": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          },
+                          "prenom": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "poste": {
+                            "type": "string"
+                          },
+                          "departement": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "admin",
+                              "manager",
+                              "employe"
+                            ]
+                          },
+                          "photoFileId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "teleworkMax": {
+                            "type": "number"
+                          },
+                          "hasPendingLeave": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "matricule",
+                          "nom",
+                          "prenom",
+                          "email",
+                          "role",
+                          "photoFileId",
+                          "teleworkMax",
+                          "hasPendingLeave"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "team"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3789,7 +5918,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3801,7 +5930,7 @@
           "org"
         ],
         "operationId": "patch_org_team_id_telework_max",
-        "summary": "PATCH /api/org/team/{id}/telework-max",
+        "summary": "Régler le maximum de jours de télétravail d’une personne de mon équipe",
         "description": "Rôles autorisés : manager. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -3813,9 +5942,45 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "teleworkMax": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "required": [
+                  "teleworkMax"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3839,7 +6004,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "manager"
         ]
@@ -3851,11 +6016,96 @@
           "org"
         ],
         "operationId": "get_org_tree",
-        "summary": "GET /api/org/tree",
+        "summary": "Organigramme",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tree": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/__schema0"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "unassigned": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "poste": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "otherRoots": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/__schema0"
+                      }
+                    }
+                  },
+                  "required": [
+                    "tree",
+                    "unassigned",
+                    "otherRoots"
+                  ],
+                  "additionalProperties": false,
+                  "$defs": {
+                    "__schema0": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "children": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/__schema0"
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "role",
+                        "children"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3879,7 +6129,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3891,11 +6141,118 @@
           "rgpd"
         ],
         "operationId": "get_rgpd_audit",
-        "summary": "GET /api/rgpd/audit",
+        "summary": "Journal d’audit : qui a consulté ou modifié quelles données",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "actorId": {
+                            "type": "string"
+                          },
+                          "actorEmail": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "targetType": {
+                            "type": "string"
+                          },
+                          "targetId": {
+                            "type": "string"
+                          },
+                          "at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "at"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "page": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "total",
+                    "page"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3919,7 +6276,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -3931,11 +6288,19 @@
           "rgpd"
         ],
         "operationId": "get_rgpd_export",
-        "summary": "GET /api/rgpd/export",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Exporter toutes mes données (droit d’accès)",
+        "description": "Fichier JSON ; la demande est tracée. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Fichier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -3956,7 +6321,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/sick-leaves": {
@@ -3967,6 +6332,21 @@
         "operationId": "get_sick_leaves",
         "summary": "Arrêts maladie à traiter",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "statut",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en attente",
+                "accepte",
+                "refuse"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Succès",
@@ -4114,11 +6494,159 @@
           "sick-leaves"
         ],
         "operationId": "post_sick_leaves",
-        "summary": "POST /api/sick-leaves",
-        "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "summary": "Déclarer un arrêt maladie",
+        "description": "Un arrêt « justifié » exige un justificatif (PDF, JPEG ou PNG). Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "typeMaladie": {
+                    "type": "string",
+                    "enum": [
+                      "justifie",
+                      "non justifie"
+                    ]
+                  },
+                  "dateDebut": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "dateFin": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "attachment": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "typeMaladie",
+                  "dateDebut",
+                  "dateFin"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sick": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "userId": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "nom": {
+                                  "type": "string"
+                                },
+                                "prenom": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "departement": {
+                                  "type": "string"
+                                },
+                                "poste": {
+                                  "type": "string"
+                                },
+                                "photoFileId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nom",
+                                "prenom"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "typeMaladie": {
+                          "type": "string",
+                          "enum": [
+                            "justifie",
+                            "non justifie"
+                          ]
+                        },
+                        "dateDebut": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "dateFin": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "statut": {
+                          "type": "string",
+                          "enum": [
+                            "en attente",
+                            "accepte",
+                            "refuse"
+                          ]
+                        },
+                        "motifRefus": {
+                          "type": "string"
+                        },
+                        "attachmentFileId": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "typeMaladie",
+                        "dateDebut",
+                        "dateFin",
+                        "statut",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "sick"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4142,7 +6670,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "employe",
           "manager"
@@ -4155,7 +6683,7 @@
           "sick-leaves"
         ],
         "operationId": "get_sick_leaves_id_attachment",
-        "summary": "GET /api/sick-leaves/{id}/attachment",
+        "summary": "Justificatif d’un arrêt",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -4169,7 +6697,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Fichier",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4190,7 +6726,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/sick-leaves/{id}/decision": {
@@ -4199,7 +6735,7 @@
           "sick-leaves"
         ],
         "operationId": "post_sick_leaves_id_decision",
-        "summary": "POST /api/sick-leaves/{id}/decision",
+        "summary": "Accepter ou refuser un arrêt maladie",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -4211,9 +6747,144 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "accepte",
+                      "refuse"
+                    ]
+                  },
+                  "motifRefus": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "decision"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sick": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "userId": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "nom": {
+                                  "type": "string"
+                                },
+                                "prenom": {
+                                  "type": "string"
+                                },
+                                "email": {
+                                  "type": "string"
+                                },
+                                "departement": {
+                                  "type": "string"
+                                },
+                                "poste": {
+                                  "type": "string"
+                                },
+                                "photoFileId": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "nom",
+                                "prenom"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "typeMaladie": {
+                          "type": "string",
+                          "enum": [
+                            "justifie",
+                            "non justifie"
+                          ]
+                        },
+                        "dateDebut": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "dateFin": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "statut": {
+                          "type": "string",
+                          "enum": [
+                            "en attente",
+                            "accepte",
+                            "refuse"
+                          ]
+                        },
+                        "motifRefus": {
+                          "type": "string"
+                        },
+                        "attachmentFileId": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "typeMaladie",
+                        "dateDebut",
+                        "dateFin",
+                        "statut",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "sick"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4237,7 +6908,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -4394,11 +7065,76 @@
           "telework"
         ],
         "operationId": "get_telework_calendar",
-        "summary": "GET /api/telework/calendar",
-        "description": "Rôles autorisés : admin, manager. Authentification requise (cookie de session).",
+        "summary": "Calendrier du télétravail",
+        "description": "Administrateur : tout le monde ; manager : son équipe. Rôles autorisés : admin, manager. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "nom": {
+                            "type": "string"
+                          },
+                          "prenom": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "nom",
+                          "prenom",
+                          "email",
+                          "date"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4422,7 +7158,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin",
           "manager"
@@ -4435,11 +7171,47 @@
           "telework"
         ],
         "operationId": "get_telework_next_week",
-        "summary": "GET /api/telework/next-week",
+        "summary": "Mes jours de télétravail de la semaine prochaine",
         "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      }
+                    },
+                    "chosen": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      }
+                    },
+                    "max": {
+                      "type": "number"
+                    },
+                    "isDirector": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "days",
+                    "chosen",
+                    "max",
+                    "isDirector"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4463,7 +7235,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "employe",
           "manager"
@@ -4474,11 +7246,54 @@
           "telework"
         ],
         "operationId": "put_telework_next_week",
-        "summary": "PUT /api/telework/next-week",
-        "description": "Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "summary": "Choisir mes jours de télétravail",
+        "description": "Au plus le maximum autorisé par le manager. Rôles autorisés : employe, manager. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dates": {
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                    }
+                  }
+                },
+                "required": [
+                  "dates"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chosen": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "chosen"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4502,7 +7317,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "employe",
           "manager"
@@ -4746,11 +7561,373 @@
           "users"
         ],
         "operationId": "post_users",
-        "summary": "POST /api/users",
+        "summary": "Créer un compte et envoyer l’invitation",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "prenom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "dateNaissance": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "adresse": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 300
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "ville": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "codePostal": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "pays": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "nationalite": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "telephone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "manager",
+                      "employe"
+                    ]
+                  },
+                  "poste": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "departement": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "sexe": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "Homme",
+                          "Femme"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "numeroSecu": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "dateEmbauche": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "typeContrat": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "CDI",
+                          "CDD",
+                          "Alternance",
+                          "Stage",
+                          "Freelance"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "salaire": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000000
+                  },
+                  "soldeConge": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "teleworkMax": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "required": [
+                  "nom",
+                  "prenom",
+                  "email",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Succès"
+          "201": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4774,7 +7951,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -4786,8 +7963,8 @@
           "users"
         ],
         "operationId": "get_users_id",
-        "summary": "GET /api/users/{id}",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Fiche d’un employé",
+        "description": "Les données sensibles (salaire, n° de sécurité sociale, adresse) ne sont visibles que de l’administrateur et de la personne. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -4800,7 +7977,147 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4821,14 +8138,14 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       },
       "patch": {
         "tags": [
           "users"
         ],
         "operationId": "patch_users_id",
-        "summary": "PATCH /api/users/{id}",
+        "summary": "Modifier un compte",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -4840,9 +8157,368 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "prenom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "dateNaissance": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "adresse": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 300
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "ville": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "codePostal": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "pays": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "nationalite": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "telephone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "manager",
+                      "employe"
+                    ]
+                  },
+                  "poste": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "departement": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "sexe": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "Homme",
+                          "Femme"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "numeroSecu": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "dateEmbauche": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "typeContrat": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "CDI",
+                          "CDD",
+                          "Alternance",
+                          "Stage",
+                          "Freelance"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "salaire": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000000
+                  },
+                  "soldeConge": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "teleworkMax": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4866,7 +8542,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -4876,8 +8552,8 @@
           "users"
         ],
         "operationId": "delete_users_id",
-        "summary": "DELETE /api/users/{id}",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Archiver un compte",
+        "description": "Les sessions sont fermées ; les données sont conservées selon la durée légale. Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -4890,7 +8566,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4914,7 +8606,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -4926,8 +8618,8 @@
           "users"
         ],
         "operationId": "post_users_id_anonymize",
-        "summary": "POST /api/users/{id}/anonymize",
-        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "summary": "Anonymiser un compte archivé (RGPD)",
+        "description": "Irréversible : données personnelles, fichiers et notifications effacés. Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -4940,7 +8632,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -4964,7 +8672,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -4976,7 +8684,7 @@
           "users"
         ],
         "operationId": "get_users_id_photo",
-        "summary": "GET /api/users/{id}/photo",
+        "summary": "Photo de profil",
         "description": "Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -4990,7 +8698,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Fichier",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5011,7 +8727,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/users/{id}/resend-invite": {
@@ -5020,7 +8736,7 @@
           "users"
         ],
         "operationId": "post_users_id_resend_invite",
-        "summary": "POST /api/users/{id}/resend-invite",
+        "summary": "Renvoyer l’invitation",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -5034,7 +8750,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5058,7 +8790,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -5070,7 +8802,7 @@
           "users"
         ],
         "operationId": "post_users_id_reset_2fa",
-        "summary": "POST /api/users/{id}/reset-2fa",
+        "summary": "Réinitialiser la 2FA d’un compte",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -5084,7 +8816,23 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5108,7 +8856,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -5120,7 +8868,7 @@
           "users"
         ],
         "operationId": "post_users_id_restore",
-        "summary": "POST /api/users/{id}/restore",
+        "summary": "Restaurer un compte archivé",
         "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
         "parameters": [
           {
@@ -5134,7 +8882,147 @@
         ],
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5158,7 +9046,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false,
+        "x-documented": true,
         "x-roles": [
           "admin"
         ]
@@ -5170,11 +9058,167 @@
           "users"
         ],
         "operationId": "post_users_me_photo",
-        "summary": "POST /api/users/me/photo",
+        "summary": "Envoyer ma photo de profil",
         "description": "Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5195,7 +9239,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     },
     "/api/users/me/profile": {
@@ -5376,11 +9420,267 @@
           "users"
         ],
         "operationId": "patch_users_me_profile",
-        "summary": "PATCH /api/users/me/profile",
-        "description": "Authentification requise (cookie de session).",
+        "summary": "Modifier mon profil",
+        "description": "Changer l’adresse e-mail exige le mot de passe actuel. Authentification requise (cookie de session).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "prenom": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "dateNaissance": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "adresse": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 300
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "ville": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "codePostal": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "pays": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "nationalite": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "telephone": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 254,
+                    "format": "email",
+                    "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                  },
+                  "currentPassword": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Succès"
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "matricule": {
+                          "type": "string"
+                        },
+                        "nom": {
+                          "type": "string"
+                        },
+                        "prenom": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "admin",
+                            "manager",
+                            "employe"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "invited",
+                            "active",
+                            "archived",
+                            "anonymized"
+                          ]
+                        },
+                        "isDirector": {
+                          "type": "boolean"
+                        },
+                        "poste": {
+                          "type": "string"
+                        },
+                        "departement": {
+                          "type": "string"
+                        },
+                        "sexe": {
+                          "type": "string",
+                          "enum": [
+                            "Homme",
+                            "Femme"
+                          ]
+                        },
+                        "dateNaissance": {
+                          "type": "string"
+                        },
+                        "nationalite": {
+                          "type": "string"
+                        },
+                        "pays": {
+                          "type": "string"
+                        },
+                        "ville": {
+                          "type": "string"
+                        },
+                        "codePostal": {
+                          "type": "string"
+                        },
+                        "adresse": {
+                          "type": "string"
+                        },
+                        "telephone": {
+                          "type": "string"
+                        },
+                        "numeroSecu": {
+                          "type": "string"
+                        },
+                        "salaire": {
+                          "type": "number"
+                        },
+                        "dateEmbauche": {
+                          "type": "string"
+                        },
+                        "typeContrat": {
+                          "type": "string",
+                          "enum": [
+                            "CDI",
+                            "CDD",
+                            "Alternance",
+                            "Stage",
+                            "Freelance"
+                          ]
+                        },
+                        "soldeConge": {
+                          "type": "number"
+                        },
+                        "teleworkMax": {
+                          "type": "number"
+                        },
+                        "photoFileId": {
+                          "type": "string"
+                        },
+                        "twoFactor": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "matricule",
+                        "nom",
+                        "prenom",
+                        "email",
+                        "role",
+                        "status",
+                        "isDirector",
+                        "soldeConge",
+                        "teleworkMax"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "user"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           },
           "401": {
             "description": "Non authentifié ou session expirée"
@@ -5401,7 +9701,7 @@
             "cookieAuth": []
           }
         ],
-        "x-documented": false
+        "x-documented": true
       }
     }
   },

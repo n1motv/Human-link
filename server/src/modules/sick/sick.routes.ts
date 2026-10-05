@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { SickLeave } from '../../models/SickLeave.js';
 import { User } from '../../models/User.js';
 import { authOf, requireAuth, requireRole } from '../../middleware/auth.js';
+import { schemas } from '../../shared.js';
 import { upload } from '../../middleware/upload.js';
 import { audit } from '../../utils/audit.js';
 import { addDays, isoDate, today } from '../../utils/dates.js';
@@ -17,20 +18,20 @@ sickRouter.use(requireAuth());
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identifiant invalide');
 
+/** Corps de la déclaration d’un arrêt maladie (avec un justificatif en multipart si l’arrêt est justifié). */
+export const sickCreateBody = z.object({
+  typeMaladie: z.enum(['justifie', 'non justifie']),
+  dateDebut: isoDate,
+  dateFin: isoDate,
+  description: z.string().trim().max(2000).optional(),
+});
+
 /** Un arrêt maladie est souvent déclaré après coup : on tolère 30 jours de rétroactivité. */
 const MAX_BACKDATE_DAYS = 30;
 
 sickRouter.post('/', requireRole('employe', 'manager'), upload.single('attachment'), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(
-    z.object({
-      typeMaladie: z.enum(['justifie', 'non justifie']),
-      dateDebut: isoDate,
-      dateFin: isoDate,
-      description: z.string().trim().max(2000).optional(),
-    }),
-    req.body,
-  );
+  const body = parse(sickCreateBody, req.body);
   if (body.dateFin < body.dateDebut) throw badRequest('La date de fin ne peut pas être avant la date de début', 'BAD_RANGE');
   if (body.dateDebut < addDays(today(), -MAX_BACKDATE_DAYS)) throw badRequest(`La date de début ne peut pas dépasser ${MAX_BACKDATE_DAYS} jours dans le passé`, 'PAST_DATE');
   const clash = await findConflict(auth.userId, body.dateDebut, body.dateFin, 'arret');
@@ -52,7 +53,7 @@ sickRouter.get('/mine', async (req, res) => {
 });
 
 sickRouter.get('/', requireRole('admin'), async (req, res) => {
-  const q = parse(z.object({ statut: z.enum(['en attente', 'accepte', 'refuse']).optional() }), req.query);
+  const q = parse(schemas.decisionFilterQuery, req.query);
   const items = await SickLeave.find(q.statut ? { statut: q.statut } : {})
     .sort({ createdAt: -1 })
     .limit(500)
@@ -70,7 +71,7 @@ sickRouter.get('/', requireRole('admin'), async (req, res) => {
 
 sickRouter.post('/:id/decision', requireRole('admin'), async (req, res) => {
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() }), req.body);
+  const body = parse(schemas.decisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
   const sick = await SickLeave.findOneAndUpdate(
     { _id: id, statut: 'en attente' },

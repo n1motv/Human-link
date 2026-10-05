@@ -21,6 +21,15 @@ export const SICK_TYPES = ['justifie', 'non justifie'] as const;
 export const VAULT_CATEGORIES = ['bulletin', 'contrat', 'autre'] as const;
 export const EVENT_KINDS = ['leave', 'sick', 'telework', 'meeting'] as const;
 
+/** Nœud de l'organigramme : une personne et ses subordonnés directs. */
+export interface OrgNode {
+  id: string;
+  name: string;
+  poste?: string;
+  role: string;
+  children: OrgNode[];
+}
+
 export function createSchemas(z: Zod) {
   const role = z.enum(ROLES);
   const decision = z.enum(DECISIONS);
@@ -47,7 +56,13 @@ export function createSchemas(z: Zod) {
     dateFin: dateOnly,
     description: z.string().trim().max(2000).optional(),
   });
-  const leaveDecisionBody = z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() });
+  /** Décision sur une demande (congé, arrêt, prime) : un refus doit être motivé. */
+  const decisionBody = z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() });
+
+  /** Filtre des listes de demandes par statut. */
+  const decisionFilterQuery = z.object({ statut: decision.optional() });
+  /** Période demandée aux calendriers : deux dates AAAA-MM-JJ. */
+  const dateRangeQuery = z.object({ from: dateOnly, to: dateOnly });
 
   // --- Réponses ---
   const brief = z.object({
@@ -211,6 +226,107 @@ export function createSchemas(z: Zod) {
     }),
   });
 
+  // --- Organisation ---
+  const orgNode: zod.ZodType<OrgNode> = z.lazy(() => z.object({ id: z.string(), name: z.string(), poste: z.string().optional(), role: z.string(), children: z.array(orgNode) }));
+  const orgTree = z.object({
+    tree: orgNode.nullable(),
+    unassigned: z.array(z.object({ id: z.string(), name: z.string(), poste: z.string().optional() })),
+    otherRoots: z.array(orgNode),
+  });
+  const supervisions = z.object({
+    assignments: z.array(z.object({ manager: brief, supervise: brief })),
+    director: brief.nullable(),
+  });
+  const teamMember = z.object({
+    id: z.string(),
+    matricule: z.string(),
+    nom: z.string(),
+    prenom: z.string(),
+    email: z.string(),
+    poste: z.string().optional(),
+    departement: z.string().optional(),
+    role: role,
+    photoFileId: z.string().nullable(),
+    teleworkMax: z.number(),
+    hasPendingLeave: z.boolean(),
+  });
+
+  // --- Tableau de bord, calendriers, télétravail ---
+  const adminDashboard = z.object({
+    totalEmployees: z.number(),
+    totalDepartments: z.number(),
+    acceptedLeaves: z.number(),
+    averageSalary: z.number(),
+    leavesByMonth: z.array(z.number()).length(12),
+    byDepartment: z.array(z.object({ name: z.string(), count: z.number() })),
+    today: z.object({ onSite: z.number(), remote: z.number(), absent: z.number() }),
+    pending: z.object({ leaves: z.number(), sick: z.number(), bonuses: z.number() }),
+    viewer: z.string(),
+  });
+  const person = z.object({ userId: z.string(), nom: z.string(), prenom: z.string(), email: z.string() });
+  const leaveCalendarItem = person.extend({ start: dateOnly, end: dateOnly, raison: z.string() });
+  const teleworkCalendarItem = person.extend({ date: dateOnly });
+  const teleworkWeek = z.object({ days: z.array(dateOnly), chosen: z.array(dateOnly), max: z.number(), isDirector: z.boolean() });
+
+  // --- Réunions ---
+  const meetingStatus = z.enum(['Accepted', 'Rejected']);
+  const meetingOrganized = z.object({
+    id: z.string(),
+    title: z.string(),
+    dateTime: z.string(),
+    status: z.string(),
+    invited: z.number(),
+    accepted: z.number(),
+    rejected: z.number(),
+  });
+  const meetingInvitation = z.object({
+    id: z.string(),
+    title: z.string(),
+    dateTime: z.string(),
+    organizer: brief.nullable(),
+    status: z.string(),
+  });
+
+  // --- Avis anonymes, contact, journal d'audit, sessions ---
+  const feedbackStatus = z.object({ month: z.string(), alreadySubmitted: z.boolean(), criteria: z.array(z.string()) });
+  const feedbackResults = z.object({
+    month: z.string(),
+    total: z.number(),
+    averages: z.record(z.string(), z.number()),
+    suggestions: z.array(z.string()),
+    suggestionsHidden: z.boolean(),
+  });
+  const contactRequest = z.object({
+    id: z.string(),
+    userId: z.string().optional(),
+    nom: z.string().optional(),
+    prenom: z.string().optional(),
+    email: z.string(),
+    telephone: z.string().optional(),
+    sujet: z.string(),
+    message: z.string(),
+    createdAt: z.string(),
+  });
+  const auditEntry = z.object({
+    id: z.string(),
+    actorId: z.string().optional(),
+    actorEmail: z.string().optional(),
+    action: z.string(),
+    targetType: z.string().optional(),
+    targetId: z.string().optional(),
+    at: z.string(),
+  });
+  const sessionInfo = z.object({
+    id: z.string(),
+    browser: z.string(),
+    os: z.string(),
+    device: z.enum(['desktop', 'mobile', 'tablet']),
+    ipMasked: z.string().optional(),
+    createdAt: z.string(),
+    lastActiveAt: z.string(),
+    current: z.boolean(),
+  });
+
   /** Enveloppes de liste : `{ items }`, avec le total quand la liste est paginée. */
   const list = <T extends zod.ZodType>(item: T) => z.object({ items: z.array(item) });
   const page = <T extends zod.ZodType>(item: T) => z.object({ items: z.array(item), total: z.number(), page: z.number() });
@@ -224,7 +340,9 @@ export function createSchemas(z: Zod) {
     loginBody,
     twoFactorBody,
     leaveCreateBody,
-    leaveDecisionBody,
+    decisionBody,
+    decisionFilterQuery,
+    dateRangeQuery,
     brief,
     user,
     userRow,
@@ -235,6 +353,21 @@ export function createSchemas(z: Zod) {
     vaultFile,
     calendarEvent,
     publicConfig,
+    orgTree,
+    supervisions,
+    teamMember,
+    adminDashboard,
+    leaveCalendarItem,
+    teleworkCalendarItem,
+    teleworkWeek,
+    meetingStatus,
+    meetingOrganized,
+    meetingInvitation,
+    feedbackStatus,
+    feedbackResults,
+    contactRequest,
+    auditEntry,
+    sessionInfo,
     list,
     page,
   };
@@ -253,3 +386,6 @@ export type Notif = zod.infer<Schemas['notif']>;
 export type VaultFile = zod.infer<Schemas['vaultFile']>;
 export type CalendarEvent = zod.infer<Schemas['calendarEvent']>;
 export type PublicConfig = zod.infer<Schemas['publicConfig']>;
+export type OrgTree = zod.infer<Schemas['orgTree']>;
+export type Supervisions = zod.infer<Schemas['supervisions']>;
+export type AdminDashboard = zod.infer<Schemas['adminDashboard']>;

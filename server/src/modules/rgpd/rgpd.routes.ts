@@ -61,18 +61,18 @@ rgpdRouter.get('/export', async (req, res) => {
   res.send(JSON.stringify(payload, null, 2));
 });
 
+/** Filtres et pagination du journal d’audit. */
+export const auditQuery = z.object({
+  action: z.string().max(60).optional(),
+  actor: z.string().max(120).optional(),
+  target: z.string().max(60).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 /** Journal d'audit (admin) : qui a consulté ou modifié quoi. */
 rgpdRouter.get('/audit', requireRole('admin'), async (req, res) => {
-  const q = parse(
-    z.object({
-      action: z.string().max(60).optional(),
-      actor: z.string().max(120).optional(),
-      target: z.string().max(60).optional(),
-      page: z.coerce.number().int().min(1).default(1),
-      limit: z.coerce.number().int().min(1).max(200).default(50),
-    }),
-    req.query,
-  );
+  const q = parse(auditQuery, req.query);
   const filter: Record<string, unknown> = {};
   if (q.action) filter.action = new RegExp(`^${escapeRegex(q.action)}`);
   if (q.actor) filter.actorEmail = new RegExp(escapeRegex(q.actor), 'i');

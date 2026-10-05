@@ -14,6 +14,16 @@ meetingsRouter.use(requireAuth());
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identifiant invalide');
 
+/** Corps de la création d’une réunion : titre, date et heure, invités. */
+export const meetingCreateBody = z.object({
+  title: z.string().trim().min(1).max(160),
+  dateTime: z.coerce.date(),
+  invitees: z.array(objectId).min(1).max(200),
+});
+
+/** Réponse d’un invité. */
+export const meetingResponseBody = z.object({ response: z.enum(['Accepted', 'Rejected']) });
+
 /** Personnes invitables par un manager : son équipe + les autres managers. */
 meetingsRouter.get('/invitable', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
@@ -24,14 +34,7 @@ meetingsRouter.get('/invitable', requireRole('manager'), async (req, res) => {
 
 meetingsRouter.post('/', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(
-    z.object({
-      title: z.string().trim().min(1).max(160),
-      dateTime: z.coerce.date(),
-      invitees: z.array(objectId).min(1).max(200),
-    }),
-    req.body,
-  );
+  const body = parse(meetingCreateBody, req.body);
   if (body.dateTime.getTime() < Date.now() - 60_000) throw badRequest('La réunion doit avoir lieu dans le futur', 'PAST_DATE');
   // Invitables : son équipe + les autres managers (jamais un employé d'une autre équipe, ni l'admin).
   const team = new Set((await Supervision.find({ managerId: auth.userId })).map((s) => String(s.superviseId)));
@@ -99,7 +102,7 @@ meetingsRouter.get('/invitations', async (req, res) => {
 meetingsRouter.post('/:id/respond', async (req, res) => {
   const auth = authOf(req);
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const { response } = parse(z.object({ response: z.enum(['Accepted', 'Rejected']) }), req.body);
+  const { response } = parse(meetingResponseBody, req.body);
   // Le filtre sur invitees.userId garantit qu'on ne répond que pour soi.
   const meeting = await Meeting.findOneAndUpdate({ _id: id, 'invitees.userId': auth.userId }, { $set: { 'invitees.$.status': response } }, { new: true });
   if (!meeting) throw notFound('Invitation introuvable');

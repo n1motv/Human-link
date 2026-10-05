@@ -104,7 +104,7 @@ La CI refait les deux contrôles. Le commit de mise en forme initial est ignoré
 
 ## Documentation de l'API (OpenAPI)
 
-`docs/openapi.json` est générée depuis le code : méthodes, chemins, authentification et rôles autorisés sont lus dans les routeurs Express ; les corps, paramètres et réponses des routes principales viennent des schémas partagés (`server/src/openapi/annotations.ts`).
+`docs/openapi.json` est générée depuis le code : méthodes, chemins, authentification et rôles autorisés sont lus dans les routeurs Express ; les corps, paramètres et réponses viennent des schémas des routes et du contrat partagé (`server/src/openapi/annotations.ts`).
 
 ```bash
 npm --prefix server run gen:openapi    # régénère docs/openapi.json (sans base ni .env)
@@ -112,7 +112,7 @@ npm --prefix server run gen:openapi    # régénère docs/openapi.json (sans bas
 
 - Un test échoue si le fichier n'est plus à jour, si une annotation vise une route disparue, ou si un fichier `*.routes.ts` n'est pas monté (`server/src/routes.ts` est la liste unique des routes).
 - En développement (hors production et hors tests) : `http://localhost:4000/api/docs` (page de lecture avec filtre) et `/api/openapi.json`.
-- Une route sans annotation figure quand même dans la spécification, avec son titre par défaut : ajouter son entrée dans `annotations.ts` pour décrire ses données.
+- Les 84 opérations sont décrites. Une nouvelle route sans entrée dans `annotations.ts` fait échouer les tests. Les corps et paramètres sont les schémas que les routes utilisent pour valider (exportés par chaque `*.routes.ts`) : la documentation ne peut pas s'en écarter. Les réponses viennent de `shared/` et sont vérifiées contre les vraies réponses par `server/tests/contract.test.ts`.
 
 ## Page de styles
 

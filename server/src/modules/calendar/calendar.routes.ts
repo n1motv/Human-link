@@ -1,18 +1,17 @@
 import { Router } from 'express';
-import { z } from 'zod';
+import { schemas } from '../../shared.js';
 import { LeaveRequest } from '../../models/LeaveRequest.js';
 import { Meeting } from '../../models/Meeting.js';
 import { SickLeave } from '../../models/SickLeave.js';
 import { Telework } from '../../models/Telework.js';
 import { authOf, requireAuth, requireRole } from '../../middleware/auth.js';
-import { isoDate } from '../../utils/dates.js';
 import { parse } from '../../utils/errors.js';
 import { managedIds } from '../access.js';
 
 export const calendarRouter = Router();
 calendarRouter.use(requireAuth());
 
-const rangeQuery = z.object({ from: isoDate, to: isoDate });
+const rangeQuery = schemas.dateRangeQuery;
 
 /** Événements personnels : congés et arrêts acceptés, télétravail, réunions acceptées ou organisées. */
 calendarRouter.get('/me', requireRole('employe', 'manager'), async (req, res) => {

@@ -19,9 +19,20 @@ feedbackRouter.get('/status', requireRole('employe', 'manager'), async (req, res
 
 const ratings = z.object(Object.fromEntries(FEEDBACK_CRITERIA.map((k) => [k, z.coerce.number().int().min(1).max(5)])));
 
+/** Corps de l’avis mensuel anonyme : une note de 1 à 5 par critère et une suggestion libre. */
+export const feedbackBody = z.object({ ratings, suggestion: z.string().trim().max(2000).optional() });
+
+/** Mois consulté par l’administrateur (le mois courant par défaut). */
+export const resultsQuery = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/)
+    .default(currentMonth()),
+});
+
 /** Un feedback par personne et par mois, enregistré de façon anonyme. */
 feedbackRouter.post('/', requireRole('employe', 'manager'), async (req, res) => {
-  const body = parse(z.object({ ratings, suggestion: z.string().trim().max(2000).optional() }), req.body);
+  const body = parse(feedbackBody, req.body);
   const month = currentMonth();
   try {
     await Feedback.create({ month, participant: participant(authOf(req).userId, month), ratings: body.ratings, suggestion: body.suggestion ?? '' });
@@ -33,15 +44,7 @@ feedbackRouter.post('/', requireRole('employe', 'manager'), async (req, res) => 
 });
 
 feedbackRouter.get('/results', requireRole('admin'), async (req, res) => {
-  const { month } = parse(
-    z.object({
-      month: z
-        .string()
-        .regex(/^\d{4}-\d{2}$/)
-        .default(currentMonth()),
-    }),
-    req.query,
-  );
+  const { month } = parse(resultsQuery, req.query);
   const rows = await Feedback.find({ month });
   const total = rows.length;
   const averages = Object.fromEntries(

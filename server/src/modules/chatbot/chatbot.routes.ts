@@ -117,8 +117,11 @@ async function askLlm(question: string, c: Ctx): Promise<string | null> {
   }
 }
 
+/** Corps d’une question à l’assistant. */
+export const chatBody = z.object({ question: z.string().trim().min(1).max(500), lang: z.enum(LANGS as [Lang, ...Lang[]]).default('fr') });
+
 chatbotRouter.post('/', async (req, res) => {
-  const body = parse(z.object({ question: z.string().trim().min(1).max(500), lang: z.enum(LANGS as [Lang, ...Lang[]]).default('fr') }), req.body);
+  const body = parse(chatBody, req.body);
   const user = await User.findById(authOf(req).userId);
   if (!user) throw notFound();
   const lang = detectLang(body.question, body.lang);

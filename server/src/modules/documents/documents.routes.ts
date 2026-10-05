@@ -29,7 +29,8 @@ documentsRouter.get('/user/:id', requireRole('admin'), async (req, res) => {
   res.json({ items });
 });
 
-const uploadSchema = z.object({
+/** Corps du dépôt d’un document dans le coffre-fort (le fichier est joint en multipart). */
+export const uploadBody = z.object({
   type: z.enum(VAULT),
   month: z.coerce.number().int().min(1).max(12).optional(),
   year: z.coerce.number().int().min(1990).max(2100).optional(),
@@ -39,7 +40,7 @@ const uploadSchema = z.object({
 documentsRouter.post('/user/:id', requireRole('admin'), upload.single('file'), async (req, res) => {
   const auth = authOf(req);
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(uploadSchema, req.body);
+  const body = parse(uploadBody, req.body);
   const target = await User.findById(id);
   if (!target || target.status !== 'active') throw notFound('Employé introuvable');
 

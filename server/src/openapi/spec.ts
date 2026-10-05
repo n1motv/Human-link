@@ -1,7 +1,7 @@
 import { z, type ZodType } from 'zod';
 import type { Mount } from '../routes.js';
 import { API_MOUNTS, PUBLIC_MOUNTS } from '../routes.js';
-import { ANNOTATIONS } from './annotations.js';
+import { ANNOTATIONS, type Annotation } from './annotations.js';
 
 /** Ce qu'on lit dans un routeur Express 5 : les couches, les routes, leurs méthodes et leurs gestionnaires. */
 interface Handler {
@@ -23,6 +23,14 @@ function jsonSchema(schema: ZodType, io: 'input' | 'output'): Record<string, unk
   return rest;
 }
 
+/** Corps de requête : JSON, ou multipart avec le champ qui porte le fichier. */
+function requestBody(a: Annotation) {
+  const schema = a.body ? jsonSchema(a.body, 'input') : { type: 'object', properties: {} };
+  if (!a.multipart) return { required: true, content: { 'application/json': { schema } } };
+  const properties = { ...((schema.properties ?? {}) as Record<string, unknown>), [a.multipart]: { type: 'string', format: 'binary' } };
+  return { required: true, content: { 'multipart/form-data': { schema: { ...schema, type: 'object', properties } } } };
+}
+
 interface Operation {
   method: string;
   path: string;
@@ -39,13 +47,15 @@ export function listOperations(mounts: Mount[] = [...PUBLIC_MOUNTS, ...API_MOUNT
   ];
   for (const m of mounts) {
     let authBelow = false; // un `router.use(requireAuth())` protège toutes les routes déclarées après lui
+    let rolesBelow: string[] | undefined; // idem pour `router.use(requireRole(...))`
     for (const layer of (m.router as unknown as { stack: Layer[] }).stack) {
       if (!layer.route) {
         if (layer.handle.requiresAuth) authBelow = true;
+        if (layer.handle.allowedRoles) rolesBelow = layer.handle.allowedRoles;
         continue;
       }
       const handlers = layer.route.stack.map((s) => s.handle);
-      const roles = handlers.find((h) => h.allowedRoles)?.allowedRoles;
+      const roles = handlers.find((h) => h.allowedRoles)?.allowedRoles ?? rolesBelow;
       const auth = authBelow || handlers.some((h) => h.requiresAuth);
       for (const method of METHOD_ORDER.filter((x) => layer.route!.methods[x])) {
         ops.push({ method, path: toOpenApiPath(join(m.prefix, layer.route.path)), auth, roles, tag: m.prefix.replace('/api/', '') });
@@ -76,9 +86,11 @@ export function buildOpenApi() {
       .filter(Boolean)
       .join(' ');
     const responses: Record<string, unknown> = {
-      [String(a?.status ?? 200)]: a?.response
-        ? { description: 'Succès', content: { 'application/json': { schema: jsonSchema(a.response, 'output') } } }
-        : { description: 'Succès' },
+      [String(a?.status ?? 200)]: a?.file
+        ? { description: 'Fichier', content: { [a.file]: { schema: { type: 'string', format: 'binary' } } } }
+        : a?.response
+          ? { description: 'Succès', content: { 'application/json': { schema: jsonSchema(a.response, 'output') } } }
+          : { description: 'Succès' },
       default: { description: 'Erreur', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
     };
     if (op.auth) responses['401'] = { description: 'Non authentifié ou session expirée' };
@@ -93,7 +105,7 @@ export function buildOpenApi() {
       summary: a?.summary ?? `${op.method.toUpperCase()} ${op.path}`,
       description: notes,
       ...(params.length ? { parameters: params } : {}),
-      ...(a?.body ? { requestBody: { required: true, content: { [a.multipart ? 'multipart/form-data' : 'application/json']: { schema: jsonSchema(a.body, 'input') } } } } : {}),
+      ...(a?.body || a?.multipart ? { requestBody: requestBody(a) } : {}),
       responses,
       ...(op.auth ? { security: [{ cookieAuth: [] }] } : {}),
       'x-documented': !!a,

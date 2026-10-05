@@ -112,3 +112,57 @@ describe('corps de requête partagés', () => {
     expect(schemas.loginBody.safeParse({ email: 'A@B.fr', password: 'x' }).data?.email).toBe('a@b.fr');
   });
 });
+
+describe('contrat serveur / client : organisation, réunions, avis, contact, audit, sessions', () => {
+  it('organisation, tableau de bord et calendriers', async () => {
+    const adm = await session('admin');
+    const mgr = await session('manager', { isDirector: true });
+    const emp = await session('employe');
+    await supervise(mgr.user, emp.user);
+    await emp.c.post('/api/leaves').send({ raison: 'annual', dateDebut: addDays(today(), 3), dateFin: addDays(today(), 3) });
+
+    conforms(schemas.supervisions, (await adm.c.get('/api/org/supervisions')).body, 'GET /api/org/supervisions');
+    conforms(schemas.orgTree, (await adm.c.get('/api/org/tree')).body, 'GET /api/org/tree');
+    conforms(
+      schemas.list(schemas.teamMember).extend({}).omit({ items: true }).extend({ team: schemas.teamMember.array() }),
+      (await mgr.c.get('/api/org/team')).body,
+      'GET /api/org/team',
+    );
+    conforms(schemas.adminDashboard, (await adm.c.get('/api/dashboard/admin')).body, 'GET /api/dashboard/admin');
+
+    const range = `from=${today()}&to=${addDays(today(), 30)}`;
+    conforms(schemas.list(schemas.leaveCalendarItem), (await mgr.c.get(`/api/calendar/leaves?${range}`)).body, 'GET /api/calendar/leaves');
+    conforms(schemas.list(schemas.teleworkCalendarItem), (await adm.c.get(`/api/telework/calendar?${range}`)).body, 'GET /api/telework/calendar');
+    const week = await emp.c.get('/api/telework/next-week');
+    conforms(schemas.teleworkWeek, week.body, 'GET /api/telework/next-week');
+  });
+
+  it('réunions', async () => {
+    const mgr = await session('manager');
+    const emp = await session('employe');
+    await supervise(mgr.user, emp.user);
+    const created = await mgr.c
+      .post('/api/meetings')
+      .send({ title: 'Revue de sprint', dateTime: new Date(Date.now() + 86_400_000).toISOString(), invitees: [String(emp.user._id)] });
+    expect(created.status).toBe(201);
+    conforms(schemas.list(schemas.meetingOrganized), (await mgr.c.get('/api/meetings/organized')).body, 'GET /api/meetings/organized');
+    conforms(schemas.list(schemas.meetingInvitation), (await emp.c.get('/api/meetings/invitations')).body, 'GET /api/meetings/invitations');
+    conforms(schemas.list(schemas.brief), (await mgr.c.get('/api/meetings/invitable')).body, 'GET /api/meetings/invitable');
+  });
+
+  it('avis anonymes, contact, journal d’audit et sessions', async () => {
+    const adm = await session('admin');
+    const emp = await session('employe');
+    const status = await emp.c.get('/api/feedback/status');
+    conforms(schemas.feedbackStatus, status.body, 'GET /api/feedback/status');
+    const ratings = Object.fromEntries((status.body.criteria as string[]).map((k) => [k, 4]));
+    expect((await emp.c.post('/api/feedback').send({ ratings, suggestion: 'Plus de calme' })).status).toBe(201);
+    conforms(schemas.feedbackResults, (await adm.c.get('/api/feedback/results')).body, 'GET /api/feedback/results');
+
+    expect((await emp.c.post('/api/contact').send({ sujet: 'Question', message: 'Bonjour, une question.' })).status).toBe(201);
+    conforms(schemas.list(schemas.contactRequest), (await adm.c.get('/api/contact')).body, 'GET /api/contact');
+
+    conforms(schemas.page(schemas.auditEntry), (await adm.c.get('/api/rgpd/audit')).body, 'GET /api/rgpd/audit');
+    conforms(schemas.list(schemas.sessionInfo), (await emp.c.get('/api/auth/sessions')).body, 'GET /api/auth/sessions');
+  });
+});

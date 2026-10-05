@@ -16,6 +16,15 @@ const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identifiant invalide');
 
 const userBrief = 'nom prenom email poste departement role isDirector photoFileId matricule';
 
+/** Un couple manager / personne supervisée (corps de l’affectation et paramètres de sa suppression). */
+export const supervisionPair = z.object({ managerId: objectId, superviseId: objectId });
+
+/** Corps de la désignation du directeur. */
+export const directorBody = z.object({ managerId: objectId });
+
+/** Corps du réglage du maximum de jours de télétravail d’une personne. */
+export const teleworkMaxBody = z.object({ teleworkMax: z.coerce.number().int().min(0).max(5) });
+
 orgRouter.get('/supervisions', requireRole('admin'), async (_req, res) => {
   const rows = await Supervision.find().populate('managerId', userBrief).populate('superviseId', userBrief);
   const director = await User.findOne({ isDirector: true }, userBrief);
@@ -28,7 +37,7 @@ orgRouter.get('/supervisions', requireRole('admin'), async (_req, res) => {
 });
 
 orgRouter.post('/supervisions', requireRole('admin'), async (req, res) => {
-  const body = parse(z.object({ managerId: objectId, superviseId: objectId }), req.body);
+  const body = parse(supervisionPair, req.body);
   if (body.managerId === body.superviseId) throw badRequest('Un manager ne peut pas se superviser lui-même');
   const [manager, supervise] = await Promise.all([User.findById(body.managerId), User.findById(body.superviseId)]);
   if (!manager || manager.role !== 'manager' || manager.status !== 'active') throw badRequest('Le manager choisi est invalide');
@@ -50,7 +59,7 @@ orgRouter.post('/supervisions', requireRole('admin'), async (req, res) => {
 });
 
 orgRouter.delete('/supervisions/:managerId/:superviseId', requireRole('admin'), async (req, res) => {
-  const { managerId, superviseId } = parse(z.object({ managerId: objectId, superviseId: objectId }), req.params);
+  const { managerId, superviseId } = parse(supervisionPair, req.params);
   const r = await Supervision.deleteOne({ managerId, superviseId });
   if (!r.deletedCount) throw notFound('Assignation introuvable');
   await audit(req, { action: 'org.unassign', targetType: 'user', targetId: superviseId, meta: { managerId } });
@@ -58,7 +67,7 @@ orgRouter.delete('/supervisions/:managerId/:superviseId', requireRole('admin'), 
 });
 
 orgRouter.put('/director', requireRole('admin'), async (req, res) => {
-  const { managerId } = parse(z.object({ managerId: objectId }), req.body);
+  const { managerId } = parse(directorBody, req.body);
   const target = await User.findById(managerId);
   if (!target || target.role !== 'manager' || target.status !== 'active') throw badRequest('Le directeur doit être un manager actif');
   await User.updateMany({ isDirector: true }, { isDirector: false });
@@ -131,7 +140,7 @@ orgRouter.get('/team', requireRole('manager'), async (req, res) => {
 orgRouter.patch('/team/:id/telework-max', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
   const id = req.params.id as string;
-  const { teleworkMax } = parse(z.object({ teleworkMax: z.coerce.number().int().min(0).max(5) }), req.body);
+  const { teleworkMax } = parse(teleworkMaxBody, req.body);
   if (!(await managedIds(auth.userId)).includes(id)) throw notFound('Cette personne ne fait pas partie de votre équipe');
   await User.updateOne({ _id: id }, { teleworkMax });
   await audit(req, { action: 'telework.set_max', targetType: 'user', targetId: id, meta: { teleworkMax } });

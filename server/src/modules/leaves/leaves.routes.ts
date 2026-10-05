@@ -72,7 +72,7 @@ leavesRouter.get('/mine', async (req, res) => {
 /** Liste de décision : admin = tout, manager = son équipe. */
 leavesRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
-  const q = parse(z.object({ statut: z.enum(['en attente', 'accepte', 'refuse']).optional() }), req.query);
+  const q = parse(schemas.decisionFilterQuery, req.query);
   const filter: Record<string, unknown> = {};
   if (q.statut) filter.statut = q.statut;
   if (auth.role === 'manager') filter.userId = { $in: await managedIds(auth.userId) };
@@ -90,7 +90,7 @@ leavesRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
 leavesRouter.post('/:id/decision', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(schemas.leaveDecisionBody, req.body);
+  const body = parse(schemas.decisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
 
   const leave = await LeaveRequest.findById(id);

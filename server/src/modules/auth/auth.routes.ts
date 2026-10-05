@@ -28,6 +28,24 @@ const email = z
   .max(254)
   .transform((v) => v.toLowerCase().trim());
 
+/** Corps de /forgot-password. */
+export const forgotPasswordBody = z.object({ email });
+
+/** Corps de /reset-password et /activate : jeton reçu par e-mail et nouveau mot de passe. */
+export const tokenPasswordBody = z.object({ token: z.string().min(20).max(200), password: passwordSchema });
+
+/** Corps de /change-password. */
+export const changePasswordBody = z.object({ currentPassword: z.string().max(200), newPassword: passwordSchema });
+
+/** Corps de /2fa/enable : code à 6 chiffres. */
+export const twoFactorCodeBody = z.object({ code: z.string().length(6) });
+
+/** Corps de /2fa/disable. */
+export const twoFactorDisableBody = z.object({ password: z.string().max(200), code: z.string().length(6) });
+
+/** Corps de /not-me : jeton du lien « ce n’était pas moi ». */
+export const notMeBody = z.object({ token: z.string().min(20).max(2000) });
+
 async function recordFailure(user: UserDoc) {
   const { maxLoginAttempts, lockMinutes } = clientConfig.security;
   user.failedAttempts += 1;
@@ -196,7 +214,7 @@ export async function sendInvitation(user: UserDoc) {
 }
 
 authRouter.post('/forgot-password', publicFormLimiter, async (req, res) => {
-  const body = parse(z.object({ email }), req.body);
+  const body = parse(forgotPasswordBody, req.body);
   const user = await User.findOne({ email: body.email });
   if (user && (user.status === 'active' || user.status === 'invited')) {
     if (user.status === 'invited') {
@@ -216,7 +234,7 @@ authRouter.post('/forgot-password', publicFormLimiter, async (req, res) => {
 });
 
 authRouter.post('/reset-password', authLimiter, async (req, res) => {
-  const body = parse(z.object({ token: z.string().min(20).max(200), password: passwordSchema }), req.body);
+  const body = parse(tokenPasswordBody, req.body);
   await assertNotPwned(body.password);
   const user = await User.findOne({ resetTokenHash: sha256(body.token), resetExpiresAt: { $gt: new Date() } }).select('+passwordHash +resetTokenHash +resetExpiresAt');
   if (!user) throw badRequest('Lien invalide ou expiré', 'BAD_TOKEN');
@@ -235,7 +253,7 @@ authRouter.post('/reset-password', authLimiter, async (req, res) => {
 });
 
 authRouter.post('/activate', authLimiter, async (req, res) => {
-  const body = parse(z.object({ token: z.string().min(20).max(200), password: passwordSchema }), req.body);
+  const body = parse(tokenPasswordBody, req.body);
   await assertNotPwned(body.password);
   const user = await User.findOne({ inviteTokenHash: sha256(body.token), inviteExpiresAt: { $gt: new Date() }, status: 'invited' }).select(
     '+passwordHash +inviteTokenHash +inviteExpiresAt',
@@ -253,7 +271,7 @@ authRouter.post('/activate', authLimiter, async (req, res) => {
 
 authRouter.post('/change-password', requireAuth({ allowPending2fa: true }), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(z.object({ currentPassword: z.string().max(200), newPassword: passwordSchema }), req.body);
+  const body = parse(changePasswordBody, req.body);
   const user = await User.findById(auth.userId).select('+passwordHash');
   if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, body.currentPassword))) {
     throw unauthorized('Mot de passe actuel incorrect', 'INVALID_CREDENTIALS');
@@ -282,7 +300,7 @@ authRouter.post('/2fa/setup', requireAuth({ allowPending2fa: true }), async (req
 });
 
 authRouter.post('/2fa/enable', requireAuth({ allowPending2fa: true }), async (req, res) => {
-  const body = parse(z.object({ code: z.string().length(6) }), req.body);
+  const body = parse(twoFactorCodeBody, req.body);
   const user = await User.findById(authOf(req).userId);
   const pending = user?.twoFactor?.pendingSecret;
   if (!user || !pending) throw badRequest("Démarrez d'abord la configuration", 'NO_PENDING_SECRET');
@@ -304,7 +322,7 @@ authRouter.post('/2fa/disable', requireAuth(), async (req, res) => {
   if (clientConfig.security.require2faForRoles.includes(auth.role)) {
     throw badRequest('La double authentification est obligatoire pour votre rôle', 'TWO_FACTOR_MANDATORY');
   }
-  const body = parse(z.object({ password: z.string().max(200), code: z.string().length(6) }), req.body);
+  const body = parse(twoFactorDisableBody, req.body);
   const user = await User.findById(auth.userId).select('+passwordHash');
   if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, body.password))) throw unauthorized('Mot de passe incorrect', 'INVALID_CREDENTIALS');
   if (!user.twoFactor?.secret || !(await verifyTotp(user.twoFactor.secret, body.code))) throw badRequest('Code invalide', 'INVALID_2FA_CODE');
@@ -336,7 +354,7 @@ authRouter.delete('/sessions', requireAuth({ allowPending2fa: true }), async (re
 
 /** Lien « ce n'était pas moi » de l'e-mail d'alerte : ferme toutes les sessions et envoie un lien de nouveau mot de passe. */
 authRouter.post('/not-me', authLimiter, async (req, res) => {
-  const body = parse(z.object({ token: z.string().min(20).max(2000) }), req.body);
+  const body = parse(notMeBody, req.body);
   const claims = await verifyNotMeToken(body.token);
   if (!claims) throw badRequest('Lien invalide ou expiré', 'BAD_TOKEN');
   const user = await User.findById(claims.userId);

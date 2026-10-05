@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { schemas } from '../../shared.js';
 import { z } from 'zod';
 import { BonusRequest } from '../../models/BonusRequest.js';
 import { User } from '../../models/User.js';
@@ -24,9 +25,12 @@ function view(b: InstanceType<typeof BonusRequest>) {
   return o;
 }
 
+/** Corps de la proposition de prime. */
+export const bonusCreateBody = z.object({ employeId: objectId, montant: z.coerce.number().positive().max(1_000_000), motif: z.string().trim().min(1).max(1000) });
+
 bonusesRouter.post('/', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(z.object({ employeId: objectId, montant: z.coerce.number().positive().max(1_000_000), motif: z.string().trim().min(1).max(1000) }), req.body);
+  const body = parse(bonusCreateBody, req.body);
   // Correction de l'ancienne version : un manager ne peut proposer une prime que pour son équipe.
   if (!(await managedIds(auth.userId)).includes(body.employeId)) throw forbidden('Cette personne ne fait pas partie de votre équipe');
   const [employee, manager] = await Promise.all([User.findById(body.employeId), User.findById(auth.userId)]);
@@ -49,7 +53,7 @@ bonusesRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
 
 bonusesRouter.post('/:id/decision', requireRole('admin'), async (req, res) => {
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() }), req.body);
+  const body = parse(schemas.decisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
   const bonus = await BonusRequest.findOneAndUpdate(
     { _id: id, statut: 'en attente' },
