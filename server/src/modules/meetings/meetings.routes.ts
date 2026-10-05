@@ -18,10 +18,7 @@ const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identifiant invalide');
 meetingsRouter.get('/invitable', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
   const team = (await Supervision.find({ managerId: auth.userId }, { superviseId: 1 })).map((s) => s.superviseId);
-  const people = await User.find(
-    { status: 'active', $or: [{ _id: { $in: team } }, { role: 'manager', _id: { $ne: auth.userId } }] },
-    'nom prenom role poste',
-  ).sort({ nom: 1 });
+  const people = await User.find({ status: 'active', $or: [{ _id: { $in: team } }, { role: 'manager', _id: { $ne: auth.userId } }] }, 'nom prenom role poste').sort({ nom: 1 });
   res.json({ items: people.map((p) => p.toJSON()) });
 });
 
@@ -39,9 +36,7 @@ meetingsRouter.post('/', requireRole('manager'), async (req, res) => {
   // Invitables : son équipe + les autres managers (jamais un employé d'une autre équipe, ni l'admin).
   const team = new Set((await Supervision.find({ managerId: auth.userId })).map((s) => String(s.superviseId)));
   const candidates = await User.find({ _id: { $in: body.invitees }, status: 'active', role: { $ne: 'admin' } }, 'role');
-  const invitees = candidates
-    .filter((u) => String(u._id) !== auth.userId && (team.has(String(u._id)) || u.role === 'manager'))
-    .map((u) => String(u._id));
+  const invitees = candidates.filter((u) => String(u._id) !== auth.userId && (team.has(String(u._id)) || u.role === 'manager')).map((u) => String(u._id));
   if (!invitees.length) throw badRequest('Aucun invité valide');
 
   const manager = await User.findById(auth.userId);
@@ -51,14 +46,22 @@ meetingsRouter.post('/', requireRole('manager'), async (req, res) => {
     createdBy: auth.userId,
     invitees: invitees.map((userId) => ({ userId })),
   });
-  await notify(invitees, 'Invitation', 'meeting.invited', { manager: displayName(manager ?? {}), title: body.title, when: body.dateTime.toISOString() }, { emailSubject: 'Invitation à une réunion' });
+  await notify(
+    invitees,
+    'Invitation',
+    'meeting.invited',
+    { manager: displayName(manager ?? {}), title: body.title, when: body.dateTime.toISOString() },
+    { emailSubject: 'Invitation à une réunion' },
+  );
   await audit(req, { action: 'meeting.create', targetType: 'meeting', targetId: String(meeting._id) });
   res.status(201).json({ meeting });
 });
 
 /** Réunions créées par le manager, avec le décompte des réponses. */
 meetingsRouter.get('/organized', requireRole('manager'), async (req, res) => {
-  const meetings = await Meeting.find({ createdBy: authOf(req).userId }).sort({ dateTime: -1 }).limit(200);
+  const meetings = await Meeting.find({ createdBy: authOf(req).userId })
+    .sort({ dateTime: -1 })
+    .limit(200);
   res.json({
     items: meetings.map((m) => ({
       id: String(m._id),
@@ -98,13 +101,13 @@ meetingsRouter.post('/:id/respond', async (req, res) => {
   const { id } = parse(z.object({ id: objectId }), req.params);
   const { response } = parse(z.object({ response: z.enum(['Accepted', 'Rejected']) }), req.body);
   // Le filtre sur invitees.userId garantit qu'on ne répond que pour soi.
-  const meeting = await Meeting.findOneAndUpdate(
-    { _id: id, 'invitees.userId': auth.userId },
-    { $set: { 'invitees.$.status': response } },
-    { new: true },
-  );
+  const meeting = await Meeting.findOneAndUpdate({ _id: id, 'invitees.userId': auth.userId }, { $set: { 'invitees.$.status': response } }, { new: true });
   if (!meeting) throw notFound('Invitation introuvable');
   const me = await User.findById(auth.userId);
-  await notify(meeting.createdBy, 'Invitation', 'meeting.responded', { name: displayName(me ?? {}), title: meeting.title, response: response === 'Accepted' ? 'accepté' : 'refusé' });
+  await notify(meeting.createdBy, 'Invitation', 'meeting.responded', {
+    name: displayName(me ?? {}),
+    title: meeting.title,
+    response: response === 'Accepted' ? 'accepté' : 'refusé',
+  });
   res.json({ ok: true });
 });

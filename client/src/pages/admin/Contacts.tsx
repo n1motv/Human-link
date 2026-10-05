@@ -70,7 +70,15 @@ export default function Contacts() {
           ))}
         </ul>
       )}
-      <ConfirmDialog open={!!del} danger title={t('common.delete')} message={t('contact.deleteConfirm')} confirmLabel={t('common.delete')} onClose={() => setDel(null)} onConfirm={() => remove.mutateAsync(del!)} />
+      <ConfirmDialog
+        open={!!del}
+        danger
+        title={t('common.delete')}
+        message={t('contact.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        onClose={() => setDel(null)}
+        onConfirm={() => remove.mutateAsync(del!)}
+      />
     </>
   );
 }

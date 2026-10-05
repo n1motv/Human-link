@@ -20,7 +20,11 @@ function ChangePassword() {
   const schema = z
     .object({
       currentPassword: z.string().min(1, t('validation.required')),
-      newPassword: z.string().min(min, t('validation.passwordMin', { n: min })).regex(/\d/, t('validation.passwordDigit')).regex(/[a-zA-Z]/, t('validation.passwordLetter')),
+      newPassword: z
+        .string()
+        .min(min, t('validation.passwordMin', { n: min }))
+        .regex(/\d/, t('validation.passwordDigit'))
+        .regex(/[a-zA-Z]/, t('validation.passwordLetter')),
       confirm: z.string(),
     })
     .refine((v) => v.newPassword === v.confirm, { path: ['confirm'], message: t('validation.passwordMatch') });
@@ -41,7 +45,11 @@ function ChangePassword() {
         }
       })}
     >
-      {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+          {error}
+        </p>
+      )}
       <Field label={t('security.currentPassword')} error={formState.errors.currentPassword?.message}>
         <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
       </Field>

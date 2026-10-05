@@ -31,7 +31,8 @@ async function acceptedLeave(userId: mongoose.Types.ObjectId, from: string, to: 
 
 function filesOnDisk(): string[] {
   const out: string[] = [];
-  const walk = (d: string) => fs.existsSync(d) && fs.readdirSync(d, { withFileTypes: true }).forEach((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : out.push(path.join(d, e.name))));
+  const walk = (d: string) =>
+    fs.existsSync(d) && fs.readdirSync(d, { withFileTypes: true }).forEach((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : out.push(path.join(d, e.name))));
   walk(process.env.STORAGE_DIR!);
   return out;
 }
@@ -42,7 +43,12 @@ describe('coffre-fort : droits et refus de téléversement', () => {
     const mgr = await session('manager');
     const emp = await session('employe');
     const other = await session('employe');
-    const upload = (c: typeof adm.c) => c.post(`/api/documents/user/${id(other.user)}`).field('type', 'autre').field('name', 'Doc').attach('file', pdf, 'doc.pdf');
+    const upload = (c: typeof adm.c) =>
+      c
+        .post(`/api/documents/user/${id(other.user)}`)
+        .field('type', 'autre')
+        .field('name', 'Doc')
+        .attach('file', pdf, 'doc.pdf');
 
     expect((await upload(emp.c)).status).toBe(403);
     expect((await upload(mgr.c)).status).toBe(403);
@@ -95,7 +101,11 @@ describe('coffre-fort : droits et refus de téléversement', () => {
   it('la suppression retire aussi le fichier chiffré du disque', async () => {
     const adm = await session('admin');
     const emp = await session('employe');
-    const up = await adm.c.post(`/api/documents/user/${id(emp.user)}`).field('type', 'autre').field('name', 'À effacer').attach('file', pdf, 'a.pdf');
+    const up = await adm.c
+      .post(`/api/documents/user/${id(emp.user)}`)
+      .field('type', 'autre')
+      .field('name', 'À effacer')
+      .attach('file', pdf, 'a.pdf');
     expect(filesOnDisk()).toHaveLength(1);
     expect((await adm.c.delete(`/api/documents/${up.body.file.id}`)).status).toBe(200);
     expect(filesOnDisk()).toHaveLength(0);
@@ -105,7 +115,14 @@ describe('coffre-fort : droits et refus de téléversement', () => {
   it('les justificatifs de congé ne sont pas téléchargeables par les routes du coffre-fort', async () => {
     const adm = await session('admin');
     const emp = await session('employe');
-    const f = await StoredFile.create({ ownerId: emp.user._id, category: 'conge', label: 'Justificatif', mime: 'application/pdf', size: pdf.length, storageKey: await writeEncrypted(pdf) });
+    const f = await StoredFile.create({
+      ownerId: emp.user._id,
+      category: 'conge',
+      label: 'Justificatif',
+      mime: 'application/pdf',
+      size: pdf.length,
+      storageKey: await writeEncrypted(pdf),
+    });
     expect((await adm.c.get(`/api/documents/${f._id}/download`)).status).toBe(404);
     expect((await emp.c.get(`/api/documents/${f._id}/download`)).status).toBe(404);
     expect((await emp.c.get('/api/documents/mine')).body.items).toHaveLength(0);
@@ -118,9 +135,21 @@ describe('RGPD : anonymisation et journal d’audit', () => {
     const emp = await session('employe', { telephone: '0612345678', numeroSecu: '1850175123456' });
     const mgr = await makeUser('manager');
     await supervise(mgr, emp.user);
-    await adm.c.post(`/api/documents/user/${id(emp.user)}`).field('type', 'autre').field('name', 'Contrat').attach('file', pdf, 'c.pdf');
+    await adm.c
+      .post(`/api/documents/user/${id(emp.user)}`)
+      .field('type', 'autre')
+      .field('name', 'Contrat')
+      .attach('file', pdf, 'c.pdf');
     const sick = await SickLeave.create({ userId: emp.user._id, typeMaladie: 'justifie', dateDebut: today(), dateFin: today(), description: 'Dépression', statut: 'accepte' });
-    await LeaveRequest.create({ userId: emp.user._id, raison: 'annual', dateDebut: today(), dateFin: today(), nombreJours: 1, description: 'Opération', motifRefus: 'Détail sensible' });
+    await LeaveRequest.create({
+      userId: emp.user._id,
+      raison: 'annual',
+      dateDebut: today(),
+      dateFin: today(),
+      nombreJours: 1,
+      description: 'Opération',
+      motifRefus: 'Détail sensible',
+    });
     await Meeting.create({ title: 'Point', dateTime: new Date(), createdBy: mgr._id, invitees: [{ userId: emp.user._id, status: 'Accepted' }, { userId: mgr._id }] });
     expect(await Notification.countDocuments({ userId: emp.user._id })).toBeGreaterThan(0); // le dépôt de document a notifié
     expect(filesOnDisk()).toHaveLength(1);

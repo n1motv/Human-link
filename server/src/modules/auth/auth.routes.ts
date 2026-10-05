@@ -22,7 +22,10 @@ import { endSession, listSessions, revokeAllSessions, revokeOtherSessions, revok
 export const authRouter = Router();
 
 const GENERIC_LOGIN_ERROR = 'Identifiants invalides ou compte temporairement verrouillé';
-const email = z.email().max(254).transform((v) => v.toLowerCase().trim());
+const email = z
+  .email()
+  .max(254)
+  .transform((v) => v.toLowerCase().trim());
 
 async function recordFailure(user: UserDoc) {
   const { maxLoginAttempts, lockMinutes } = clientConfig.security;
@@ -214,9 +217,7 @@ authRouter.post('/forgot-password', publicFormLimiter, async (req, res) => {
 authRouter.post('/reset-password', authLimiter, async (req, res) => {
   const body = parse(z.object({ token: z.string().min(20).max(200), password: passwordSchema }), req.body);
   await assertNotPwned(body.password);
-  const user = await User.findOne({ resetTokenHash: sha256(body.token), resetExpiresAt: { $gt: new Date() } }).select(
-    '+passwordHash +resetTokenHash +resetExpiresAt',
-  );
+  const user = await User.findOne({ resetTokenHash: sha256(body.token), resetExpiresAt: { $gt: new Date() } }).select('+passwordHash +resetTokenHash +resetExpiresAt');
   if (!user) throw badRequest('Lien invalide ou expiré', 'BAD_TOKEN');
   user.passwordHash = await hashPassword(body.password);
   user.passwordChangedAt = new Date();
@@ -340,7 +341,10 @@ authRouter.post('/not-me', authLimiter, async (req, res) => {
   const user = await User.findById(claims.userId);
   if (user && user.status === 'active') {
     user.tokenVersion += 1; // invalide immédiatement les jetons d'accès de l'inconnu
-    user.set('knownDevices', user.knownDevices.filter((d) => d.hash !== claims.deviceHash));
+    user.set(
+      'knownDevices',
+      user.knownDevices.filter((d) => d.hash !== claims.deviceHash),
+    );
     await user.save();
     await revokeAllSessions(String(user._id));
     const link = await issueLink(user, 'reset');

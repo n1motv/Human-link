@@ -51,7 +51,14 @@ export default function FeedbackResults() {
                     <span className="font-medium">{t(`feedback.criteria.${k}`)}</span>
                     <span className="font-bold tabular-nums">{v.toFixed(2)}</span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-glass-hover" role="meter" aria-valuenow={v} aria-valuemin={0} aria-valuemax={5} aria-label={t(`feedback.criteria.${k}`)}>
+                  <div
+                    className="h-2.5 overflow-hidden rounded-full bg-glass-hover"
+                    role="meter"
+                    aria-valuenow={v}
+                    aria-valuemin={0}
+                    aria-valuemax={5}
+                    aria-label={t(`feedback.criteria.${k}`)}
+                  >
                     <div className="h-full rounded-full bg-gradient-to-r from-accent to-accent2 transition-all" style={{ width: `${(v / 5) * 100}%` }} />
                   </div>
                 </li>

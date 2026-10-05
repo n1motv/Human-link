@@ -51,7 +51,10 @@ export function ChatWidget() {
       </button>
 
       {open && (
-        <section aria-label={t('chat.title')} className="glass-strong rise fixed bottom-24 end-3 z-40 flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:end-5">
+        <section
+          aria-label={t('chat.title')}
+          className="glass-strong rise fixed bottom-24 end-3 z-40 flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:end-5"
+        >
           <header className="flex items-center gap-3 border-b border-line px-4 py-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent2 text-on-accent">
               <Sparkles size={18} />
@@ -97,7 +100,14 @@ export function ChatWidget() {
               void send(input);
             }}
           >
-            <input className="field !min-h-10 flex-1 !rounded-full" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t('chat.placeholder')} maxLength={500} aria-label={t('chat.placeholder')} />
+            <input
+              className="field !min-h-10 flex-1 !rounded-full"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={t('chat.placeholder')}
+              maxLength={500}
+              aria-label={t('chat.placeholder')}
+            />
             <button className="btn btn-primary btn-icon !h-10 !w-10" disabled={busy || !input.trim()} aria-label={t('chat.send')}>
               <Send size={16} className="rtl:-scale-x-100" />
             </button>

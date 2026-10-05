@@ -50,7 +50,7 @@ export async function assertClean(data: Buffer, name = 'fichier'): Promise<void>
   try {
     const r = await scanBuffer(data);
     if (r.status === 'infected') {
-      logger.warn({ signature: r.signature, name }, 'Fichier refusé par l\'antivirus');
+      logger.warn({ signature: r.signature, name }, "Fichier refusé par l'antivirus");
       throw badRequest('Fichier refusé : un contenu malveillant a été détecté.', 'INFECTED_FILE');
     }
   } catch (err) {

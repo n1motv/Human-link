@@ -19,7 +19,11 @@ export default function Home() {
 
   const profile = useQuery({ queryKey: ['profile'], queryFn: () => api.get<{ user: User }>('/users/me/profile') });
   const leaves = useQuery({ queryKey: ['leaves', 'mine'], queryFn: () => api.get<{ items: Leave[] }>('/leaves/mine'), enabled: modules.leaves });
-  const week = useQuery({ queryKey: ['telework', 'next'], queryFn: () => api.get<{ days: string[]; chosen: string[]; max: number }>('/telework/next-week'), enabled: modules.telework });
+  const week = useQuery({
+    queryKey: ['telework', 'next'],
+    queryFn: () => api.get<{ days: string[]; chosen: string[]; max: number }>('/telework/next-week'),
+    enabled: modules.telework,
+  });
   const invites = useQuery({
     queryKey: ['meetings', 'invitations'],
     queryFn: () => api.get<{ items: { id: string; status: string; dateTime: string }[] }>('/meetings/invitations'),
@@ -45,7 +49,15 @@ export default function Home() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {modules.leaves && <StatTile label={t('home.balance')} value={fmtNumber(u.soldeConge, lang)} hint={t('home.days')} icon={<CalendarCheck size={18} />} tone="accent" />}
         {modules.leaves && <StatTile label={t('home.pending')} value={pending} hint={t('home.pendingHint')} icon={<Plane size={18} />} tone="warn" />}
-        {modules.telework && <StatTile label={t('home.telework')} value={`${week.data?.chosen.length ?? 0}/${week.data?.max ?? u.teleworkMax}`} hint={t('home.nextWeek')} icon={<Wifi size={18} />} tone="info" />}
+        {modules.telework && (
+          <StatTile
+            label={t('home.telework')}
+            value={`${week.data?.chosen.length ?? 0}/${week.data?.max ?? u.teleworkMax}`}
+            hint={t('home.nextWeek')}
+            icon={<Wifi size={18} />}
+            tone="info"
+          />
+        )}
         {modules.meetings && <StatTile label={t('home.invitations')} value={pendingInvites} hint={t('home.toAnswer')} icon={<Video size={18} />} tone="ok" />}
       </div>
 

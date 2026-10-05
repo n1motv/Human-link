@@ -38,7 +38,10 @@ export default function Notifications() {
         <ul className="space-y-3">
           {q.data!.items.map((n) => (
             <li key={n.id} className={`glass flex items-start gap-4 p-4 ${n.isRead ? 'opacity-75' : ''}`}>
-              <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${n.isRead ? 'bg-subtle' : 'bg-gradient-to-br from-accent to-accent2'}`} aria-label={n.isRead ? '' : t('notifications.new')} />
+              <span
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${n.isRead ? 'bg-subtle' : 'bg-gradient-to-br from-accent to-accent2'}`}
+                aria-label={n.isRead ? '' : t('notifications.new')}
+              />
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{renderNotif(n, t, i18n.language)}</p>
                 <p className="mt-1 text-xs text-subtle">

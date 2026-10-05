@@ -19,7 +19,10 @@ export default function SickRequests() {
   const [filter, setFilter] = useState<Filter>('en attente');
   const [refusing, setRefusing] = useState<Sick | null>(null);
   const [approving, setApproving] = useState<Sick | null>(null);
-  const q = useQuery({ queryKey: ['sick', 'all', filter], queryFn: () => api.get<{ items: Sick[] }>(`/sick-leaves${filter === 'all' ? '' : `?statut=${encodeURIComponent(filter)}`}`) });
+  const q = useQuery({
+    queryKey: ['sick', 'all', filter],
+    queryFn: () => api.get<{ items: Sick[] }>(`/sick-leaves${filter === 'all' ? '' : `?statut=${encodeURIComponent(filter)}`}`),
+  });
   const decide = useAction(
     ({ id, decision, motifRefus }: { id: string; decision: 'accepte' | 'refuse'; motifRefus?: string }) => api.post(`/sick-leaves/${id}/decision`, { decision, motifRefus }),
     { success: t('decision.done'), invalidate: [['sick'], ['dashboard']] },
@@ -91,7 +94,11 @@ export default function SickRequests() {
                   <td>
                     <div className="flex items-center justify-end gap-2">
                       {s.attachmentFileId && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('sick.certificate')} onClick={() => downloadFile(`/sick-leaves/${s.id}/attachment`)}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                          aria-label={t('sick.certificate')}
+                          onClick={() => downloadFile(`/sick-leaves/${s.id}/attachment`)}
+                        >
                           <Paperclip size={16} />
                         </button>
                       )}

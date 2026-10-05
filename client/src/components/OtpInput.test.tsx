@@ -16,7 +16,11 @@ describe('OtpInput', () => {
     render(<Harness onComplete={onComplete} />);
     expect(boxes()).toHaveLength(6);
     '12345'.split('').forEach((d, i) => fireEvent.change(boxes()[i]!, { target: { value: d } }));
-    expect(boxes().map((b) => b.value).join('')).toBe('12345');
+    expect(
+      boxes()
+        .map((b) => b.value)
+        .join(''),
+    ).toBe('12345');
     expect(onComplete).not.toHaveBeenCalled();
     fireEvent.change(boxes()[5]!, { target: { value: '6' } });
     expect(onComplete).toHaveBeenCalledWith('123456');
@@ -32,7 +36,11 @@ describe('OtpInput', () => {
     const onComplete = vi.fn();
     render(<Harness onComplete={onComplete} />);
     fireEvent.paste(boxes()[0]!, { clipboardData: { getData: () => ' 654 321 ' } });
-    expect(boxes().map((b) => b.value).join('')).toBe('654321');
+    expect(
+      boxes()
+        .map((b) => b.value)
+        .join(''),
+    ).toBe('654321');
     expect(onComplete).toHaveBeenCalledWith('654321');
   });
 
@@ -40,9 +48,17 @@ describe('OtpInput', () => {
     render(<Harness />);
     '12'.split('').forEach((d, i) => fireEvent.change(boxes()[i]!, { target: { value: d } }));
     fireEvent.keyDown(boxes()[1]!, { key: 'Backspace' });
-    expect(boxes().map((b) => b.value).join('')).toBe('1');
+    expect(
+      boxes()
+        .map((b) => b.value)
+        .join(''),
+    ).toBe('1');
     fireEvent.keyDown(boxes()[1]!, { key: 'Backspace' });
-    expect(boxes().map((b) => b.value).join('')).toBe('');
+    expect(
+      boxes()
+        .map((b) => b.value)
+        .join(''),
+    ).toBe('');
   });
 
   it('code bon : les cases fusionnent en une case verte avec une coche', () => {

@@ -30,11 +30,19 @@ export default function TeamCalendar() {
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const { from, to } = monthRange(month);
 
-  const leaves = useQuery({ queryKey: ['calendar', 'leaves', from], queryFn: () => api.get<{ items: LeaveEntry[] }>(`/calendar/leaves?from=${from}&to=${to}`), enabled: tab === 'leaves' && modules.leaves });
-  const tele = useQuery({ queryKey: ['calendar', 'telework', from], queryFn: () => api.get<{ items: TeleEntry[] }>(`/telework/calendar?from=${from}&to=${to}`), enabled: tab === 'telework' && modules.telework });
+  const leaves = useQuery({
+    queryKey: ['calendar', 'leaves', from],
+    queryFn: () => api.get<{ items: LeaveEntry[] }>(`/calendar/leaves?from=${from}&to=${to}`),
+    enabled: tab === 'leaves' && modules.leaves,
+  });
+  const tele = useQuery({
+    queryKey: ['calendar', 'telework', from],
+    queryFn: () => api.get<{ items: TeleEntry[] }>(`/telework/calendar?from=${from}&to=${to}`),
+    enabled: tab === 'telework' && modules.telework,
+  });
 
   const people = useMemo(() => {
-    const src = tab === 'leaves' ? leaves.data?.items ?? [] : tele.data?.items ?? [];
+    const src = tab === 'leaves' ? (leaves.data?.items ?? []) : (tele.data?.items ?? []);
     const byId = new Map<string, string>();
     for (const x of src) byId.set(x.userId, `${x.prenom} ${x.nom}`);
     const colors = personColors([...byId.keys()]);
@@ -44,7 +52,14 @@ export default function TeamCalendar() {
 
   const items: CalItem[] =
     tab === 'leaves'
-      ? (leaves.data?.items ?? []).map((l, i) => ({ id: `l${i}`, start: l.start, end: l.end, label: `${l.prenom} ${l.nom}`, color: colorOf(l.userId), detail: t(`leave.reasons.${l.raison}`, { defaultValue: l.raison }) }))
+      ? (leaves.data?.items ?? []).map((l, i) => ({
+          id: `l${i}`,
+          start: l.start,
+          end: l.end,
+          label: `${l.prenom} ${l.nom}`,
+          color: colorOf(l.userId),
+          detail: t(`leave.reasons.${l.raison}`, { defaultValue: l.raison }),
+        }))
       : (tele.data?.items ?? []).map((e, i) => ({ id: `t${i}`, start: e.date, end: e.date, label: `${e.prenom} ${e.nom}`, color: colorOf(e.userId) }));
   const err = tab === 'leaves' ? leaves.error : tele.error;
 
@@ -57,7 +72,10 @@ export default function TeamCalendar() {
           <Tabs
             value={tab}
             onChange={setTab}
-            items={[...(modules.leaves ? [{ value: 'leaves' as const, label: t('nav.leaves') }] : []), ...(modules.telework ? [{ value: 'telework' as const, label: t('nav.telework') }] : [])]}
+            items={[
+              ...(modules.leaves ? [{ value: 'leaves' as const, label: t('nav.leaves') }] : []),
+              ...(modules.telework ? [{ value: 'telework' as const, label: t('nav.telework') }] : []),
+            ]}
           />
         }
       />

@@ -110,8 +110,7 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(60rem 40rem at 8% -8%, var(--orb-1), transparent 60%),
-    radial-gradient(48rem 36rem at 100% 8%, var(--orb-2), transparent 62%),
+    radial-gradient(60rem 40rem at 8% -8%, var(--orb-1), transparent 60%), radial-gradient(48rem 36rem at 100% 8%, var(--orb-2), transparent 62%),
     radial-gradient(52rem 38rem at 55% 108%, var(--orb-3), transparent 62%);
   transform: translateZ(0);
 }
@@ -197,11 +196,15 @@ body::before {
     color: var(--on-accent);
     border-color: transparent;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 6px 18px rgb(var(--accent-rgb) / 0.32), inset 0 1px 0 rgb(255 255 255 / 0.25);
+    box-shadow:
+      0 6px 18px rgb(var(--accent-rgb) / 0.32),
+      inset 0 1px 0 rgb(255 255 255 / 0.25);
   }
   .btn-primary:hover:not(:disabled) {
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 8px 24px rgb(var(--accent-rgb) / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.3);
+    box-shadow:
+      0 8px 24px rgb(var(--accent-rgb) / 0.45),
+      inset 0 1px 0 rgb(255 255 255 / 0.3);
     filter: brightness(1.06);
   }
   .btn-danger {
@@ -256,7 +259,9 @@ body::before {
     height: 2.25rem;
     border-radius: 12px;
     color: var(--fg-muted);
-    transition: background 0.15s ease, color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
   }
   .dp-nav:hover {
     background: var(--glass-hover);
@@ -270,7 +275,9 @@ body::before {
     font-size: 0.875rem;
     font-weight: 500;
     font-variant-numeric: tabular-nums;
-    transition: background 0.15s ease, transform 0.15s ease;
+    transition:
+      background 0.15s ease,
+      transform 0.15s ease;
   }
   .dp-day:hover:not(:disabled) {
     background: rgb(var(--accent-rgb) / 0.16);
@@ -503,9 +510,17 @@ body::before {
   }
 }
 @keyframes otp-jolt {
-  20%, 60% { translate: -6px 0; }
-  40%, 80% { translate: 6px 0; }
-  100% { translate: 0 0; }
+  20%,
+  60% {
+    translate: -6px 0;
+  }
+  40%,
+  80% {
+    translate: 6px 0;
+  }
+  100% {
+    translate: 0 0;
+  }
 }
 .otp-shake {
   animation:
@@ -516,8 +531,12 @@ body::before {
   animation: otp-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 0.5s both;
 }
 @keyframes otp-ring {
-  from { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent); }
-  to { box-shadow: 0 0 0 16px transparent; }
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 16px transparent;
+  }
 }
 .otp-shake {
   animation: otp-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
@@ -526,14 +545,33 @@ body::before {
   animation: otp-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
 }
 @keyframes otp-shake {
-  10%, 90% { transform: translateX(-2px); }
-  20%, 80% { transform: translateX(4px); }
-  30%, 50%, 70% { transform: translateX(-7px); }
-  40%, 60% { transform: translateX(7px); }
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-7px);
+  }
+  40%,
+  60% {
+    transform: translateX(7px);
+  }
 }
 @keyframes otp-pop {
-  from { transform: scale(0.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .page-in {
   animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
@@ -574,8 +612,7 @@ body::before {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(46rem 32rem at 12% -6%, var(--orb-1), transparent 62%),
-    radial-gradient(40rem 30rem at 100% 10%, var(--orb-2), transparent 64%),
+    radial-gradient(46rem 32rem at 12% -6%, var(--orb-1), transparent 62%), radial-gradient(40rem 30rem at 100% 10%, var(--orb-2), transparent 64%),
     radial-gradient(44rem 32rem at 50% 110%, var(--orb-3), transparent 64%);
   animation: session-drift 6s ease-in-out infinite alternate;
 }
@@ -613,30 +650,56 @@ body::before {
   animation: session-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s both;
 }
 @keyframes session-fade-in {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 @keyframes session-fade-out {
-  to { opacity: 0; transform: scale(1.02); }
+  to {
+    opacity: 0;
+    transform: scale(1.02);
+  }
 }
 @keyframes session-pop {
-  from { opacity: 0; transform: scale(0.6); }
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
 }
 @keyframes session-draw {
-  to { stroke-dashoffset: 0; }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 @keyframes session-undraw {
-  to { stroke-dashoffset: 100; }
+  to {
+    stroke-dashoffset: 100;
+  }
 }
 @keyframes session-rise {
-  from { opacity: 0; transform: translateY(14px); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
 }
 @keyframes session-door {
-  0% { transform: translateX(0); opacity: 1; }
-  70% { transform: translateX(8px); opacity: 1; }
-  100% { transform: translateX(14px); opacity: 0.35; }
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(8px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(14px);
+    opacity: 0.35;
+  }
 }
 @keyframes session-drift {
-  to { transform: translate3d(0, -2%, 0) scale(1.06); }
+  to {
+    transform: translate3d(0, -2%, 0) scale(1.06);
+  }
 }
 
 .splash-in {
@@ -649,9 +712,16 @@ body::before {
   animation: splash-slide 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 @keyframes splash-pulse {
-  50% { transform: scale(1.04); opacity: 0.85; }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.85;
+  }
 }
 @keyframes splash-slide {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(200%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(200%);
+  }
 }

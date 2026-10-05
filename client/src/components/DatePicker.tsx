@@ -23,7 +23,10 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { type: 'date
  * Sélecteur de date au style de l'application. Remplace <input type="date|month|datetime-local"> à l'identique
  * (value / onChange / min / max / {...register()}) : un champ natif masqué reste la source de vérité.
  */
-export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicker({ type, invalid, className, disabled, min, max, value, defaultValue, onChange, onBlur, name, id, ...rest }, ref) {
+export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicker(
+  { type, invalid, className, disabled, min, max, value, defaultValue, onChange, onBlur, name, id, ...rest },
+  ref,
+) {
   const mode: PickerMode = type === 'month' ? 'month' : type === 'datetime-local' ? 'datetime' : 'date';
   const { t, i18n } = useTranslation();
   const loc = intlLocale(i18n.language);
@@ -179,7 +182,25 @@ export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicke
 
   return (
     <div className="relative">
-      <input ref={nativeRef} type={type} id={id} name={name} min={min} max={max} value={value} defaultValue={defaultValue} disabled={disabled} onChange={onChange} onBlur={onBlur} tabIndex={-1} aria-hidden className="pointer-events-none absolute inset-0 h-full w-full opacity-0" {...rest} />
+      <input
+        ref={nativeRef}
+        type={type}
+        id={id}
+        name={name}
+        min={min}
+        max={max}
+        value={value}
+        defaultValue={defaultValue}
+        disabled={disabled}
+        onChange={onChange}
+        onBlur={onBlur}
+        tabIndex={-1}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+        {...rest}
+      />
+      {/* aria-invalid pilote le style d'erreur du champ (.field[aria-invalid]) ; le champ natif masqué porte la validation. */}
+      {/* eslint-disable-next-line jsx-a11y/role-supports-aria-props */}
       <button
         ref={btnRef}
         type="button"
@@ -251,12 +272,7 @@ export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicke
                         disabled={disabledDay}
                         tabIndex={selected || (iso === today && !sel) ? 0 : -1}
                         onClick={() => pickDay(iso)}
-                        className={clsx(
-                          'dp-day',
-                          c.other && 'text-subtle/60',
-                          iso === today && !selected && 'ring-1 ring-accent text-accent font-bold',
-                          selected && 'dp-day-sel',
-                        )}
+                        className={clsx('dp-day', c.other && 'text-subtle/60', iso === today && !selected && 'ring-1 ring-accent text-accent font-bold', selected && 'dp-day-sel')}
                       >
                         {c.d}
                       </button>
@@ -272,7 +288,17 @@ export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicke
                   const iso = `${cursor.y}-${pad(m + 1)}`;
                   const selected = !!sel && sel.y === cursor.y && sel.m === m;
                   return (
-                    <button key={m} type="button" disabled={mode === 'month' && !!outOfRange(iso)} onClick={() => pickMonth(m)} className={clsx('dp-cell capitalize', selected && 'dp-day-sel', !selected && cursor.y === now.getFullYear() && m === now.getMonth() && 'ring-1 ring-accent text-accent')}>
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={mode === 'month' && !!outOfRange(iso)}
+                      onClick={() => pickMonth(m)}
+                      className={clsx(
+                        'dp-cell capitalize',
+                        selected && 'dp-day-sel',
+                        !selected && cursor.y === now.getFullYear() && m === now.getMonth() && 'ring-1 ring-accent text-accent',
+                      )}
+                    >
                       {fmt({ month: 'short' }, cursor.y, m)}
                     </button>
                   );
@@ -355,7 +381,17 @@ function TimeCol({ label, value, max, step = 1, onPick }: { label: string; value
       <p className="mb-1 text-xs text-subtle">{label}</p>
       <div ref={ref} role="listbox" aria-label={label} className="h-28 w-16 snap-y overflow-y-auto rounded-xl border border-line bg-glass p-1">
         {items.map((n) => (
-          <button key={n} type="button" role="option" aria-selected={n === value} onClick={() => onPick(n)} className={clsx('block w-full snap-center rounded-lg py-1 text-sm font-semibold tabular-nums', n === value ? 'dp-day-sel' : 'text-muted hover:bg-glass-hover hover:text-fg')}>
+          <button
+            key={n}
+            type="button"
+            role="option"
+            aria-selected={n === value}
+            onClick={() => onPick(n)}
+            className={clsx(
+              'block w-full snap-center rounded-lg py-1 text-sm font-semibold tabular-nums',
+              n === value ? 'dp-day-sel' : 'text-muted hover:bg-glass-hover hover:text-fg',
+            )}
+          >
             {pad(n)}
           </button>
         ))}

@@ -37,9 +37,7 @@ export default function Telework() {
       <Card>
         <div className="mb-5 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{t('telework.nextWeek')}</h2>
-          <span className={clsx('badge', exact ? 'badge-ok' : 'badge-warn')}>
-            {isDirector ? sel.length : `${sel.length} / ${max}`}
-          </span>
+          <span className={clsx('badge', exact ? 'badge-ok' : 'badge-warn')}>{isDirector ? sel.length : `${sel.length} / ${max}`}</span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {days.map((d) => {

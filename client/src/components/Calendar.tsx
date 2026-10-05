@@ -57,7 +57,7 @@ export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Pr
 
   const title = new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m, 1)));
   const today = todayIso();
-  const sel = selected ? byDay.get(selected) ?? [] : [];
+  const sel = selected ? (byDay.get(selected) ?? []) : [];
 
   return (
     <div className="glass p-4 sm:p-6">
@@ -93,12 +93,19 @@ export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Pr
                 selected === day ? 'border-accent bg-glass-hover' : 'border-transparent bg-glass hover:bg-glass-hover',
               )}
             >
-              <span className={clsx('inline-grid h-6 w-6 place-items-center rounded-full text-xs font-semibold', isToday && 'bg-gradient-to-br from-accent to-accent2 text-on-accent')}>
+              <span
+                className={clsx('inline-grid h-6 w-6 place-items-center rounded-full text-xs font-semibold', isToday && 'bg-gradient-to-br from-accent to-accent2 text-on-accent')}
+              >
                 {Number(day.slice(8))}
               </span>
               <div className="mt-1 hidden space-y-0.5 sm:block">
                 {list.slice(0, 3).map((it) => (
-                  <div key={it.id + day} className="truncate rounded-md px-1.5 py-0.5 text-xs font-semibold leading-snug" style={{ background: it.color, color: readableOn(it.color) }} title={it.label}>
+                  <div
+                    key={it.id + day}
+                    className="truncate rounded-md px-1.5 py-0.5 text-xs font-semibold leading-snug"
+                    style={{ background: it.color, color: readableOn(it.color) }}
+                    title={it.label}
+                  >
                     {it.label}
                   </div>
                 ))}

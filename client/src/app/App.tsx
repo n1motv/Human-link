@@ -98,14 +98,28 @@ export function App() {
         <Route path="/activate" element={<SetPassword mode="activate" />} />
         <Route path="/not-me" element={<NotMe />} />
         <Route path="/privacy" element={<Privacy />} />
-        <Route path="/contact" element={<RequireModule name="contact"><PublicContact /></RequireModule>} />
+        <Route
+          path="/contact"
+          element={
+            <RequireModule name="contact">
+              <PublicContact />
+            </RequireModule>
+          }
+        />
 
         <Route element={<Protected />}>
           <Route path="/setup-2fa" element={<Setup2fa />} />
           <Route element={<Layout />}>
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/security" element={<Security />} />
-            <Route path="/support" element={<RequireModule name="contact"><InternalContact /></RequireModule>} />
+            <Route
+              path="/support"
+              element={
+                <RequireModule name="contact">
+                  <InternalContact />
+                </RequireModule>
+              }
+            />
 
             {/* Espace personnel : employés et managers */}
             <Route path="/me" element={staff(<Home />)} />

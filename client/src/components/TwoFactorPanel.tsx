@@ -134,7 +134,11 @@ export function TwoFactorPanel({ onEnabled }: Props) {
           <p className="text-sm text-muted">{t('security.mandatory')}</p>
         ) : disabling ? (
           <div className="space-y-3">
-            {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-bad">
+                {error}
+              </p>
+            )}
             <Field label={t('auth.password')}>
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
             </Field>
@@ -162,7 +166,9 @@ export function TwoFactorPanel({ onEnabled }: Props) {
                   setOtpStatus('idle');
                   setError(null);
                 }}
-              >{t('common.cancel')}</Button>
+              >
+                {t('common.cancel')}
+              </Button>
               <Button variant="danger" loading={busy} disabled={code.length !== 6 || !password} onClick={disable} icon={<ShieldOff size={16} />}>
                 {t('security.disable')}
               </Button>
@@ -196,7 +202,11 @@ export function TwoFactorPanel({ onEnabled }: Props) {
             </code>
           </div>
         </div>
-        {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-bad">
+            {error}
+          </p>
+        )}
         <div>
           <span className="mb-2 block text-xs font-semibold text-muted">{t('auth.code')}</span>
           <OtpInput
@@ -227,7 +237,11 @@ export function TwoFactorPanel({ onEnabled }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted">{mandatory ? t('security.required') : t('security.intro')}</p>
-      {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-bad">
+          {error}
+        </p>
+      )}
       <FormActions>
         <Button variant="primary" loading={busy} onClick={start} icon={<Smartphone size={16} />}>
           {t('security.enable')}

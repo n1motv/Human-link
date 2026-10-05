@@ -145,7 +145,15 @@ export default function Organize() {
         </TableWrap>
       )}
       <NewMeeting open={open} onClose={() => setOpen(false)} />
-      <ConfirmDialog open={!!del} danger title={t('common.delete')} message={t('meetings.deleteConfirm')} confirmLabel={t('common.delete')} onClose={() => setDel(null)} onConfirm={() => remove.mutateAsync(del!)} />
+      <ConfirmDialog
+        open={!!del}
+        danger
+        title={t('common.delete')}
+        message={t('meetings.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        onClose={() => setDel(null)}
+        onConfirm={() => remove.mutateAsync(del!)}
+      />
     </>
   );
 }

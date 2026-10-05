@@ -94,10 +94,7 @@ leavesRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
 leavesRouter.post('/:id/decision', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
   const { id } = parse(z.object({ id: objectId }), req.params);
-  const body = parse(
-    z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() }),
-    req.body,
-  );
+  const body = parse(z.object({ decision: z.enum(['accepte', 'refuse']), motifRefus: z.string().trim().min(1).max(1000).optional() }), req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
 
   const leave = await LeaveRequest.findById(id);
@@ -137,7 +134,7 @@ leavesRouter.post('/:id/decision', requireRole('admin', 'manager'), async (req, 
     const debited = await User.findOneAndUpdate({ _id: employeeId, soldeConge: { $gte: leave.nombreJours } }, { $inc: { soldeConge: -leave.nombreJours } });
     if (!debited) {
       await LeaveRequest.updateOne({ _id: id }, { statut: 'en attente', statutAdmin: 'en attente' });
-      throw badRequest("Solde de congé insuffisant pour cette demande", 'INSUFFICIENT_BALANCE');
+      throw badRequest('Solde de congé insuffisant pour cette demande', 'INSUFFICIENT_BALANCE');
     }
     await clearTelework(employeeId, leave.dateDebut, leave.dateFin);
     await notify(employeeId, 'Congé', 'leave.accepted', params, { emailSubject: 'Réponse à votre demande de congé' });

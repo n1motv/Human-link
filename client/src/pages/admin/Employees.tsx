@@ -39,12 +39,32 @@ interface FormValues {
 }
 
 const blank: FormValues = {
-  nom: '', prenom: '', email: '', role: 'employe', poste: '', departement: '', sexe: '', dateNaissance: '', telephone: '', adresse: '', ville: '', codePostal: '',
-  pays: '', nationalite: '', numeroSecu: '', dateEmbauche: '', typeContrat: '', salaire: '', soldeConge: '', teleworkMax: '',
+  nom: '',
+  prenom: '',
+  email: '',
+  role: 'employe',
+  poste: '',
+  departement: '',
+  sexe: '',
+  dateNaissance: '',
+  telephone: '',
+  adresse: '',
+  ville: '',
+  codePostal: '',
+  pays: '',
+  nationalite: '',
+  numeroSecu: '',
+  dateEmbauche: '',
+  typeContrat: '',
+  salaire: '',
+  soldeConge: '',
+  teleworkMax: '',
 };
 
 const toForm = (u: User): FormValues =>
-  Object.fromEntries(Object.keys(blank).map((k) => [k, (u as unknown as Record<string, unknown>)[k] === undefined ? '' : String((u as unknown as Record<string, unknown>)[k])])) as unknown as FormValues;
+  Object.fromEntries(
+    Object.keys(blank).map((k) => [k, (u as unknown as Record<string, unknown>)[k] === undefined ? '' : String((u as unknown as Record<string, unknown>)[k])]),
+  ) as unknown as FormValues;
 
 const NUMERIC = ['salaire', 'soldeConge', 'teleworkMax'];
 
@@ -103,7 +123,11 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
       }
     >
       <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-        {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+            {error}
+          </p>
+        )}
         {isNew && <p className="rounded-xl border border-line bg-glass px-3 py-2 text-sm text-muted">{t('employees.inviteHint')}</p>}
 
         <fieldset className="grid gap-4 sm:grid-cols-2">
@@ -210,7 +234,8 @@ export default function Employees() {
 
   const q = useQuery({
     queryKey: ['users', term, status, page],
-    queryFn: () => api.get<{ items: Row[]; total: number }>(`/users?page=${page}&limit=${PAGE_SIZE}${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
+    queryFn: () =>
+      api.get<{ items: Row[]; total: number }>(`/users?page=${page}&limit=${PAGE_SIZE}${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
     placeholderData: keepPreviousData,
   });
   const archive = useAction((id: string) => api.delete(`/users/${id}`), { success: t('employees.archived'), invalidate: [['users']] });
@@ -302,26 +327,51 @@ export default function Employees() {
                         </button>
                       )}
                       {u.status === 'active' && u.twoFactor?.enabled && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.reset2fa')} title={t('employees.reset2fa')} onClick={() => setAction({ kind: 'reset2fa', user: u })}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                          aria-label={t('employees.reset2fa')}
+                          title={t('employees.reset2fa')}
+                          onClick={() => setAction({ kind: 'reset2fa', user: u })}
+                        >
                           <KeyRound size={16} />
                         </button>
                       )}
                       {u.status === 'invited' && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.resend')} title={t('employees.resend')} onClick={() => setAction({ kind: 'resend', user: u })}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                          aria-label={t('employees.resend')}
+                          title={t('employees.resend')}
+                          onClick={() => setAction({ kind: 'resend', user: u })}
+                        >
                           <MailPlus size={16} />
                         </button>
                       )}
                       {u.status === 'archived' ? (
                         <>
-                          <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('employees.restore')} title={t('employees.restore')} onClick={() => setAction({ kind: 'restore', user: u })}>
+                          <button
+                            className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                            aria-label={t('employees.restore')}
+                            title={t('employees.restore')}
+                            onClick={() => setAction({ kind: 'restore', user: u })}
+                          >
                             <RotateCcw size={16} />
                           </button>
-                          <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('employees.anonymize')} title={t('employees.anonymize')} onClick={() => setAction({ kind: 'anonymize', user: u })}>
+                          <button
+                            className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad"
+                            aria-label={t('employees.anonymize')}
+                            title={t('employees.anonymize')}
+                            onClick={() => setAction({ kind: 'anonymize', user: u })}
+                          >
                             <Eraser size={16} />
                           </button>
                         </>
                       ) : (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('employees.archive')} title={t('employees.archive')} onClick={() => setAction({ kind: 'archive', user: u })}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad"
+                          aria-label={t('employees.archive')}
+                          title={t('employees.archive')}
+                          onClick={() => setAction({ kind: 'archive', user: u })}
+                        >
                           <Archive size={16} />
                         </button>
                       )}
@@ -337,11 +387,23 @@ export default function Employees() {
         <div className="mt-4 flex items-center justify-between text-sm text-muted">
           <span>{t('employees.range', { from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, q.data.total), total: q.data.total })}</span>
           <div className="flex items-center gap-2">
-            <Button size="sm" icon={<ChevronLeft size={14} className="rtl:rotate-180" />} disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label={t('common.previous')} />
+            <Button
+              size="sm"
+              icon={<ChevronLeft size={14} className="rtl:rotate-180" />}
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+              aria-label={t('common.previous')}
+            />
             <span className="tabular-nums">
               {page} / {Math.ceil(q.data.total / PAGE_SIZE)}
             </span>
-            <Button size="sm" icon={<ChevronRight size={14} className="rtl:rotate-180" />} disabled={page * PAGE_SIZE >= q.data.total} onClick={() => setPage((p) => p + 1)} aria-label={t('common.next')} />
+            <Button
+              size="sm"
+              icon={<ChevronRight size={14} className="rtl:rotate-180" />}
+              disabled={page * PAGE_SIZE >= q.data.total}
+              onClick={() => setPage((p) => p + 1)}
+              aria-label={t('common.next')}
+            />
           </div>
         </div>
       )}
@@ -358,7 +420,15 @@ export default function Employees() {
         onConfirm={() => {
           const id = action!.user.id;
           const k = action!.kind;
-          return k === 'anonymize' ? anonymize.mutateAsync(id) : k === 'reset2fa' ? reset2fa.mutateAsync(id) : k === 'restore' ? restore.mutateAsync(id) : k === 'resend' ? invite.mutateAsync(id) : archive.mutateAsync(id);
+          return k === 'anonymize'
+            ? anonymize.mutateAsync(id)
+            : k === 'reset2fa'
+              ? reset2fa.mutateAsync(id)
+              : k === 'restore'
+                ? restore.mutateAsync(id)
+                : k === 'resend'
+                  ? invite.mutateAsync(id)
+                  : archive.mutateAsync(id);
         }}
       />
     </>

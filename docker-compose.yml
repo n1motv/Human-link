@@ -12,7 +12,7 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
-    command: ["--auth", "--bind_ip_all"]
+    command: ['--auth', '--bind_ip_all']
     environment:
       MONGO_INITDB_ROOT_USERNAME: humanlink
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?définir MONGO_PASSWORD dans .env}
@@ -20,7 +20,7 @@ services:
       - mongo-data:/data/db
     # Aucun port publié : seule l'application peut joindre la base.
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -38,40 +38,39 @@ services:
       TRUST_PROXY: ${TRUST_PROXY:-0}
       # Chemins DANS le conteneur : prioritaires sur le .env du client, qui peut donc servir aussi aux tests locaux (npm run instances).
       NODE_ENV: production
-      PORT: "4000"
+      PORT: '4000'
       CLIENT_DIR: /client
       CLIENT_DIST: /app/client/dist
-      SERVE_CLIENT: "true"
+      SERVE_CLIENT: 'true'
       STORAGE_DIR: /data/storage
     volumes:
       - ${CLIENT_DIR:-./clients/example}:/client:ro
       - app-data:/data
     # Sans le profil https, l'application est directement exposée (à placer derrière votre propre reverse proxy TLS).
     ports:
-      - "${APP_PORT:-4000}:4000"
+      - '${APP_PORT:-4000}:4000'
 
   # Antivirus optionnel : docker compose --profile antivirus up -d clamav ; puis CLAMAV_HOST=clamav dans le .env du client.
   clamav:
     image: clamav/clamav:1.4
-    profiles: ["antivirus"]
+    profiles: ['antivirus']
     restart: unless-stopped
     volumes:
       - clamav-data:/var/lib/clamav
     # Aucun port publié : seule l'application joint le démon (port 3310 du réseau Compose).
     healthcheck:
-      test: ["CMD", "clamdcheck.sh"]
+      test: ['CMD', 'clamdcheck.sh']
       interval: 60s
       timeout: 10s
       retries: 5
       start_period: 300s
-
 
   # Sauvegardes automatiques : docker compose --profile backup up -d backup
   # Chaque nuit (BACKUP_HOUR, UTC) : base MongoDB + fichiers dans BACKUP_PATH, conservés BACKUP_KEEP_DAYS jours ;
   # le 1er du mois, test de restauration dans une base temporaire. Voir docs/DEPLOIEMENT.md, « Sauvegardes ».
   backup:
     build: ./deploy/backup
-    profiles: ["backup"]
+    profiles: ['backup']
     restart: unless-stopped
     depends_on:
       mongo:
@@ -89,7 +88,7 @@ services:
       - ${BACKUP_PATH:-./backups}:/backups
     # Alerte (« unhealthy ») si aucune sauvegarde n'a réussi depuis plus de 26 h.
     healthcheck:
-      test: ["CMD-SHELL", "find /backups/last-success -mmin -1560 2>/dev/null | grep -q ."]
+      test: ['CMD-SHELL', 'find /backups/last-success -mmin -1560 2>/dev/null | grep -q .']
       interval: 1h
       timeout: 10s
       retries: 1
@@ -97,12 +96,12 @@ services:
 
   caddy:
     image: caddy:2
-    profiles: ["https"]
+    profiles: ['https']
     restart: unless-stopped
     depends_on: [app]
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     environment:
       DOMAIN: ${DOMAIN:?définir DOMAIN dans .env pour le profil https}
     volumes:

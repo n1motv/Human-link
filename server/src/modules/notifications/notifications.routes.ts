@@ -9,10 +9,7 @@ notificationsRouter.use(requireAuth());
 
 notificationsRouter.get('/', async (req, res) => {
   const userId = authOf(req).userId;
-  const [items, unread] = await Promise.all([
-    Notification.find({ userId }).sort({ createdAt: -1 }).limit(100),
-    Notification.countDocuments({ userId, isRead: false }),
-  ]);
+  const [items, unread] = await Promise.all([Notification.find({ userId }).sort({ createdAt: -1 }).limit(100), Notification.countDocuments({ userId, isRead: false })]);
   res.json({ items, unread });
 });
 

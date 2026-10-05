@@ -53,7 +53,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     return [...pages, ...actions];
   }, [user.role, modules, t, nav, theme, toggle, signOut]);
 
-  const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  const norm = (s: string) =>
+    s
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase();
   const results = useMemo(() => {
     const needle = norm(q.trim());
     return needle ? commands.filter((c) => norm(c.label).includes(needle)) : commands;

@@ -26,10 +26,7 @@ function view(b: InstanceType<typeof BonusRequest>) {
 
 bonusesRouter.post('/', requireRole('manager'), async (req, res) => {
   const auth = authOf(req);
-  const body = parse(
-    z.object({ employeId: objectId, montant: z.coerce.number().positive().max(1_000_000), motif: z.string().trim().min(1).max(1000) }),
-    req.body,
-  );
+  const body = parse(z.object({ employeId: objectId, montant: z.coerce.number().positive().max(1_000_000), motif: z.string().trim().min(1).max(1000) }), req.body);
   // Correction de l'ancienne version : un manager ne peut proposer une prime que pour son équipe.
   if (!(await managedIds(auth.userId)).includes(body.employeId)) throw forbidden('Cette personne ne fait pas partie de votre équipe');
   const [employee, manager] = await Promise.all([User.findById(body.employeId), User.findById(auth.userId)]);

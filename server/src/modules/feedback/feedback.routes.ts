@@ -33,7 +33,15 @@ feedbackRouter.post('/', requireRole('employe', 'manager'), async (req, res) => 
 });
 
 feedbackRouter.get('/results', requireRole('admin'), async (req, res) => {
-  const { month } = parse(z.object({ month: z.string().regex(/^\d{4}-\d{2}$/).default(currentMonth()) }), req.query);
+  const { month } = parse(
+    z.object({
+      month: z
+        .string()
+        .regex(/^\d{4}-\d{2}$/)
+        .default(currentMonth()),
+    }),
+    req.query,
+  );
   const rows = await Feedback.find({ month });
   const total = rows.length;
   const averages = Object.fromEntries(

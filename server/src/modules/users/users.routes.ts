@@ -21,7 +21,10 @@ export const usersRouter = Router();
 usersRouter.use(requireAuth());
 
 const text = (max = 120) => z.string().trim().max(max);
-const optText = (max = 120) => text(max).optional().or(z.literal('').transform(() => undefined));
+const optText = (max = 120) =>
+  text(max)
+    .optional()
+    .or(z.literal('').transform(() => undefined));
 const optDate = isoDate.optional().or(z.literal('').transform(() => undefined));
 
 const profileFields = {
@@ -37,14 +40,23 @@ const profileFields = {
 };
 
 const adminFields = {
-  email: z.email().max(254).transform((v) => v.toLowerCase().trim()),
+  email: z
+    .email()
+    .max(254)
+    .transform((v) => v.toLowerCase().trim()),
   role: z.enum(ROLES),
   poste: optText(),
   departement: optText(),
-  sexe: z.enum(['Homme', 'Femme']).optional().or(z.literal('').transform(() => undefined)),
+  sexe: z
+    .enum(['Homme', 'Femme'])
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   numeroSecu: optText(40),
   dateEmbauche: optDate,
-  typeContrat: z.enum(CONTRACTS).optional().or(z.literal('').transform(() => undefined)),
+  typeContrat: z
+    .enum(CONTRACTS)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   salaire: z.coerce.number().min(0).max(10_000_000).optional(),
   soldeConge: z.coerce.number().min(0).max(1000).optional(),
   teleworkMax: z.coerce.number().int().min(0).max(5).optional(),
@@ -79,10 +91,7 @@ usersRouter.get('/me/profile', async (req, res) => {
 });
 
 usersRouter.patch('/me/profile', async (req, res) => {
-  const body = parse(
-    z.object({ ...profileFields, email: adminFields.email.optional(), currentPassword: z.string().max(200).optional() }).partial(),
-    req.body,
-  );
+  const body = parse(z.object({ ...profileFields, email: adminFields.email.optional(), currentPassword: z.string().max(200).optional() }).partial(), req.body);
   checkAge(body.dateNaissance);
   const user = await loadUser(authOf(req).userId);
 
@@ -147,7 +156,10 @@ usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
     filter.$and = [{ _id: { $nin: taken } }];
   }
   const [items, total] = await Promise.all([
-    User.find(filter).sort({ nom: 1, prenom: 1 }).skip((q.page - 1) * q.limit).limit(q.limit),
+    User.find(filter)
+      .sort({ nom: 1, prenom: 1 })
+      .skip((q.page - 1) * q.limit)
+      .limit(q.limit),
     User.countDocuments(filter),
   ]);
   res.json({ items: items.map((u) => listView(toPublicUser(u))), total, page: q.page });
@@ -219,7 +231,7 @@ usersRouter.post('/:id/reset-2fa', requireRole('admin'), async (req, res) => {
 
 usersRouter.post('/:id/resend-invite', requireRole('admin'), async (req, res) => {
   const user = await loadUser(req.params.id as string);
-  if (user.status !== 'invited') throw badRequest("Ce compte est déjà activé");
+  if (user.status !== 'invited') throw badRequest('Ce compte est déjà activé');
   await sendInvitation(user);
   res.json({ ok: true });
 });

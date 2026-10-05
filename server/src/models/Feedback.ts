@@ -1,14 +1,9 @@
 import { Schema, model } from 'mongoose';
 import { applyJsonTransform } from './plugins.js';
 
-export const FEEDBACK_CRITERIA = [
-  'env', 'management', 'worklife', 'comm', 'recognition',
-  'training', 'equipment', 'team', 'meetings', 'transparency',
-] as const;
+export const FEEDBACK_CRITERIA = ['env', 'management', 'worklife', 'comm', 'recognition', 'training', 'equipment', 'team', 'meetings', 'transparency'] as const;
 
-const ratings = Object.fromEntries(
-  FEEDBACK_CRITERIA.map((k) => [k, { type: Number, required: true, min: 1, max: 5 }]),
-);
+const ratings = Object.fromEntries(FEEDBACK_CRITERIA.map((k) => [k, { type: Number, required: true, min: 1, max: 5 }]));
 
 /**
  * Feedback ANONYME : aucun lien vers l'utilisateur. `participant` est un pseudonyme HMAC

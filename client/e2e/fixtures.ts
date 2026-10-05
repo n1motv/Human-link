@@ -3,7 +3,9 @@ import type { Page } from '@playwright/test';
 /** Logo de test : un SVG en ligne, pour vérifier aussi l'affichage du logo sans dépendre du serveur. */
 const LOGO =
   'data:image/svg+xml;utf8,' +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40"><rect width="40" height="40" rx="10" fill="#8b5cf6"/><text x="52" y="29" font-family="Arial" font-weight="700" font-size="26" fill="#8b5cf6">ACME</text></svg>');
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40"><rect width="40" height="40" rx="10" fill="#8b5cf6"/><text x="52" y="29" font-family="Arial" font-weight="700" font-size="26" fill="#8b5cf6">ACME</text></svg>',
+  );
 
 const CONFIG = {
   company: { name: 'Acme', supportEmail: 'rh@acme.test', dpoEmail: 'dpo@acme.test', legalName: 'Acme SAS', address: '1 rue du Test, 75000 Paris' },
@@ -48,7 +50,15 @@ const leave = (id: string, who: ReturnType<typeof brief>, over: Record<string, u
 });
 
 const LEAVES_MINE = [
-  leave('m1', brief('u-employee', 'Sofia', 'Lopez'), { raison: 'travel', dateDebut: '2026-10-27', dateFin: '2026-10-30', nombreJours: 4, statut: 'accepte', statutManager: 'accepte', statutAdmin: 'accepte' }),
+  leave('m1', brief('u-employee', 'Sofia', 'Lopez'), {
+    raison: 'travel',
+    dateDebut: '2026-10-27',
+    dateFin: '2026-10-30',
+    nombreJours: 4,
+    statut: 'accepte',
+    statutManager: 'accepte',
+    statutAdmin: 'accepte',
+  }),
   leave('m2', brief('u-employee', 'Sofia', 'Lopez'), { dateDebut: '2026-11-16', dateFin: '2026-11-18' }),
 ];
 const TEAM_PENDING = [
@@ -70,7 +80,9 @@ function routes(role: Role | null): Record<string, unknown> {
     '/notifications': { items: [], unread: 2 },
     '/leaves/mine': { items: LEAVES_MINE },
     '/telework/next-week': { days: ['2026-10-12', '2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16'], chosen: ['2026-10-12', '2026-10-15'], max: 2 },
-    '/meetings/invitations': { items: [{ id: 'i1', status: 'en attente', dateTime: '2026-10-09T14:00:00Z', title: 'Revue de sprint', organizer: { nom: 'Bernard', prenom: 'Karim' } }] },
+    '/meetings/invitations': {
+      items: [{ id: 'i1', status: 'en attente', dateTime: '2026-10-09T14:00:00Z', title: 'Revue de sprint', organizer: { nom: 'Bernard', prenom: 'Karim' } }],
+    },
     '/leaves?statut=en%20attente': { items: TEAM_PENDING },
   };
 }

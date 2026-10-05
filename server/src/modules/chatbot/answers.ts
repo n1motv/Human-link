@@ -70,7 +70,7 @@ export const T: Record<Lang, Answers> = {
     noManager: () => 'Aucun manager ne vous est assigné.',
   },
   en: {
-    unknown: () => "Sorry, I don't have access to that information. Try for example: \"What is my leave balance?\"",
+    unknown: () => 'Sorry, I don\'t have access to that information. Try for example: "What is my leave balance?"',
     matricule: (v) => `Your employee ID is ${v}.`,
     name: (p, n) => `Your name is ${p} ${n}.`,
     age: (n) => `You are ${n} years old.`,

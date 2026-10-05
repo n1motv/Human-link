@@ -26,7 +26,10 @@ export default function Audit() {
   const [page, setPage] = useState(1);
   const q = useQuery({
     queryKey: ['audit', action, actor, page],
-    queryFn: () => api.get<{ items: Entry[]; total: number }>(`/rgpd/audit?page=${page}&limit=${LIMIT}${action ? `&action=${encodeURIComponent(action)}` : ''}${actor ? `&actor=${encodeURIComponent(actor)}` : ''}`),
+    queryFn: () =>
+      api.get<{ items: Entry[]; total: number }>(
+        `/rgpd/audit?page=${page}&limit=${LIMIT}${action ? `&action=${encodeURIComponent(action)}` : ''}${actor ? `&actor=${encodeURIComponent(actor)}` : ''}`,
+      ),
     placeholderData: (prev) => prev,
   });
   const pages = Math.max(1, Math.ceil((q.data?.total ?? 0) / LIMIT));
@@ -35,8 +38,26 @@ export default function Audit() {
     <>
       <PageHeader title={t('nav.audit')} subtitle={t('audit.subtitle')} />
       <div className="mb-5 flex flex-wrap gap-3">
-        <Input className="!w-auto min-w-[14rem]" placeholder={t('audit.filterAction')} aria-label={t('audit.filterAction')} value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} />
-        <Input className="!w-auto min-w-[14rem]" placeholder={t('audit.filterActor')} aria-label={t('audit.filterActor')} value={actor} onChange={(e) => { setActor(e.target.value); setPage(1); }} />
+        <Input
+          className="!w-auto min-w-[14rem]"
+          placeholder={t('audit.filterAction')}
+          aria-label={t('audit.filterAction')}
+          value={action}
+          onChange={(e) => {
+            setAction(e.target.value);
+            setPage(1);
+          }}
+        />
+        <Input
+          className="!w-auto min-w-[14rem]"
+          placeholder={t('audit.filterActor')}
+          aria-label={t('audit.filterActor')}
+          value={actor}
+          onChange={(e) => {
+            setActor(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
       {q.isLoading ? (
         <Spinner />
@@ -77,11 +98,23 @@ export default function Audit() {
           <div className="mt-4 flex items-center justify-between text-sm text-muted">
             <span>{t('audit.total', { count: q.data!.total })}</span>
             <div className="flex items-center gap-2">
-              <Button size="sm" icon={<ChevronLeft size={14} className="rtl:rotate-180" />} disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label={t('common.previous')} />
+              <Button
+                size="sm"
+                icon={<ChevronLeft size={14} className="rtl:rotate-180" />}
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                aria-label={t('common.previous')}
+              />
               <span className="tabular-nums">
                 {page} / {pages}
               </span>
-              <Button size="sm" icon={<ChevronRight size={14} className="rtl:rotate-180" />} disabled={page >= pages} onClick={() => setPage((p) => p + 1)} aria-label={t('common.next')} />
+              <Button
+                size="sm"
+                icon={<ChevronRight size={14} className="rtl:rotate-180" />}
+                disabled={page >= pages}
+                onClick={() => setPage((p) => p + 1)}
+                aria-label={t('common.next')}
+              />
             </div>
           </div>
         </>

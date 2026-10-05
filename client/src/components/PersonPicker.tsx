@@ -92,7 +92,12 @@ export function PersonPicker({ value, onChange, filter = 'status=active', exclud
         onKeyDown={onKey}
       />
       {value && (
-        <button type="button" className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('common.clear')} onClick={() => (onChange(null), setTerm(''))}>
+        <button
+          type="button"
+          className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted hover:bg-glass-hover hover:text-fg"
+          aria-label={t('common.clear')}
+          onClick={() => (onChange(null), setTerm(''))}
+        >
           <X size={14} />
         </button>
       )}
@@ -111,7 +116,11 @@ export function PersonPicker({ value, onChange, filter = 'status=active', exclud
                 onMouseEnter={() => setActive(i)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(p)}
-                className={clsx('flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm', i === active && 'bg-glass text-fg', p.id === value?.id && 'font-semibold text-accent')}
+                className={clsx(
+                  'flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm',
+                  i === active && 'bg-glass text-fg',
+                  p.id === value?.id && 'font-semibold text-accent',
+                )}
               >
                 <Avatar id={p.id} prenom={p.prenom} nom={p.nom} hasPhoto={!!p.photoFileId} size={28} />
                 <span className="min-w-0 flex-1 truncate">

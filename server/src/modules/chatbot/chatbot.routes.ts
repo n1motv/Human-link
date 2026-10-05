@@ -40,25 +40,44 @@ function answerFor(intent: Intent, lang: Lang, c: Ctx): string {
   const t = T[lang];
   const u = c.user;
   switch (intent) {
-    case 'matricule': return t.matricule(u.matricule);
-    case 'name': return t.name(u.prenom, u.nom);
-    case 'age': return u.dateNaissance ? t.age(ageOn(u.dateNaissance)) : t.unknown();
-    case 'birthdate': return u.dateNaissance ? t.birthdate(u.dateNaissance) : t.unknown();
-    case 'poste': return u.poste ? t.poste(u.poste) : t.unknown();
-    case 'departement': return u.departement ? t.departement(u.departement) : t.unknown();
-    case 'salaire': return typeof u.salaire === 'number' ? t.salaire(u.salaire) : t.unknown();
-    case 'social_security': return u.numeroSecu ? t.secu(u.numeroSecu) : t.unknown();
-    case 'telephone': return u.telephone ? t.telephone(u.telephone) : t.unknown();
-    case 'adresse': return u.adresse ? t.adresse([u.adresse, u.codePostal, u.ville, u.pays].filter(Boolean).join(', ')) : t.unknown();
-    case 'date_embauche': return u.dateEmbauche ? t.embauche(u.dateEmbauche) : t.unknown();
-    case 'type_contrat': return u.typeContrat ? t.contrat(u.typeContrat) : t.unknown();
-    case 'solde': return t.solde(u.soldeConge);
-    case 'conge': return c.leaves.length ? t.conges(c.leaves.map((l) => ({ from: l.dateDebut, to: l.dateFin, statut: l.statut, raison: l.raison }))) : t.noLeave();
-    case 'arret': return c.sicks.length ? t.arrets(c.sicks.map((s) => ({ from: s.dateDebut, to: s.dateFin, statut: s.statut }))) : t.noSick();
-    case 'teletravail': return c.telework.length ? t.telework(c.telework.map((d) => d.date)) : t.noTelework();
-    case 'prime': return c.bonuses.length ? t.primes(c.bonuses.map((b) => ({ montant: b.montant, statut: b.statut }))) : t.noBonus();
-    case 'notification': return c.unread.length ? t.notifs(c.unread.map((n) => n.message)) : t.noNotifs();
-    case 'manager': return c.manager ? t.manager(`${c.manager.prenom} ${c.manager.nom}`) : t.noManager();
+    case 'matricule':
+      return t.matricule(u.matricule);
+    case 'name':
+      return t.name(u.prenom, u.nom);
+    case 'age':
+      return u.dateNaissance ? t.age(ageOn(u.dateNaissance)) : t.unknown();
+    case 'birthdate':
+      return u.dateNaissance ? t.birthdate(u.dateNaissance) : t.unknown();
+    case 'poste':
+      return u.poste ? t.poste(u.poste) : t.unknown();
+    case 'departement':
+      return u.departement ? t.departement(u.departement) : t.unknown();
+    case 'salaire':
+      return typeof u.salaire === 'number' ? t.salaire(u.salaire) : t.unknown();
+    case 'social_security':
+      return u.numeroSecu ? t.secu(u.numeroSecu) : t.unknown();
+    case 'telephone':
+      return u.telephone ? t.telephone(u.telephone) : t.unknown();
+    case 'adresse':
+      return u.adresse ? t.adresse([u.adresse, u.codePostal, u.ville, u.pays].filter(Boolean).join(', ')) : t.unknown();
+    case 'date_embauche':
+      return u.dateEmbauche ? t.embauche(u.dateEmbauche) : t.unknown();
+    case 'type_contrat':
+      return u.typeContrat ? t.contrat(u.typeContrat) : t.unknown();
+    case 'solde':
+      return t.solde(u.soldeConge);
+    case 'conge':
+      return c.leaves.length ? t.conges(c.leaves.map((l) => ({ from: l.dateDebut, to: l.dateFin, statut: l.statut, raison: l.raison }))) : t.noLeave();
+    case 'arret':
+      return c.sicks.length ? t.arrets(c.sicks.map((s) => ({ from: s.dateDebut, to: s.dateFin, statut: s.statut }))) : t.noSick();
+    case 'teletravail':
+      return c.telework.length ? t.telework(c.telework.map((d) => d.date)) : t.noTelework();
+    case 'prime':
+      return c.bonuses.length ? t.primes(c.bonuses.map((b) => ({ montant: b.montant, statut: b.statut }))) : t.noBonus();
+    case 'notification':
+      return c.unread.length ? t.notifs(c.unread.map((n) => n.message)) : t.noNotifs();
+    case 'manager':
+      return c.manager ? t.manager(`${c.manager.prenom} ${c.manager.nom}`) : t.noManager();
   }
 }
 
@@ -66,8 +85,13 @@ function answerFor(intent: Intent, lang: Lang, c: Ctx): string {
 function safeContext(c: Ctx): string {
   const u = c.user;
   return [
-    `Nom: ${u.prenom} ${u.nom}`, `Matricule: ${u.matricule}`, `Poste: ${u.poste ?? '-'}`, `Département: ${u.departement ?? '-'}`,
-    `Solde de congés: ${u.soldeConge} jours`, `Contrat: ${u.typeContrat ?? '-'}`, `Date d'embauche: ${u.dateEmbauche ?? '-'}`,
+    `Nom: ${u.prenom} ${u.nom}`,
+    `Matricule: ${u.matricule}`,
+    `Poste: ${u.poste ?? '-'}`,
+    `Département: ${u.departement ?? '-'}`,
+    `Solde de congés: ${u.soldeConge} jours`,
+    `Contrat: ${u.typeContrat ?? '-'}`,
+    `Date d'embauche: ${u.dateEmbauche ?? '-'}`,
     `Congés: ${c.leaves.map((l) => `${l.dateDebut}→${l.dateFin} (${l.statut})`).join('; ') || 'aucun'}`,
     `Arrêts: ${c.sicks.map((s) => `${s.dateDebut}→${s.dateFin} (${s.statut})`).join('; ') || 'aucun'}`,
     `Télétravail à venir: ${c.telework.map((d) => d.date).join(', ') || 'aucun'}`,

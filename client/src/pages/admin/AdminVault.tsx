@@ -62,7 +62,11 @@ function UploadModal({ userId, open, onClose }: { userId: string; open: boolean;
       }
     >
       <div className="space-y-4">
-        {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+            {error}
+          </p>
+        )}
         <Field label={t('vault.type')} required>
           <Select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
             <option value="bulletin">{t('vault.cat.bulletin')}</option>
@@ -124,10 +128,25 @@ export default function AdminVault() {
         </p>
       </Card>
 
-      {userId && (files.isLoading ? <Spinner /> : files.isError ? <ErrorState error={files.error} onRetry={() => files.refetch()} /> : <VaultList files={files.data!.items} onDelete={setDel} />)}
+      {userId &&
+        (files.isLoading ? (
+          <Spinner />
+        ) : files.isError ? (
+          <ErrorState error={files.error} onRetry={() => files.refetch()} />
+        ) : (
+          <VaultList files={files.data!.items} onDelete={setDel} />
+        ))}
 
       {userId && <UploadModal userId={userId} open={upload} onClose={() => setUpload(false)} />}
-      <ConfirmDialog open={!!del} danger title={t('common.delete')} message={t('vault.deleteConfirm', { name: del?.label ?? '' })} confirmLabel={t('common.delete')} onClose={() => setDel(null)} onConfirm={() => remove.mutateAsync(del!.id)} />
+      <ConfirmDialog
+        open={!!del}
+        danger
+        title={t('common.delete')}
+        message={t('vault.deleteConfirm', { name: del?.label ?? '' })}
+        confirmLabel={t('common.delete')}
+        onClose={() => setDel(null)}
+        onConfirm={() => remove.mutateAsync(del!.id)}
+      />
     </>
   );
 }

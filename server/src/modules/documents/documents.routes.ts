@@ -48,11 +48,18 @@ documentsRouter.post('/user/:id', requireRole('admin'), upload.single('file'), a
     if (!body.name) throw badRequest('Le nom du document est requis', 'NAME_REQUIRED');
     label = body.name;
   } else {
-    if (!body.month || !body.year) throw badRequest('Le mois et l\'année sont requis', 'PERIOD_REQUIRED');
+    if (!body.month || !body.year) throw badRequest("Le mois et l'année sont requis", 'PERIOD_REQUIRED');
     label = `${body.type === 'bulletin' ? 'Bulletin' : 'Contrat'} ${String(body.month).padStart(2, '0')}/${body.year}`;
   }
   const stored = await saveUpload({
-    file: req.file, ownerId: id, category: body.type, uploadedBy: auth.userId, allowed: PDF, label, month: body.month, year: body.year,
+    file: req.file,
+    ownerId: id,
+    category: body.type,
+    uploadedBy: auth.userId,
+    allowed: PDF,
+    label,
+    month: body.month,
+    year: body.year,
   });
   await notify(id, 'Document', 'document.added', { label }, { emailSubject: 'Nouveau document dans votre coffre-fort' });
   await audit(req, { action: 'vault.upload', targetType: 'user', targetId: id, meta: { fileId: String(stored._id), type: body.type } });

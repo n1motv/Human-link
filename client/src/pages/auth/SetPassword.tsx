@@ -22,7 +22,11 @@ export default function SetPassword({ mode }: { mode: 'activate' | 'reset' }) {
 
   const schema = z
     .object({
-      password: z.string().min(min, t('validation.passwordMin', { n: min })).regex(/\d/, t('validation.passwordDigit')).regex(/[a-zA-Z]/, t('validation.passwordLetter')),
+      password: z
+        .string()
+        .min(min, t('validation.passwordMin', { n: min }))
+        .regex(/\d/, t('validation.passwordDigit'))
+        .regex(/[a-zA-Z]/, t('validation.passwordLetter')),
       confirm: z.string(),
     })
     .refine((v) => v.password === v.confirm, { path: ['confirm'], message: t('validation.passwordMatch') });
@@ -58,7 +62,11 @@ export default function SetPassword({ mode }: { mode: 'activate' | 'reset' }) {
             }
           })}
         >
-          {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+          {error && (
+            <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+              {error}
+            </p>
+          )}
           <Field label={t('auth.newPassword')} error={formState.errors.password?.message}>
             <Input {...register('password')} type="password" autoComplete="new-password" autoFocus invalid={!!formState.errors.password} />
           </Field>

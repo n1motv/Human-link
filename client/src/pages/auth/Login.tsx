@@ -43,7 +43,13 @@ export default function Login() {
       const seconds = (e as ApiError).details as unknown as { retryAfterSeconds?: number } | undefined;
       return t('auth.throttled', { seconds: seconds?.retryAfterSeconds ?? 30 });
     }
-    return code === 'INVALID_2FA_CODE' ? t('auth.invalidCode') : code === 'RATE_LIMITED' ? t('auth.tooMany') : e instanceof ApiError && e.status < 500 ? t('auth.invalidCredentials') : t('common.error');
+    return code === 'INVALID_2FA_CODE'
+      ? t('auth.invalidCode')
+      : code === 'RATE_LIMITED'
+        ? t('auth.tooMany')
+        : e instanceof ApiError && e.status < 500
+          ? t('auth.invalidCredentials')
+          : t('common.error');
   };
 
   const verifyOtp = async (code: string) => {
@@ -130,24 +136,40 @@ export default function Login() {
             <Field label={t('auth.password')} error={formState.errors.password?.message}>
               <div className="relative">
                 <Input {...register('password')} type={show ? 'text' : 'password'} autoComplete="current-password" invalid={!!formState.errors.password} className="!pe-11" />
-                <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')} className="absolute end-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg">
+                <button
+                  type="button"
+                  onClick={() => setShow((s) => !s)}
+                  aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')}
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
+                >
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </Field>
           </>
         )}
-        <Button type="submit" variant="primary" className="w-full" loading={formState.isSubmitting || otpStatus === 'checking'} disabled={challenge !== null && !recovery && otp.length !== 6} icon={challenge ? <KeyRound size={16} /> : <LogIn size={16} />}>
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-full"
+          loading={formState.isSubmitting || otpStatus === 'checking'}
+          disabled={challenge !== null && !recovery && otp.length !== 6}
+          icon={challenge ? <KeyRound size={16} /> : <LogIn size={16} />}
+        >
           {challenge ? t('auth.verify') : t('auth.login')}
         </Button>
         {challenge && (
-          <button type="button" className="w-full text-center text-sm text-muted hover:text-fg" onClick={() => {
+          <button
+            type="button"
+            className="w-full text-center text-sm text-muted hover:text-fg"
+            onClick={() => {
               setChallenge(null);
               setOtp('');
               setOtpStatus('idle');
               setRecovery(false);
               setError(null);
-            }}>
+            }}
+          >
             {t('common.back')}
           </button>
         )}

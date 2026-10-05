@@ -98,16 +98,17 @@ function init(names) {
     if (!port) fail(`${name}: instance.json (port) introuvable`);
     let text = fs.readFileSync(example, 'utf8');
     // Valeurs propres au test local (sans Docker, en HTTP). Le déploiement Docker les remplace (voir docker-compose.yml).
-    text = text
-      .replace(/^APP_URL=.*$/m, `APP_URL=http://localhost:${port}`)
-      .replace(/^NODE_ENV=.*$/m, `NODE_ENV=production
+    text = text.replace(/^APP_URL=.*$/m, `APP_URL=http://localhost:${port}`).replace(
+      /^NODE_ENV=.*$/m,
+      `NODE_ENV=production
 PORT=${port}
 COOKIE_SECURE=false
 MONGODB_URI=mongodb://127.0.0.1:27017/${database}
 CLIENT_DIR=.
 SERVE_CLIENT=true
 CLIENT_DIST=../../client/dist
-STORAGE_DIR=./storage`);
+STORAGE_DIR=./storage`,
+    );
     for (const k of ['JWT_SECRET', 'FIELD_ENCRYPTION_KEY', 'FILE_ENCRYPTION_KEY', 'PSEUDONYM_KEY']) text = text.replace(new RegExp(`^${k}=.*$`, 'm'), `${k}=${key()}`);
     text = text.replace(/^ADMIN_PASSWORD=.*$/m, `ADMIN_PASSWORD=${password}`);
     fs.writeFileSync(target, text, { mode: 0o600 });
@@ -116,7 +117,7 @@ STORAGE_DIR=./storage`);
 }
 
 function checkBuilt() {
-  if (!fs.existsSync(SERVER_ENTRY) || !fs.existsSync(FRONT_DIST)) fail('Application non compilée. Lancez d\'abord : npm run build');
+  if (!fs.existsSync(SERVER_ENTRY) || !fs.existsSync(FRONT_DIST)) fail("Application non compilée. Lancez d'abord : npm run build");
 }
 
 function up(names) {
@@ -184,8 +185,17 @@ async function status(names) {
         health = red('ne répond pas');
       }
     }
-    rows.push({ name, port: env.PORT ?? '?', db: (env.MONGODB_URI ?? '').split('/').pop(), pid: pid ?? '—', etat: pid ? green('en marche') : dim('arrêtée'), health, url: `http://localhost:${env.PORT ?? '?'}` });
+    rows.push({
+      name,
+      port: env.PORT ?? '?',
+      db: (env.MONGODB_URI ?? '').split('/').pop(),
+      pid: pid ?? '—',
+      etat: pid ? green('en marche') : dim('arrêtée'),
+      health,
+      url: `http://localhost:${env.PORT ?? '?'}`,
+    });
   }
+  // eslint-disable-next-line no-control-regex -- ce sont justement les codes de couleur ANSI (ESC) qu'on retire
   const strip = (s) => String(s).replace(/\x1b\[[0-9;]*m/g, '');
   const cols = ['name', 'port', 'db', 'pid', 'etat', 'health', 'url'];
   const heads = ['INSTANCE', 'PORT', 'BASE', 'PID', 'ÉTAT', 'SANTÉ', 'URL'];
@@ -196,7 +206,7 @@ async function status(names) {
 }
 
 function seed(names, flags) {
-  if (!fs.existsSync(SEED_ENTRY)) fail('Application non compilée. Lancez d\'abord : npm run build');
+  if (!fs.existsSync(SEED_ENTRY)) fail("Application non compilée. Lancez d'abord : npm run build");
   for (const name of names) {
     console.log(bold(`\n— ${name} —`));
     const r = spawnSync(process.execPath, [SEED_ENTRY, ...flags], { cwd: dirOf(name), stdio: 'inherit' });
@@ -216,7 +226,8 @@ const flags = rest.filter((a) => a.startsWith('--'));
 
 switch (cmd) {
   case 'list':
-    for (const n of discover()) console.log(`${n.padEnd(12)} port ${envOf(n).PORT ?? dim('(pas de .env)')}  ${fs.existsSync(path.join(dirOf(n), '.env')) ? '' : dim('→ npm run instances -- init ' + n)}`);
+    for (const n of discover())
+      console.log(`${n.padEnd(12)} port ${envOf(n).PORT ?? dim('(pas de .env)')}  ${fs.existsSync(path.join(dirOf(n), '.env')) ? '' : dim('→ npm run instances -- init ' + n)}`);
     break;
   case 'init':
     init(select(rest));

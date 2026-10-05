@@ -32,7 +32,9 @@ if (args.includes('--admin')) files.admin_password = pass() + '9aA';
 fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
 const existing = Object.keys(files).filter((n) => fs.existsSync(path.join(dir, n)));
 if (existing.length && !force) {
-  console.error(`✗ Fichiers déjà présents dans ${dir} : ${existing.join(', ')}\n  Rien n'a été écrit. --force les remplace, mais les données déjà chiffrées avec les anciennes clés deviendraient illisibles.`);
+  console.error(
+    `✗ Fichiers déjà présents dans ${dir} : ${existing.join(', ')}\n  Rien n'a été écrit. --force les remplace, mais les données déjà chiffrées avec les anciennes clés deviendraient illisibles.`,
+  );
   process.exit(1);
 }
 for (const [name, value] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), value, { mode: 0o400 });

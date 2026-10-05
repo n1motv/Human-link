@@ -63,7 +63,8 @@ export function Field({ label, error, hint, required, children, className }: Fie
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(function Input({ invalid, className, ...p }, ref) {
   // Dates : sélecteur maison (même API que <input type="date|month|datetime-local">).
-  if (p.type === 'date' || p.type === 'month' || p.type === 'datetime-local') return <DatePicker ref={ref} invalid={invalid} className={className} {...p} type={p.type as 'date' | 'month' | 'datetime-local'} />;
+  if (p.type === 'date' || p.type === 'month' || p.type === 'datetime-local')
+    return <DatePicker ref={ref} invalid={invalid} className={className} {...p} type={p.type as 'date' | 'month' | 'datetime-local'} />;
   return <input ref={ref} aria-invalid={invalid || undefined} className={clsx('field', className)} {...p} />;
 });
 
@@ -138,7 +139,11 @@ export function StatTile({ label, value, hint, icon, tone }: { label: string; va
     <div className="glass glass-hover p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-muted">{label}</p>
-        {icon && <span className={clsx('grid h-10 w-10 place-items-center rounded-xl', toneCls)} style={{ background: 'color-mix(in srgb, currentColor 14%, transparent)' }}>{icon}</span>}
+        {icon && (
+          <span className={clsx('grid h-10 w-10 place-items-center rounded-xl', toneCls)} style={{ background: 'color-mix(in srgb, currentColor 14%, transparent)' }}>
+            {icon}
+          </span>
+        )}
       </div>
       <p className="font-display mt-4 text-4xl font-bold tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}

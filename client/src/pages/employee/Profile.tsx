@@ -11,7 +11,10 @@ import { fmtDate, fmtMoney } from '../../lib/format';
 import { useAction } from '../../lib/hooks';
 import type { User } from '../../lib/types';
 
-type Form = Pick<User, 'nom' | 'prenom' | 'dateNaissance' | 'adresse' | 'ville' | 'codePostal' | 'pays' | 'nationalite' | 'telephone'> & { email: string; currentPassword?: string };
+type Form = Pick<User, 'nom' | 'prenom' | 'dateNaissance' | 'adresse' | 'ville' | 'codePostal' | 'pays' | 'nationalite' | 'telephone'> & {
+  email: string;
+  currentPassword?: string;
+};
 
 export default function Profile() {
   const { t, i18n } = useTranslation();

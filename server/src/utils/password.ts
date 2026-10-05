@@ -20,9 +20,7 @@ export async function dummyVerify(plain: string): Promise<void> {
   await verifyPassword(await dummy, plain);
 }
 
-const COMMON = new Set([
-  'password1234', 'azerty123456', 'motdepasse123', '123456789012', 'qwertyuiop12', 'administrator1',
-]);
+const COMMON = new Set(['password1234', 'azerty123456', 'motdepasse123', '123456789012', 'qwertyuiop12', 'administrator1']);
 
 /** Politique NIST : longueur minimale (configurable), pas de règles de composition arbitraires, pas de mot de passe courant. */
 export const passwordSchema = z

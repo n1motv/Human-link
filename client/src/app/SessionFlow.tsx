@@ -115,12 +115,31 @@ function SessionScreen({ screen }: { screen: Screen }) {
               </linearGradient>
             </defs>
             <circle cx="60" cy="60" r="54" fill="none" stroke="var(--glass-border)" strokeWidth="3" />
-            <circle cx="60" cy="60" r="54" fill="none" stroke="url(#sess-grad)" strokeWidth="4" strokeLinecap="round" pathLength={100} className={login ? 'session-ring' : 'session-ring-out'} />
+            <circle
+              cx="60"
+              cy="60"
+              r="54"
+              fill="none"
+              stroke="url(#sess-grad)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              pathLength={100}
+              className={login ? 'session-ring' : 'session-ring-out'}
+            />
           </svg>
           <div className="session-badge grid h-24 w-24 place-items-center rounded-full border border-line bg-glass-strong shadow-xl">
             {login ? (
               <svg viewBox="0 0 52 52" className="h-12 w-12" aria-hidden>
-                <path d="M14 27 l8 8 l16 -18" fill="none" stroke="url(#sess-grad)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" pathLength={100} className="session-check" />
+                <path
+                  d="M14 27 l8 8 l16 -18"
+                  fill="none"
+                  stroke="url(#sess-grad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  pathLength={100}
+                  className="session-check"
+                />
               </svg>
             ) : (
               <LogOut size={34} className="session-door text-accent" aria-hidden />
@@ -135,7 +154,12 @@ function SessionScreen({ screen }: { screen: Screen }) {
 
         <div className="session-brand mt-2 flex items-center gap-3 opacity-80">
           {!broken ? (
-            <img src={theme === 'dark' ? cfg.branding.logoOnDarkUrl : cfg.branding.logoUrl} alt="" className="h-7 w-auto max-w-[140px] object-contain" onError={() => setBroken(true)} />
+            <img
+              src={theme === 'dark' ? cfg.branding.logoOnDarkUrl : cfg.branding.logoUrl}
+              alt=""
+              className="h-7 w-auto max-w-[140px] object-contain"
+              onError={() => setBroken(true)}
+            />
           ) : (
             <span className="gradient-text font-display text-lg font-extrabold">{cfg.company.name}</span>
           )}

@@ -59,7 +59,11 @@ function ContactForm({ authenticated }: { authenticated: boolean }) {
         }
       })}
     >
-      {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+          {error}
+        </p>
+      )}
       {!authenticated && (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('profile.firstName')}>
@@ -103,7 +107,10 @@ function CompanyInfo() {
   return (
     <ul className="space-y-3 text-sm">
       <li className="flex items-start gap-3">
-        <Mail size={16} className="mt-0.5 text-accent" /> <a className="hover:underline" href={`mailto:${company.supportEmail}`}>{company.supportEmail}</a>
+        <Mail size={16} className="mt-0.5 text-accent" />{' '}
+        <a className="hover:underline" href={`mailto:${company.supportEmail}`}>
+          {company.supportEmail}
+        </a>
       </li>
       <li className="flex items-start gap-3">
         <MapPin size={16} className="mt-0.5 text-accent" /> <span>{company.address}</span>

@@ -84,7 +84,6 @@ function load(): ClientConfig {
   const res = schema.safeParse(raw);
   if (!res.success) {
     const lines = res.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`);
-    // eslint-disable-next-line no-console
     console.error(`\nclient.config.json invalide (${file}) :\n${lines.join('\n')}\n`);
     process.exit(1);
   }

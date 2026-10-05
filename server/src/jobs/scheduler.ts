@@ -17,17 +17,20 @@ import { anonymizeUser } from '../modules/rgpd/anonymize.js';
 export async function accrueMonthlyLeave(): Promise<number> {
   const month = currentMonth();
   const amount = clientConfig.hr.monthlyLeaveAccrual;
-  const r = await User.updateMany(
-    { status: 'active', role: { $ne: 'admin' }, dernierMoisMaj: { $ne: month } },
-    { $inc: { soldeConge: amount }, $set: { dernierMoisMaj: month } },
-  );
+  const r = await User.updateMany({ status: 'active', role: { $ne: 'admin' }, dernierMoisMaj: { $ne: month } }, { $inc: { soldeConge: amount }, $set: { dernierMoisMaj: month } });
   if (r.modifiedCount) logger.info(`Congés mensuels crédités à ${r.modifiedCount} personne(s)`);
   return r.modifiedCount;
 }
 
 async function remind(key: 'telework.reminder' | 'feedback.reminder', type: string) {
   const people = await User.find({ status: 'active', role: { $ne: 'admin' } }, '_id');
-  await notify(people.map((p) => p._id), type, key, {}, { emailSubject: type === 'Télétravail' ? 'Choix des jours de télétravail' : 'Votre avis compte' });
+  await notify(
+    people.map((p) => p._id),
+    type,
+    key,
+    {},
+    { emailSubject: type === 'Télétravail' ? 'Choix des jours de télétravail' : 'Votre avis compte' },
+  );
 }
 
 /**

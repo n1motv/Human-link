@@ -32,7 +32,7 @@ orgRouter.post('/supervisions', requireRole('admin'), async (req, res) => {
   if (body.managerId === body.superviseId) throw badRequest('Un manager ne peut pas se superviser lui-même');
   const [manager, supervise] = await Promise.all([User.findById(body.managerId), User.findById(body.superviseId)]);
   if (!manager || manager.role !== 'manager' || manager.status !== 'active') throw badRequest('Le manager choisi est invalide');
-  if (!supervise || supervise.status !== 'active' || supervise.role === 'admin') throw badRequest("La personne supervisée est invalide");
+  if (!supervise || supervise.status !== 'active' || supervise.role === 'admin') throw badRequest('La personne supervisée est invalide');
   if (await Supervision.exists({ superviseId: body.superviseId })) throw conflict('Cette personne est déjà supervisée par un autre manager');
 
   // Empêche les cycles (A supervise B qui supervise A, directement ou indirectement).
@@ -70,10 +70,7 @@ orgRouter.put('/director', requireRole('admin'), async (req, res) => {
 
 /** Organigramme : arbre à partir du directeur, puis les éventuelles racines isolées. */
 orgRouter.get('/tree', requireRole('admin'), async (_req, res) => {
-  const [links, users] = await Promise.all([
-    Supervision.find(),
-    User.find({ status: 'active', role: { $ne: 'admin' } }, userBrief),
-  ]);
+  const [links, users] = await Promise.all([Supervision.find(), User.find({ status: 'active', role: { $ne: 'admin' } }, userBrief)]);
   const byId = new Map(users.map((u) => [String(u._id), u]));
   const children = new Map<string, string[]>();
   const hasParent = new Set<string>();
@@ -97,12 +94,10 @@ orgRouter.get('/tree', requireRole('admin'), async (_req, res) => {
   };
   const director = users.find((u) => u.isDirector);
   const roots = users.filter((u) => !hasParent.has(String(u._id)) && (!director || String(u._id) !== String(director._id)));
-  const tree = director
-    ? { ...(build(String(director._id)) as object) }
-    : null;
+  const tree = director ? { ...(build(String(director._id)) as object) } : null;
   res.json({
     tree,
-    unassigned: roots.filter((r) => !(children.get(String(r._id))?.length)).map((r) => ({ id: String(r._id), name: displayName(r), poste: r.poste })),
+    unassigned: roots.filter((r) => !children.get(String(r._id))?.length).map((r) => ({ id: String(r._id), name: displayName(r), poste: r.poste })),
     otherRoots: roots.filter((r) => children.get(String(r._id))?.length).map((r) => build(String(r._id))),
   });
 });

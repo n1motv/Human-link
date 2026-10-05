@@ -117,7 +117,7 @@ describe('CSRF et session', () => {
 });
 
 describe('activation et mot de passe oublié', () => {
-  it("active un compte invité via le lien reçu par e-mail, sans jamais envoyer de mot de passe", async () => {
+  it('active un compte invité via le lien reçu par e-mail, sans jamais envoyer de mot de passe', async () => {
     const { c: admin } = await session('admin');
     const res = await admin.post('/api/users').send({ nom: 'Dupont', prenom: 'Jean', email: 'jean@test.local', role: 'employe', salaire: 3000, numeroSecu: '1850175123456' });
     expect(res.status).toBe(201);

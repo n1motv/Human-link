@@ -21,7 +21,11 @@ const fr = load('fr');
 let bad = 0;
 for (const k of used) if (!(k in fr)) (console.error(`✗ clé utilisée mais absente de fr.json : ${k}`), bad++);
 
-const vars = (s) => [...String(s).matchAll(/{{\s*(\w+)\s*}}/g)].map((m) => m[1]).sort().join(',');
+const vars = (s) =>
+  [...String(s).matchAll(/{{\s*(\w+)\s*}}/g)]
+    .map((m) => m[1])
+    .sort()
+    .join(',');
 const full = ['en', 'es', 'it', 'ar'];
 for (const l of full) {
   const t = load(l);

@@ -13,7 +13,17 @@ export default function Privacy() {
     { icon: Scale, key: 'controller', params: { company: company.legalName, address: company.address } },
     { icon: Database, key: 'data', params: {} },
     { icon: Eye, key: 'purposes', params: {} },
-    { icon: Timer, key: 'retention', params: { audit: gdpr.auditLogRetentionDays, notif: gdpr.notificationRetentionDays, contact: gdpr.contactRequestRetentionDays, feedback: gdpr.feedbackRetentionMonths, years: gdpr.departedEmployeeRetentionYears } },
+    {
+      icon: Timer,
+      key: 'retention',
+      params: {
+        audit: gdpr.auditLogRetentionDays,
+        notif: gdpr.notificationRetentionDays,
+        contact: gdpr.contactRequestRetentionDays,
+        feedback: gdpr.feedbackRetentionMonths,
+        years: gdpr.departedEmployeeRetentionYears,
+      },
+    },
     { icon: Lock, key: 'security', params: {} },
     { icon: UserCheck, key: 'rights', params: { dpo: company.dpoEmail } },
   ] as const;

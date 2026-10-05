@@ -65,7 +65,7 @@ describe('congés : double validation manager puis admin', () => {
     expect((await emp.c.post('/api/leaves').send({ ...leave, dateDebut: '2020-01-06', dateFin: '2020-01-07' })).body.error.code).toBe('PAST_DATE');
   });
 
-  it("un manager ne décide pas pour une personne hors de son équipe", async () => {
+  it('un manager ne décide pas pour une personne hors de son équipe', async () => {
     const { emp } = await team();
     const stranger = await session('manager');
     const id = (await emp.c.post('/api/leaves').send(leave)).body.leave.id;
@@ -196,7 +196,7 @@ describe('contrôle d’accès et données sensibles', () => {
     expect(u.soldeConge).toBe(20);
   });
 
-  it("changer son e-mail exige le mot de passe actuel", async () => {
+  it('changer son e-mail exige le mot de passe actuel', async () => {
     const emp = await session('employe');
     expect((await emp.c.patch('/api/users/me/profile').send({ email: 'autre@test.local' })).status).toBe(403);
     const ok = await emp.c.patch('/api/users/me/profile').send({ email: 'autre@test.local', currentPassword: 'Sup3r-Secret-Pass-2026' });
@@ -246,7 +246,11 @@ describe('coffre-fort et fichiers', () => {
   it('refuse un faux PDF (extension trompeuse) et un exécutable', async () => {
     const adm = await session('admin');
     const owner = await session('employe');
-    const fake = await adm.c.post(`/api/documents/user/${owner.user._id}`).field('type', 'autre').field('name', 'Test').attach('file', Buffer.from('<?php system($_GET[1]); ?>'), 'shell.pdf');
+    const fake = await adm.c
+      .post(`/api/documents/user/${owner.user._id}`)
+      .field('type', 'autre')
+      .field('name', 'Test')
+      .attach('file', Buffer.from('<?php system($_GET[1]); ?>'), 'shell.pdf');
     expect(fake.status).toBe(400);
     expect(fake.body.error.code).toBe('BAD_FILE_TYPE');
     const exe = await adm.c.post(`/api/documents/user/${owner.user._id}`).field('type', 'autre').field('name', 'Test').attach('file', Buffer.from('MZ\x90\x00\x03'), 'a.pdf');
@@ -255,7 +259,12 @@ describe('coffre-fort et fichiers', () => {
 
   it("le justificatif d'un arrêt maladie reste inaccessible au manager", async () => {
     const { mgr, emp, adm } = await team();
-    const sick = await emp.c.post('/api/sick-leaves').field('typeMaladie', 'justifie').field('dateDebut', today()).field('dateFin', addDays(today(), 1)).attach('attachment', pdf, 'certificat.pdf');
+    const sick = await emp.c
+      .post('/api/sick-leaves')
+      .field('typeMaladie', 'justifie')
+      .field('dateDebut', today())
+      .field('dateFin', addDays(today(), 1))
+      .attach('attachment', pdf, 'certificat.pdf');
     expect(sick.status).toBe(201);
     const id = sick.body.sick.id;
     expect((await mgr.c.get(`/api/sick-leaves/${id}/attachment`)).status).toBe(404);
@@ -294,7 +303,7 @@ describe('feedback anonyme, RGPD, assistant', () => {
     expect(res.text).not.toMatch(/passwordHash/);
   });
 
-  it("archiver puis anonymiser efface les données personnelles", async () => {
+  it('archiver puis anonymiser efface les données personnelles', async () => {
     const adm = await session('admin');
     const emp = await session('employe', { telephone: '0612345678', adresse: '1 rue Secrète', salaire: 3000 });
     expect((await adm.c.post(`/api/users/${emp.user._id}/anonymize`).send({})).status).toBe(400); // il faut archiver d'abord

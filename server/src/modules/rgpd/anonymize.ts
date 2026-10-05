@@ -46,9 +46,19 @@ export async function anonymizeUser(user: UserDoc): Promise<void> {
     tokenVersion: user.tokenVersion + 1,
   });
   user.set({
-    poste: undefined, sexe: undefined, dateNaissance: undefined, nationalite: undefined, pays: undefined,
-    ville: undefined, codePostal: undefined, telephone: undefined, adresse: undefined, numeroSecu: undefined,
-    salaire: undefined, photoFileId: undefined, twoFactor: { enabled: false, recoveryCodes: [] },
+    poste: undefined,
+    sexe: undefined,
+    dateNaissance: undefined,
+    nationalite: undefined,
+    pays: undefined,
+    ville: undefined,
+    codePostal: undefined,
+    telephone: undefined,
+    adresse: undefined,
+    numeroSecu: undefined,
+    salaire: undefined,
+    photoFileId: undefined,
+    twoFactor: { enabled: false, recoveryCodes: [] },
   });
   user.passwordHash = undefined;
   await user.save();

@@ -96,7 +96,12 @@ const isoDate = (v: unknown): string | undefined => {
   return m ? m[1] : undefined; // valeurs invalides de l'ancienne base (ex. « 30 ») ignorées
 };
 const decision = (v: unknown) => (v === 'accepte' || v === 'refuse' ? v : 'en attente');
-const normName = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+const normName = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase();
 
 const report: Record<string, number> = {};
 const bump = (k: string, n = 1) => (report[k] = (report[k] ?? 0) + n);
@@ -122,7 +127,9 @@ try {
   const contacts = all('SELECT * FROM demandes_contact');
   const feedbacks = all('SELECT * FROM feedback');
 
-  console.log(`Base lue : ${users.length} utilisateurs, ${leaves.length} congés, ${sicks.length} arrêts, ${bonuses.length} primes, ${meetings.length} réunions, ${feedbacks.length} feedbacks.`);
+  console.log(
+    `Base lue : ${users.length} utilisateurs, ${leaves.length} congés, ${sicks.length} arrêts, ${bonuses.length} primes, ${meetings.length} réunions, ${feedbacks.length} feedbacks.`,
+  );
   if (dryRun) {
     console.log('--dry-run : aucune écriture.');
     cleanup();
@@ -281,8 +288,16 @@ try {
 
   // ---------- Feedback : ré-anonymisation ----------
   const legacyKeys: Record<string, string> = {
-    env: 'rating_env', management: 'rating_management', worklife: 'rating_worklife', comm: 'rating_comm', recognition: 'rating_recognition',
-    training: 'rating_training', equipment: 'rating_equipment', team: 'rating_team', meetings: 'rating_meetings', transparency: 'rating_transparency',
+    env: 'rating_env',
+    management: 'rating_management',
+    worklife: 'rating_worklife',
+    comm: 'rating_comm',
+    recognition: 'rating_recognition',
+    training: 'rating_training',
+    equipment: 'rating_equipment',
+    team: 'rating_team',
+    meetings: 'rating_meetings',
+    transparency: 'rating_transparency',
   };
   for (const f of feedbacks) {
     const month = String(f.created_at ?? '').slice(0, 7);
@@ -299,7 +314,11 @@ try {
     const vault = path.join(filesDir, 'coffre_fort');
     const byName = new Map<string, mongoose.Types.ObjectId>();
     for (const u of await User.find({ status: 'active' }, 'nom prenom')) byName.set(normName(`${u.nom}${u.prenom}`), u._id);
-    for (const [folder, category] of [['bulletins', 'bulletin'], ['contrats', 'contrat'], ['autres', 'autre']] as const) {
+    for (const [folder, category] of [
+      ['bulletins', 'bulletin'],
+      ['contrats', 'contrat'],
+      ['autres', 'autre'],
+    ] as const) {
       const base = path.join(vault, folder);
       if (!fs.existsSync(base)) continue;
       for (const person of fs.readdirSync(base)) {
@@ -312,7 +331,15 @@ try {
           const data = fs.readFileSync(path.join(base, person, file));
           if (data.subarray(0, 4).toString() !== '%PDF') continue;
           const storageKey = await writeEncrypted(data);
-          await StoredFile.create({ ownerId: owner, category, label: file.replace(/\.pdf$/i, '').replace(/_\d{8}$/, ''), originalName: file, mime: 'application/pdf', size: data.length, storageKey });
+          await StoredFile.create({
+            ownerId: owner,
+            category,
+            label: file.replace(/\.pdf$/i, '').replace(/_\d{8}$/, ''),
+            originalName: file,
+            mime: 'application/pdf',
+            size: data.length,
+            storageKey,
+          });
           bump('documents du coffre-fort');
         }
       }
@@ -322,7 +349,7 @@ try {
   console.log('\nMigration terminée :');
   for (const [k, v] of Object.entries(report)) console.log(`  ${String(v).padStart(5)}  ${k}`);
   console.log('\nÀ faire ensuite :');
-  console.log("  - Les photos de profil et justificatifs S3 ne sont pas migrés (voir docs/MIGRATION.md).");
+  console.log('  - Les photos de profil et justificatifs S3 ne sont pas migrés (voir docs/MIGRATION.md).');
   console.log('  - Les administrateurs devront activer la 2FA à leur première connexion.');
   console.log('  - Vérifiez les comptes puis archivez/supprimez l’ancienne base et son fichier .env.');
 } finally {

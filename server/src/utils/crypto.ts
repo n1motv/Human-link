@@ -19,7 +19,10 @@ const kidOf = (key: Buffer) => crypto.createHash('sha256').update(key).digest('h
 export function buildKeyRing(current: string, old?: string): KeyRing {
   const cur = Buffer.from(current, 'hex');
   const all = new Map<string, Buffer>([[kidOf(cur), cur]]);
-  for (const hex of (old ?? '').split(',').map((s) => s.trim()).filter(Boolean)) {
+  for (const hex of (old ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)) {
     const k = Buffer.from(hex, 'hex');
     all.set(kidOf(k), k);
   }

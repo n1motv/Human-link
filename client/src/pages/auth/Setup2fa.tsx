@@ -20,10 +20,7 @@ export default function Setup2fa() {
       title={t('security.setupTitle')}
       subtitle={t('security.setupHint')}
       footer={
-        <button
-          className="inline-flex items-center gap-2 font-semibold text-accent hover:underline"
-          onClick={() => void signOut()}
-        >
+        <button className="inline-flex items-center gap-2 font-semibold text-accent hover:underline" onClick={() => void signOut()}>
           <LogOut size={14} /> {t('auth.logout')}
         </button>
       }

@@ -53,7 +53,10 @@ sickRouter.get('/mine', async (req, res) => {
 
 sickRouter.get('/', requireRole('admin'), async (req, res) => {
   const q = parse(z.object({ statut: z.enum(['en attente', 'accepte', 'refuse']).optional() }), req.query);
-  const items = await SickLeave.find(q.statut ? { statut: q.statut } : {}).sort({ createdAt: -1 }).limit(500).populate('userId', 'nom prenom email departement');
+  const items = await SickLeave.find(q.statut ? { statut: q.statut } : {})
+    .sort({ createdAt: -1 })
+    .limit(500)
+    .populate('userId', 'nom prenom email departement');
   await audit(req, { action: 'sick.list', targetType: 'sick' }); // donnée de santé : lecture tracée
   res.json({
     items: items.map((s) => {
@@ -77,9 +80,9 @@ sickRouter.post('/:id/decision', requireRole('admin'), async (req, res) => {
   if (!sick) throw (await SickLeave.exists({ _id: id })) ? conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED') : notFound('Demande introuvable');
   if (body.decision === 'accepte') {
     await clearTelework(String(sick.userId), sick.dateDebut, sick.dateFin);
-    await notify(sick.userId, 'Arrêt', 'sick.accepted', {}, { emailSubject: "Réponse à votre arrêt maladie" });
+    await notify(sick.userId, 'Arrêt', 'sick.accepted', {}, { emailSubject: 'Réponse à votre arrêt maladie' });
   } else {
-    await notify(sick.userId, 'Arrêt', 'sick.refused', { motif: body.motifRefus ?? '' }, { emailSubject: "Réponse à votre arrêt maladie" });
+    await notify(sick.userId, 'Arrêt', 'sick.refused', { motif: body.motifRefus ?? '' }, { emailSubject: 'Réponse à votre arrêt maladie' });
   }
   await audit(req, { action: `sick.${body.decision}`, targetType: 'sick', targetId: id });
   res.json({ sick });

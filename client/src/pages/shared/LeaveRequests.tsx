@@ -21,7 +21,10 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
   const [refusing, setRefusing] = useState<Leave | null>(null);
   const [approving, setApproving] = useState<Leave | null>(null);
 
-  const q = useQuery({ queryKey: ['leaves', 'all', filter], queryFn: () => api.get<{ items: Leave[] }>(`/leaves${filter === 'all' ? '' : `?statut=${encodeURIComponent(filter)}`}`) });
+  const q = useQuery({
+    queryKey: ['leaves', 'all', filter],
+    queryFn: () => api.get<{ items: Leave[] }>(`/leaves${filter === 'all' ? '' : `?statut=${encodeURIComponent(filter)}`}`),
+  });
   const decide = useAction(
     ({ id, decision, motifRefus }: { id: string; decision: 'accepte' | 'refuse'; motifRefus?: string }) => api.post(`/leaves/${id}/decision`, { decision, motifRefus }),
     { success: t('decision.done'), invalidate: [['leaves'], ['dashboard'], ['team']] },
@@ -97,13 +100,23 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
                   <td>
                     <div className="flex items-center justify-end gap-2">
                       {l.attachmentFileId && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('leave.attachment')} onClick={() => downloadFile(`/leaves/${l.id}/attachment`)}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                          aria-label={t('leave.attachment')}
+                          onClick={() => downloadFile(`/leaves/${l.id}/attachment`)}
+                        >
                           <Paperclip size={16} />
                         </button>
                       )}
                       {canDecide(l) && (
                         <>
-                          <Button size="sm" variant="primary" icon={<Check size={14} />} loading={decide.isPending && decide.variables?.id === l.id} onClick={() => setApproving(l)}>
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            icon={<Check size={14} />}
+                            loading={decide.isPending && decide.variables?.id === l.id}
+                            onClick={() => setApproving(l)}
+                          >
                             {t('decision.approve')}
                           </Button>
                           <Button size="sm" variant="danger" icon={<X size={14} />} onClick={() => setRefusing(l)}>

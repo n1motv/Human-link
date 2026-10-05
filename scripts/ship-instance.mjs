@@ -56,14 +56,14 @@ if (!flag('no-image')) {
   if (daemon.status !== 0) fail('Docker ne répond pas (démarrez Docker Desktop / le service), ou utilisez --no-image.');
   console.log(`→ Construction de l'image ${imageName} …`);
   const build = run('docker', ['build', '-t', imageName, '.'], { stdio: 'inherit' });
-  if (build.status !== 0) fail('La construction de l\'image a échoué.');
+  if (build.status !== 0) fail("La construction de l'image a échoué.");
   if (flag('push')) {
     if (!opt('registry')) fail('--push nécessite --registry <dépôt>');
     const push = run('docker', ['push', imageName], { stdio: 'inherit' });
     if (push.status !== 0) fail('docker push a échoué (docker login ?).');
   }
   imageFile = `human-link-${version}.tar`;
-  console.log('→ Export de l\'image …');
+  console.log("→ Export de l'image …");
   const save = run('docker', ['save', '-o', path.join(dir, imageFile), imageName], { stdio: 'inherit' });
   if (save.status !== 0) fail('docker save a échoué.');
 }
@@ -155,9 +155,7 @@ APP_PORT=127.0.0.1:4000
 `,
 );
 
-const loadStep = imageFile
-  ? `docker load -i ${imageFile}`
-  : `docker pull ${imageName}      # image publiée sur votre registre (docker login au besoin)`;
+const loadStep = imageFile ? `docker load -i ${imageFile}` : `docker pull ${imageName}      # image publiée sur votre registre (docker login au besoin)`;
 fs.writeFileSync(
   path.join(dir, 'INSTALL.md'),
   `# Installation de ${cfg.company.name} (Human Link ${version})
@@ -204,8 +202,7 @@ L'application est disponible sur https://<votre domaine>. L'administrateur doit 
 
 // --- 5. Empreintes et archive ---
 const sums = [];
-const walk = (d) =>
-  fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
 for (const f of walk(dir).sort()) {
   const rel = path.relative(dir, f).split(path.sep).join('/');
   sums.push(`${crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex')}  ${rel}`);
@@ -218,4 +215,6 @@ const tar = run('tar', ['-czf', `${name}.tar.gz`, name], { cwd: out });
 if (tar.status !== 0) console.warn('⚠ tar indisponible : le dossier est livrable tel quel.');
 
 const size = (f) => `${(fs.statSync(f).size / 1048576).toFixed(1)} Mo`;
-console.log(`\n✓ Colis prêt pour ${cfg.company.name}\n  Dossier  : ${dir}${tar.status === 0 ? `\n  Archive  : ${archive} (${size(archive)})` : ''}\n  Image    : ${imageFile ? `${imageName} (${imageFile})` : `non incluse (${imageName} à publier sur un registre)`}\n  Secrets  : aucun (le client génère ses clés avec gen-keys)`);
+console.log(
+  `\n✓ Colis prêt pour ${cfg.company.name}\n  Dossier  : ${dir}${tar.status === 0 ? `\n  Archive  : ${archive} (${size(archive)})` : ''}\n  Image    : ${imageFile ? `${imageName} (${imageFile})` : `non incluse (${imageName} à publier sur un registre)`}\n  Secrets  : aucun (le client génère ses clés avec gen-keys)`,
+);

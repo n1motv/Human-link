@@ -44,7 +44,10 @@ type Props = SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean; icon
  * Menu déroulant au style du site. API compatible avec <select> (value/onChange/{...register()}) :
  * un <select> natif masqué reste la source de vérité, la liste affichée est personnalisée.
  */
-export const Select = forwardRef<HTMLSelectElement, Props>(function Select({ invalid, icon, className, children, disabled, onChange, onBlur, name, value, defaultValue, id, ...rest }, ref) {
+export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
+  { invalid, icon, className, children, disabled, onChange, onBlur, name, value, defaultValue, id, ...rest },
+  ref,
+) {
   const nativeRef = useRef<HTMLSelectElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);

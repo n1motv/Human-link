@@ -49,7 +49,11 @@ function SideLinks({ onNavigate }: { onNavigate?: () => void }) {
     <NavLink key={i.to} to={i.to} end={i.end} onClick={onNavigate} className="nav-link">
       <i.icon size={18} aria-hidden />
       <span className="flex-1 truncate">{t(i.label)}</span>
-      {!!pending[i.to] && <span className="badge badge-warn !px-1.5 !py-0" aria-label={`${pending[i.to]}`}>{pending[i.to]}</span>}
+      {!!pending[i.to] && (
+        <span className="badge badge-warn !px-1.5 !py-0" aria-label={`${pending[i.to]}`}>
+          {pending[i.to]}
+        </span>
+      )}
     </NavLink>
   );
   return (
@@ -111,7 +115,10 @@ export function Layout() {
 
   return (
     <div className="min-h-screen lg:ps-72">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
+      >
         {t('common.skipToContent')}
       </a>
 

@@ -78,7 +78,11 @@ function LeaveForm({ open, onClose }: { open: boolean; onClose: () => void }) {
       }
     >
       <div className="space-y-4">
-        {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+            {error}
+          </p>
+        )}
         <Field label={t('leave.reason')} required>
           <Select value={v.raison} onChange={(e) => setV({ ...v, raison: e.target.value })}>
             {REASONS.map((r) => (
@@ -90,7 +94,12 @@ function LeaveForm({ open, onClose }: { open: boolean; onClose: () => void }) {
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('leave.from')} required>
-            <Input type="date" min={todayIso()} value={v.dateDebut} onChange={(e) => setV({ ...v, dateDebut: e.target.value, dateFin: v.dateFin && v.dateFin < e.target.value ? e.target.value : v.dateFin })} />
+            <Input
+              type="date"
+              min={todayIso()}
+              value={v.dateDebut}
+              onChange={(e) => setV({ ...v, dateDebut: e.target.value, dateFin: v.dateFin && v.dateFin < e.target.value ? e.target.value : v.dateFin })}
+            />
           </Field>
           <Field label={t('leave.to')} required>
             <Input type="date" min={v.dateDebut || todayIso()} value={v.dateFin} onChange={(e) => setV({ ...v, dateFin: e.target.value })} />
@@ -171,13 +180,21 @@ export default function MyLeaves() {
                     {l.statut === 'refuse' && l.motifRefus && <p className="mt-1 max-w-xs text-xs text-bad">{l.motifRefus}</p>}
                   </td>
                   <td className="text-xs text-muted">
-                    <span className="block">{t('leave.stepManager')}: {t(`status.${l.statutManager === 'accepte' ? 'approved' : l.statutManager === 'refuse' ? 'rejected' : 'pending'}`)}</span>
-                    <span className="block">{t('leave.stepAdmin')}: {t(`status.${l.statutAdmin === 'accepte' ? 'approved' : l.statutAdmin === 'refuse' ? 'rejected' : 'pending'}`)}</span>
+                    <span className="block">
+                      {t('leave.stepManager')}: {t(`status.${l.statutManager === 'accepte' ? 'approved' : l.statutManager === 'refuse' ? 'rejected' : 'pending'}`)}
+                    </span>
+                    <span className="block">
+                      {t('leave.stepAdmin')}: {t(`status.${l.statutAdmin === 'accepte' ? 'approved' : l.statutAdmin === 'refuse' ? 'rejected' : 'pending'}`)}
+                    </span>
                   </td>
                   <td>
                     <div className="flex justify-end gap-1">
                       {l.attachmentFileId && (
-                        <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('leave.attachment')} onClick={() => downloadFile(`/leaves/${l.id}/attachment`)}>
+                        <button
+                          className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                          aria-label={t('leave.attachment')}
+                          onClick={() => downloadFile(`/leaves/${l.id}/attachment`)}
+                        >
                           <Paperclip size={16} />
                         </button>
                       )}

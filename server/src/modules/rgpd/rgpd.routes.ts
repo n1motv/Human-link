@@ -44,8 +44,15 @@ rgpdRouter.get('/export', async (req, res) => {
     exportedAt: new Date().toISOString(),
     profile: toPublicUser(user),
     managerId: supervision ? String(supervision.managerId) : null,
-    leaves, sickLeaves: sicks, bonuses, telework: telework.map((t) => t.date), meetings, notifications,
-    documents: files, contactRequests: contacts, activityLog: history,
+    leaves,
+    sickLeaves: sicks,
+    bonuses,
+    telework: telework.map((t) => t.date),
+    meetings,
+    notifications,
+    documents: files,
+    contactRequests: contacts,
+    activityLog: history,
     note: 'Les retours de feedback mensuel sont anonymes et ne peuvent pas être rattachés à votre compte.',
   };
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -71,7 +78,10 @@ rgpdRouter.get('/audit', requireRole('admin'), async (req, res) => {
   if (q.actor) filter.actorEmail = new RegExp(escapeRegex(q.actor), 'i');
   if (q.target) filter.targetId = q.target;
   const [items, total] = await Promise.all([
-    AuditLog.find(filter).sort({ at: -1 }).skip((q.page - 1) * q.limit).limit(q.limit),
+    AuditLog.find(filter)
+      .sort({ at: -1 })
+      .skip((q.page - 1) * q.limit)
+      .limit(q.limit),
     AuditLog.countDocuments(filter),
   ]);
   res.json({ items, total, page: q.page });

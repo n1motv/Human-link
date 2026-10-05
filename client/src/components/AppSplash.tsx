@@ -14,7 +14,12 @@ export function AppSplash() {
       <div className="splash-in flex flex-col items-center gap-5 text-center">
         <div className="splash-pulse">
           {!broken ? (
-            <img src={theme === 'dark' ? cfg.branding.logoOnDarkUrl : cfg.branding.logoUrl} alt="" className="h-16 w-auto max-w-[220px] object-contain" onError={() => setBroken(true)} />
+            <img
+              src={theme === 'dark' ? cfg.branding.logoOnDarkUrl : cfg.branding.logoUrl}
+              alt=""
+              className="h-16 w-auto max-w-[220px] object-contain"
+              onError={() => setBroken(true)}
+            />
           ) : (
             <p className="gradient-text font-display text-4xl font-extrabold">{cfg.company.name}</p>
           )}

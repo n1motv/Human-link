@@ -21,12 +21,19 @@ export function RouteProgress() {
         window.setTimeout(() => {
           setVisible(true);
           setW(12);
-          timers.current.push(window.setTimeout(() => setW(55), 120), window.setTimeout(() => setW(80), 900), window.setTimeout(() => setW(92), 2600));
+          timers.current.push(
+            window.setTimeout(() => setW(55), 120),
+            window.setTimeout(() => setW(80), 900),
+            window.setTimeout(() => setW(92), 2600),
+          );
         }, 120),
       );
     } else {
       setW((cur) => (cur > 0 ? 100 : 0));
-      timers.current.push(window.setTimeout(() => setVisible(false), 260), window.setTimeout(() => setW(0), 520));
+      timers.current.push(
+        window.setTimeout(() => setVisible(false), 260),
+        window.setTimeout(() => setW(0), 520),
+      );
     }
     return clear;
   }, [busy]);

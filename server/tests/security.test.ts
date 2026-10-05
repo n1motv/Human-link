@@ -101,7 +101,11 @@ describe('appareils connectés', () => {
 
   it('lit le User-Agent et masque l’adresse IP', () => {
     expect(parseUserAgent(CHROME_WIN)).toEqual({ browser: 'Chrome', os: 'Windows', device: 'desktop' });
-    expect(parseUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1')).toEqual({ browser: 'Safari', os: 'iOS', device: 'mobile' });
+    expect(parseUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1')).toEqual({
+      browser: 'Safari',
+      os: 'iOS',
+      device: 'mobile',
+    });
     expect(maskIp('203.0.113.42')).toBe('203.0.•.•');
     expect(maskIp('::ffff:198.51.100.7')).toBe('198.51.•.•');
   });

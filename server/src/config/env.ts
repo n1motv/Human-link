@@ -6,7 +6,6 @@ import { applyFileSecrets } from './secrets.js';
 try {
   applyFileSecrets();
 } catch (err) {
-  // eslint-disable-next-line no-console
   console.error(`
 Configuration invalide :
   - ${(err as Error).message}
@@ -19,9 +18,7 @@ Configuration invalide :
  * Tout ce qui change d'un client à l'autre mais qui n'est PAS secret
  * (nom, logo, couleurs, modules, règles RH) se trouve dans client.config.json.
  */
-const bool = z
-  .enum(['true', 'false'])
-  .transform((v) => v === 'true');
+const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
 
 const key32 = (name: string) =>
   z
@@ -105,7 +102,6 @@ const raw = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !
 const parsed = schema.safeParse(raw);
 if (!parsed.success) {
   const lines = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`);
-  // eslint-disable-next-line no-console
   console.error(`\nConfiguration invalide :\n${lines.join('\n')}\n`);
   process.exit(1);
 }

@@ -74,7 +74,11 @@ export default function Org() {
   if (sup.isError || tree.isError) return <ErrorState error={sup.error ?? tree.error} />;
 
   const nameOf = (p: Person | null) => (p ? `${p.prenom} ${p.nom}` : '');
-  const askName = (id?: string) => sup.data!.assignments.flatMap((x) => [x.manager, x.supervise]).map((u) => ({ id: u.id, n: `${u.prenom} ${u.nom}` })).find((u) => u.id === id)?.n || '';
+  const askName = (id?: string) =>
+    sup
+      .data!.assignments.flatMap((x) => [x.manager, x.supervise])
+      .map((u) => ({ id: u.id, n: `${u.prenom} ${u.nom}` }))
+      .find((u) => u.id === id)?.n || '';
 
   return (
     <>
@@ -127,9 +131,16 @@ export default function Org() {
                 {sup.data!.assignments.map((a) => (
                   <li key={`${a.manager.id}-${a.supervise.id}`} className="flex items-center gap-3 rounded-xl border border-line bg-glass px-3 py-2.5 text-sm">
                     <span className="min-w-0 flex-1 truncate">
-                      <strong>{a.manager.prenom} {a.manager.nom}</strong> <span className="text-subtle">→</span> {a.supervise.prenom} {a.supervise.nom}
+                      <strong>
+                        {a.manager.prenom} {a.manager.nom}
+                      </strong>{' '}
+                      <span className="text-subtle">→</span> {a.supervise.prenom} {a.supervise.nom}
                     </span>
-                    <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad" aria-label={t('common.delete')} onClick={() => setAsk({ kind: 'unassign', a: a.manager.id, b: a.supervise.id })}>
+                    <button
+                      className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-bad"
+                      aria-label={t('common.delete')}
+                      onClick={() => setAsk({ kind: 'unassign', a: a.manager.id, b: a.supervise.id })}
+                    >
                       <Trash2 size={15} />
                     </button>
                   </li>

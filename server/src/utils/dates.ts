@@ -47,7 +47,7 @@ export function countWorkingDays(start: string, end: string, workingDays: number
 /** Lundi de la semaine suivante (jour courant exclu). */
 export function nextMonday(from = today()): string {
   const dow = toUtc(from).getUTCDay(); // 0 = dimanche
-  const delta = ((8 - dow) % 7) || 7;
+  const delta = (8 - dow) % 7 || 7;
   return addDays(from, delta);
 }
 

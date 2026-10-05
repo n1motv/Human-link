@@ -33,7 +33,13 @@ calendarRouter.get('/me', requireRole('employe', 'manager'), async (req, res) =>
       ...leaves.map((l) => ({ kind: 'leave', title: l.raison, start: l.dateDebut, end: l.dateFin })),
       ...sicks.map((s) => ({ kind: 'sick', title: 'sick', start: s.dateDebut, end: s.dateFin })),
       ...tele.map((t) => ({ kind: 'telework', title: 'telework', start: t.date, end: t.date })),
-      ...meetings.map((m) => ({ kind: 'meeting', title: m.title, start: m.dateTime.toISOString().slice(0, 10), end: m.dateTime.toISOString().slice(0, 10), time: m.dateTime.toISOString() })),
+      ...meetings.map((m) => ({
+        kind: 'meeting',
+        title: m.title,
+        start: m.dateTime.toISOString().slice(0, 10),
+        end: m.dateTime.toISOString().slice(0, 10),
+        time: m.dateTime.toISOString(),
+      })),
     ],
   });
 });

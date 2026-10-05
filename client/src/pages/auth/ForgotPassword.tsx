@@ -45,7 +45,11 @@ export default function ForgotPassword() {
             }
           })}
         >
-          {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+          {error && (
+            <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+              {error}
+            </p>
+          )}
           <Field label={t('auth.email')} error={formState.errors.email?.message}>
             <Input {...register('email')} type="email" autoComplete="email" autoFocus invalid={!!formState.errors.email} />
           </Field>

@@ -55,7 +55,11 @@ function SickForm({ open, onClose }: { open: boolean; onClose: () => void }) {
       }
     >
       <div className="space-y-4">
-        {error && <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-sm text-bad">
+            {error}
+          </p>
+        )}
         <Field label={t('sick.type')} required>
           <Select value={v.typeMaladie} onChange={(e) => setV({ ...v, typeMaladie: e.target.value })}>
             <option value="justifie">{t('sick.justified')}</option>
@@ -64,7 +68,12 @@ function SickForm({ open, onClose }: { open: boolean; onClose: () => void }) {
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('leave.from')} required>
-            <Input type="date" min={addDaysIso(todayIso(), -30)} value={v.dateDebut} onChange={(e) => setV({ ...v, dateDebut: e.target.value, dateFin: v.dateFin < e.target.value ? e.target.value : v.dateFin })} />
+            <Input
+              type="date"
+              min={addDaysIso(todayIso(), -30)}
+              value={v.dateDebut}
+              onChange={(e) => setV({ ...v, dateDebut: e.target.value, dateFin: v.dateFin < e.target.value ? e.target.value : v.dateFin })}
+            />
           </Field>
           <Field label={t('leave.to')} required>
             <Input type="date" min={v.dateDebut} value={v.dateFin} onChange={(e) => setV({ ...v, dateFin: e.target.value })} />
@@ -130,7 +139,11 @@ export default function MySick() {
                   </td>
                   <td className="text-end">
                     {s.attachmentFileId && (
-                      <button className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg" aria-label={t('sick.certificate')} onClick={() => downloadFile(`/sick-leaves/${s.id}/attachment`)}>
+                      <button
+                        className="rounded-full p-2 text-muted hover:bg-glass-hover hover:text-fg"
+                        aria-label={t('sick.certificate')}
+                        onClick={() => downloadFile(`/sick-leaves/${s.id}/attachment`)}
+                      >
                         <Paperclip size={16} />
                       </button>
                     )}
