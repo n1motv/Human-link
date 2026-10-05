@@ -13,6 +13,17 @@ propres traitements (registre, base légale, information des salariés, contrats
   Un changement de mot de passe déconnecte toutes les sessions.
 - Message d'erreur de connexion unique et temps de réponse égalisé pour les comptes inconnus.
 - Verrouillage temporaire après N échecs (configurable) + e-mail d'alerte au titulaire.
+- **Freinage progressif par compte et par adresse IP** : 5 échecs tolérés (`security.loginFreeAttempts`, de 1 à 10), puis un délai qui double à chaque nouvel échec
+  (15 s, 30 s, 1 min… jusqu'à 15 min, `loginBaseDelaySeconds` / `loginMaxDelayMinutes`). La réponse est un `429` avec `Retry-After` ; une connexion réussie remet le compteur à zéro.
+  Il s'applique aussi aux comptes inexistants (aucune différence observable). Le renouvellement automatique de session a son propre seuil, bien plus large (600 requêtes / 15 min).
+  Le compteur est en mémoire : une instance par client suffit ; avec plusieurs instances, le placer dans Redis.
+- **Appareils connectés** (page Sécurité) : liste des sessions (navigateur, système, adresse **partiellement masquée**, dernière activité) et déconnexion à distance, d'un appareil ou de tous les autres.
+  Un jeton d'accès déjà émis reste valable jusqu'à son expiration (10 min au plus) ; le jeton de rafraîchissement est coupé immédiatement. Pas de ville : elle exigerait une base de géolocalisation d'IP.
+- **Alerte de nouvel appareil** : à la connexion depuis un navigateur/système jamais vu pour ce compte, un e-mail détaille la connexion avec un lien « ce n'était pas moi » (7 jours) qui ferme
+  toutes les sessions, invalide les jetons d'accès et envoie un lien de nouveau mot de passe. Seule une empreinte navigateur + système est conservée (jamais l'adresse IP), 25 appareils au maximum.
+- **Mots de passe divulgués** : à la création et au changement de mot de passe, refus des mots de passe présents dans des fuites publiques (Have I Been Pwned, méthode **k-anonymat** : seuls les 5 premiers caractères
+  de l'empreinte SHA-1 quittent le serveur). Si le service est injoignable, le mot de passe est accepté (une panne externe ne doit pas bloquer). Désactivable : `security.checkPwnedPasswords: false` dans `client.config.json`
+  (client sans accès Internet sortant ou politique interdisant tout appel externe) ou `HIBP_ENABLED=false`.
 - Session : jeton d'accès JWT de 10 min et jeton de rafraîchissement **rotatif** (7 j) dans des cookies `httpOnly` + `SameSite=Strict` (+ `Secure` en production).
   Aucun jeton dans le `localStorage` : un script injecté ne peut pas les voler. Un jeton de rafraîchissement rejoué (vol probable) révoque toute la famille de sessions.
 - **CSRF** : double-submit cookie (`X-CSRF-Token`) en plus de `SameSite=Strict`.
@@ -33,6 +44,10 @@ propres traitements (registre, base légale, information des salariés, contrats
 - **Fichiers** (bulletins, contrats, justificatifs, photos) : chiffrés AES-256-GCM avant écriture disque, nom aléatoire, dossier hors serveur web,
   téléchargement via l'API après contrôle d'accès, en-têtes `nosniff`, `no-store` et CSP `sandbox`.
 - **Téléversements** : type réel vérifié par signature binaire (pas l'extension), PDF/JPG/PNG/WebP uniquement, 10 Mo maximum.
+- **Antivirus ClamAV** (optionnel) : avec `CLAMAV_HOST`, chaque fichier est analysé avant d'être stocké ; un fichier infecté est refusé (`INFECTED_FILE`). Si ClamAV est injoignable, les fichiers sont acceptés
+  et l'incident journalisé, sauf avec `CLAMAV_REQUIRED=true` (alors refus `503`). Démarrer le démon : `docker compose --profile antivirus up -d clamav` puis `CLAMAV_HOST=clamav` dans le `.env` du client
+  (le premier démarrage télécharge les signatures, quelques minutes).
+- **Clés versionnées** : chaque valeur chiffrée porte l'identifiant de sa clé (`enc:v2:<kid>:…`, fichiers `HLF2`), ce qui permet de changer de clé sans arrêt (voir « Rotation des clés »).
 - **Validation** de toute entrée avec zod (types stricts, champs inconnus supprimés) : une injection NoSQL (`{"$ne":null}`) est rejetée en 400.
   Les saisies de recherche sont échappées avant d'être utilisées dans une expression régulière.
 - **Feedback mensuel anonyme** : aucune référence à l'utilisateur n'est stockée (seulement un pseudonyme HMAC qui empêche le double envoi) ;
@@ -59,6 +74,19 @@ propres traitements (registre, base légale, information des salariés, contrats
 
 Les obligations légales (ex. conservation des bulletins de paie) peuvent primer sur l'effacement : l'archivage existe pour cela.
 
+## Rotation des clés de chiffrement
+
+Les clés `FIELD_ENCRYPTION_KEY` (champs) et `FILE_ENCRYPTION_KEY` (fichiers) peuvent être changées **sans interruption de service** :
+
+1. Générer une nouvelle clé : `cd server && npm run gen:keys` (utiliser la ligne `FIELD_ENCRYPTION_KEY=…` ou `FILE_ENCRYPTION_KEY=…`).
+2. Dans le `.env` du client : mettre la **nouvelle** clé dans `FIELD_ENCRYPTION_KEY`, et l'**ancienne** dans `FIELD_ENCRYPTION_KEYS_OLD` (liste séparée par des virgules ; idem pour les fichiers avec `FILE_ENCRYPTION_KEYS_OLD`).
+3. Redémarrer : tout reste lisible (les anciennes valeurs se déchiffrent avec l'ancienne clé), les nouvelles écritures utilisent la nouvelle clé.
+4. Rechiffrer l'existant : `npm run rotate-keys -- --dry-run` (compte ce qui reste), puis `npm run rotate-keys`. Le script est reprenable et écrit les fichiers de façon atomique.
+   Avec Docker : `docker compose exec app node dist/scripts/rotate-keys.js`.
+5. Quand le script ne signale plus rien, retirer l'ancienne clé de `*_KEYS_OLD` et la détruire.
+
+Faire une **sauvegarde** de la base et du dossier `storage` avant l'étape 4. Une clé perdue rend les données chiffrées sous cette clé définitivement illisibles.
+
 ## 3. Rétention automatique
 
 Une tâche quotidienne (03:30) supprime : journal d'audit, notifications, demandes de contact, feedbacks au-delà des durées de
@@ -82,6 +110,7 @@ indicatives** : à valider avec le client.
 
 - Le verrouillage de compte peut être utilisé pour **empêcher un utilisateur de se connecter** (déni de service ciblé, durée = `lockMinutes`) : compromis assumé, atténué par la limitation de débit.
 - Un code TOTP valide peut être réutilisé dans sa fenêtre de 30 s.
+- Le freinage de connexion est en mémoire : il est remis à zéro au redémarrage du serveur et n'est pas partagé entre plusieurs instances.
 - Les tâches planifiées s'exécutent dans le processus Node : avec **plusieurs instances** pour un même client, elles seraient jouées en double
   (le crédit de congés est idempotent, les rappels seraient dupliqués). Un client = une instance.
 - L'e-mail n'est pas chiffré de bout en bout.

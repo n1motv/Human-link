@@ -5,15 +5,19 @@ import { clientConfig } from '../../config/client.js';
 import { env } from '../../config/env.js';
 import { authOf, requireAuth } from '../../middleware/auth.js';
 import { issueCsrfCookie } from '../../middleware/csrf.js';
-import { authLimiter, publicFormLimiter } from '../../middleware/rateLimit.js';
-import { audit } from '../../utils/audit.js';
+import { authLimiter, publicFormLimiter, refreshLimiter } from '../../middleware/rateLimit.js';
+import { audit, clientIp } from '../../utils/audit.js';
 import { randomToken, sha256 } from '../../utils/crypto.js';
 import { badRequest, notFound, parse, unauthorized } from '../../utils/errors.js';
 import { sendMail } from '../../utils/mailer.js';
 import { dummyVerify, hashPassword, passwordSchema, verifyPassword } from '../../utils/password.js';
-import { signTwoFactorChallenge, verifyTwoFactorChallenge } from '../../utils/tokens.js';
+import { signNotMeToken, signTwoFactorChallenge, verifyNotMeToken, verifyTwoFactorChallenge } from '../../utils/tokens.js';
 import { hashRecovery, newRecoveryCodes, newTotpSecret, totpQrDataUrl, verifyTotp } from '../../utils/totp.js';
-import { endSession, revokeAllSessions, rotateSession, startSession } from './session.js';
+import { assertLoginAllowed, recordLoginFailure, recordLoginSuccess } from '../../utils/loginThrottle.js';
+import { assertNotPwned } from '../../utils/pwned.js';
+import { maskIp, parseUserAgent } from '../../utils/userAgent.js';
+import { REFRESH_COOKIE } from '../../middleware/auth.js';
+import { endSession, listSessions, revokeAllSessions, revokeOtherSessions, revokeSession, rotateSession, startSession } from './session.js';
 
 export const authRouter = Router();
 
@@ -35,10 +39,38 @@ async function recordFailure(user: UserDoc) {
   await user.save();
 }
 
+/** Alerte « nouvel appareil » : seulement si la personne s'est déjà connectée depuis un autre appareil. */
+async function trackDevice(req: import('express').Request, user: UserDoc) {
+  const ua = parseUserAgent(req.get('user-agent'));
+  const hash = sha256(`${ua.browser}|${ua.os}|${ua.device}`).slice(0, 32);
+  const now = new Date();
+  const known = user.knownDevices ?? [];
+  const existing = known.find((d) => d.hash === hash);
+  if (existing) {
+    existing.lastSeen = now;
+    return;
+  }
+  const isNew = known.length > 0;
+  user.knownDevices.push({ hash, label: `${ua.browser} · ${ua.os}`, firstSeen: now, lastSeen: now });
+  if (user.knownDevices.length > 25) user.knownDevices.splice(0, user.knownDevices.length - 25); // on garde les plus récents
+  if (isNew) {
+    const link = `${env.APP_URL}/not-me?token=${await signNotMeToken(String(user._id), hash)}`;
+    void sendMail(
+      user.email,
+      'Nouvelle connexion à votre compte',
+      `Bonjour ${user.prenom},\n\nUne connexion à votre compte vient d'être effectuée depuis un appareil inhabituel :\n` +
+        `  • Navigateur : ${ua.browser}\n  • Système : ${ua.os}\n  • Adresse : ${maskIp(clientIp(req))}\n  • Date : ${now.toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}\n\n` +
+        `Si c'était vous, ignorez ce message.\n\nSi ce n'était pas vous, cliquez ici pour fermer toutes les sessions et choisir un nouveau mot de passe (lien valable 7 jours) :\n${link}`,
+    );
+    await audit(req, { action: 'auth.new_device', actorId: String(user._id), actorEmail: user.email, meta: { device: `${ua.browser} · ${ua.os}` } });
+  }
+}
+
 async function completeLogin(req: import('express').Request, res: import('express').Response, user: UserDoc) {
   user.failedAttempts = 0;
   user.lockUntil = undefined;
   user.lastLoginAt = new Date();
+  await trackDevice(req, user);
   await user.save();
   await startSession(req, res, user);
   await audit(req, { action: 'auth.login', actorId: String(user._id), actorEmail: user.email });
@@ -53,21 +85,28 @@ authRouter.get('/csrf', (_req, res) => {
 
 authRouter.post('/login', authLimiter, async (req, res) => {
   const body = parse(z.object({ email, password: z.string().min(1).max(200) }), req.body);
+  const ip = clientIp(req);
+  // Freinage par couple IP + compte : s'applique aussi aux comptes inexistants (aucune différence observable).
+  assertLoginAllowed(res, ip, body.email);
   const user = await User.findOne({ email: body.email }).select('+passwordHash');
 
   if (!user?.passwordHash || user.status !== 'active') {
     await dummyVerify(body.password);
+    recordLoginFailure(ip, body.email);
     throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
   }
   if (user.lockUntil && user.lockUntil > new Date()) {
     await dummyVerify(body.password);
+    recordLoginFailure(ip, body.email);
     throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
   }
   if (!(await verifyPassword(user.passwordHash, body.password))) {
+    recordLoginFailure(ip, body.email);
     await recordFailure(user);
     await audit(req, { action: 'auth.login_failed', actorId: String(user._id), actorEmail: user.email });
     throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
   }
+  recordLoginSuccess(ip, body.email);
 
   if (user.twoFactor?.enabled) {
     res.json({ twoFactorRequired: true, challenge: await signTwoFactorChallenge(String(user._id)) });
@@ -80,6 +119,8 @@ authRouter.post('/2fa/login', authLimiter, async (req, res) => {
   const body = parse(z.object({ challenge: z.string().max(2000), code: z.string().min(6).max(20) }), req.body);
   const userId = await verifyTwoFactorChallenge(body.challenge);
   if (!userId) throw unauthorized('Vérification expirée, reconnectez-vous', 'CHALLENGE_EXPIRED');
+  const ip = clientIp(req);
+  assertLoginAllowed(res, ip, `2fa:${userId}`);
   const user = await User.findById(userId);
   if (!user || user.status !== 'active' || !user.twoFactor?.enabled) throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
   if (user.lockUntil && user.lockUntil > new Date()) throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
@@ -97,14 +138,17 @@ authRouter.post('/2fa/login', authLimiter, async (req, res) => {
     }
   }
   if (!ok) {
+    recordLoginFailure(ip, `2fa:${userId}`);
     await recordFailure(user);
     await audit(req, { action: 'auth.2fa_failed', actorId: String(user._id), actorEmail: user.email });
     throw unauthorized('Code invalide', 'INVALID_2FA_CODE');
   }
+  recordLoginSuccess(ip, `2fa:${userId}`);
   await completeLogin(req, res, user);
 });
 
-authRouter.post('/refresh', authLimiter, async (req, res) => {
+// Le renouvellement de session est automatique : seuil nettement plus haut que la connexion.
+authRouter.post('/refresh', refreshLimiter, async (req, res) => {
   const user = await rotateSession(req, res, (id) => User.findById(id));
   res.json({ user: toPublicUser(user) });
 });
@@ -169,6 +213,7 @@ authRouter.post('/forgot-password', publicFormLimiter, async (req, res) => {
 
 authRouter.post('/reset-password', authLimiter, async (req, res) => {
   const body = parse(z.object({ token: z.string().min(20).max(200), password: passwordSchema }), req.body);
+  await assertNotPwned(body.password);
   const user = await User.findOne({ resetTokenHash: sha256(body.token), resetExpiresAt: { $gt: new Date() } }).select(
     '+passwordHash +resetTokenHash +resetExpiresAt',
   );
@@ -189,6 +234,7 @@ authRouter.post('/reset-password', authLimiter, async (req, res) => {
 
 authRouter.post('/activate', authLimiter, async (req, res) => {
   const body = parse(z.object({ token: z.string().min(20).max(200), password: passwordSchema }), req.body);
+  await assertNotPwned(body.password);
   const user = await User.findOne({ inviteTokenHash: sha256(body.token), inviteExpiresAt: { $gt: new Date() }, status: 'invited' }).select(
     '+passwordHash +inviteTokenHash +inviteExpiresAt',
   );
@@ -210,6 +256,7 @@ authRouter.post('/change-password', requireAuth({ allowPending2fa: true }), asyn
   if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, body.currentPassword))) {
     throw unauthorized('Mot de passe actuel incorrect', 'INVALID_CREDENTIALS');
   }
+  await assertNotPwned(body.newPassword);
   user.passwordHash = await hashPassword(body.newPassword);
   user.passwordChangedAt = new Date();
   user.tokenVersion += 1;
@@ -263,4 +310,46 @@ authRouter.post('/2fa/disable', requireAuth(), async (req, res) => {
   await user.save();
   await audit(req, { action: 'auth.2fa_disabled' });
   res.json({ ok: true });
+});
+
+// ---------- Appareils connectés ----------
+
+authRouter.get('/sessions', requireAuth({ allowPending2fa: true }), async (req, res) => {
+  res.json({ items: await listSessions(authOf(req).userId, req.cookies?.[REFRESH_COOKIE] as string | undefined) });
+});
+
+authRouter.delete('/sessions/:id', requireAuth({ allowPending2fa: true }), async (req, res) => {
+  const { id } = parse(z.object({ id: z.string().min(10).max(64) }), req.params);
+  const wasCurrent = await revokeSession(authOf(req).userId, id, req.cookies?.[REFRESH_COOKIE] as string | undefined);
+  await audit(req, { action: 'auth.session_revoked', meta: { current: wasCurrent } });
+  if (wasCurrent) await endSession(req, res); // c'était cet appareil : on ferme aussi les cookies
+  res.json({ ok: true, current: wasCurrent });
+});
+
+authRouter.delete('/sessions', requireAuth({ allowPending2fa: true }), async (req, res) => {
+  const closed = await revokeOtherSessions(authOf(req).userId, req.cookies?.[REFRESH_COOKIE] as string | undefined);
+  await audit(req, { action: 'auth.other_sessions_revoked', meta: { closed } });
+  res.json({ ok: true, closed });
+});
+
+/** Lien « ce n'était pas moi » de l'e-mail d'alerte : ferme toutes les sessions et envoie un lien de nouveau mot de passe. */
+authRouter.post('/not-me', authLimiter, async (req, res) => {
+  const body = parse(z.object({ token: z.string().min(20).max(2000) }), req.body);
+  const claims = await verifyNotMeToken(body.token);
+  if (!claims) throw badRequest('Lien invalide ou expiré', 'BAD_TOKEN');
+  const user = await User.findById(claims.userId);
+  if (user && user.status === 'active') {
+    user.tokenVersion += 1; // invalide immédiatement les jetons d'accès de l'inconnu
+    user.set('knownDevices', user.knownDevices.filter((d) => d.hash !== claims.deviceHash));
+    await user.save();
+    await revokeAllSessions(String(user._id));
+    const link = await issueLink(user, 'reset');
+    void sendMail(
+      user.email,
+      'Sécurisez votre compte',
+      `Bonjour ${user.prenom},\n\nVous avez signalé une connexion inconnue : toutes vos sessions ont été fermées.\nChoisissez maintenant un nouveau mot de passe (lien valable ${clientConfig.security.resetTokenMinutes} minutes) :\n${link}`,
+    );
+    await audit(req, { action: 'auth.not_me', actorId: String(user._id), actorEmail: user.email });
+  }
+  res.json({ ok: true }); // même réponse dans tous les cas
 });

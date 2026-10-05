@@ -15,6 +15,7 @@
     "test": "vitest run",
     "seed": "tsx src/scripts/seed.ts",
     "gen:keys": "tsx src/scripts/gen-keys.ts",
+    "rotate-keys": "tsx src/scripts/rotate-keys.ts",
     "migrate:sqlite": "tsx src/scripts/migrate-from-sqlite.ts",
     "setup": "tsx src/scripts/init-env.ts"
   },

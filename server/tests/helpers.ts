@@ -4,6 +4,7 @@ import { createApp } from '../src/app.js';
 import { clientConfig } from '../src/config/client.js';
 import { Supervision } from '../src/models/Supervision.js';
 import { User, type Role } from '../src/models/User.js';
+import { resetLoginThrottle } from '../src/utils/loginThrottle.js';
 import { outbox } from '../src/utils/mailer.js';
 import { hashPassword } from '../src/utils/password.js';
 
@@ -22,6 +23,7 @@ export async function resetDb() {
   const collections = await mongoose.connection.db!.collections();
   await Promise.all(collections.map((c) => c.deleteMany({})));
   outbox.length = 0;
+  resetLoginThrottle();
 }
 
 /** Désactive l'obligation de 2FA (sauf dans le test dédié) pour simplifier les scénarios. */

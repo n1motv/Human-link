@@ -204,7 +204,7 @@ describe('double authentification', () => {
     const setup = await c.post('/api/auth/2fa/setup').send({});
     await c.post('/api/auth/2fa/enable').send({ code: await generate({ secret: setup.body.secret }) });
     const raw = await mongoose.connection.db!.collection('users').findOne({ _id: user._id });
-    expect(raw!.twoFactor.secret).toMatch(/^enc:v1:/);
+    expect(raw!.twoFactor.secret).toMatch(/^enc:v2:/);
     expect(JSON.stringify(raw)).not.toContain(setup.body.secret);
   });
 });

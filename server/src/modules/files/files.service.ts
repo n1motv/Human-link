@@ -3,6 +3,7 @@ import type { Types } from 'mongoose';
 import { StoredFile } from '../../models/StoredFile.js';
 import { audit } from '../../utils/audit.js';
 import { MAX_FILE_BYTES, MIME_GROUPS, readDecrypted, removeFile, sniffMime, writeEncrypted } from '../../utils/storage.js';
+import { assertClean } from '../../utils/antivirus.js';
 import { badRequest, notFound } from '../../utils/errors.js';
 
 type Category = 'photo' | 'bulletin' | 'contrat' | 'autre' | 'conge' | 'arret';
@@ -23,6 +24,7 @@ export async function saveUpload(input: SaveInput) {
   if (!file) throw badRequest('Fichier manquant', 'NO_FILE');
   if (file.size > MAX_FILE_BYTES) throw badRequest('Fichier trop volumineux', 'FILE_TOO_LARGE');
   const mime = await sniffMime(file.buffer, input.allowed);
+  await assertClean(file.buffer, file.originalname); // antivirus ClamAV si configuré
   const storageKey = await writeEncrypted(file.buffer);
   return StoredFile.create({
     ownerId: input.ownerId,

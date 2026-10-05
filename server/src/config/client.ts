@@ -53,6 +53,13 @@ const schema = z.object({
     inviteTokenHours: z.number().int().min(1),
     resetTokenMinutes: z.number().int().min(5),
     require2faForRoles: z.array(z.enum(['admin', 'manager', 'employe'])),
+    /** Tentatives de connexion échouées tolérées par compte et par adresse IP avant d'imposer un délai. */
+    loginFreeAttempts: z.number().int().min(1).max(10).default(5),
+    /** Délai imposé après la dernière tentative gratuite ; il double à chaque nouvel échec. */
+    loginBaseDelaySeconds: z.number().int().min(1).default(15),
+    loginMaxDelayMinutes: z.number().int().min(1).default(15),
+    /** Refuser les mots de passe présents dans des fuites publiques (envoie 5 caractères d'une empreinte, jamais le mot de passe). */
+    checkPwnedPasswords: z.boolean().default(true),
   }),
   gdpr: z.object({
     auditLogRetentionDays: z.number().int().min(30),

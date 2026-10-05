@@ -148,7 +148,7 @@ describe('contrôle d’accès et données sensibles', () => {
     const { mgr, emp, adm } = await team();
     await adm.c.patch(`/api/users/${emp.user._id}`).send({ salaire: 4200, numeroSecu: '1850175123456', telephone: '0600000000' });
     const raw = await mongoose.connection.db!.collection('users').findOne({ _id: emp.user._id });
-    for (const f of ['salaire', 'numeroSecu', 'telephone']) expect(String(raw![f])).toMatch(/^enc:v1:/);
+    for (const f of ['salaire', 'numeroSecu', 'telephone']) expect(String(raw![f])).toMatch(/^enc:v2:/);
     expect(JSON.stringify(raw)).not.toMatch(/1850175123456|4200/);
 
     const asAdmin = await adm.c.get(`/api/users/${emp.user._id}`);

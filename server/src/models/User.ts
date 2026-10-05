@@ -45,6 +45,11 @@ const userSchema = new Schema(
     lastLoginAt: { type: Date },
     passwordChangedAt: { type: Date },
     tokenVersion: { type: Number, default: 0 }, // incrémenter = révoquer toutes les sessions
+    // Appareils déjà utilisés pour se connecter (empreinte navigateur + système, jamais d'adresse IP) : sert à l'alerte « nouvel appareil ».
+    knownDevices: {
+      type: [{ _id: false, hash: String, label: String, firstSeen: Date, lastSeen: Date }],
+      default: [],
+    },
     twoFactor: {
       enabled: { type: Boolean, default: false },
       secret: encryptedString, // secret TOTP chiffré
@@ -70,6 +75,7 @@ applyJsonTransform(userSchema, [
   'failedAttempts',
   'lockUntil',
   'tokenVersion',
+  'knownDevices',
 ]);
 
 export type UserAttrs = InferSchemaType<typeof userSchema>;

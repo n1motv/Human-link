@@ -30,6 +30,26 @@ export async function verifyAccessToken(token: string): Promise<AccessClaims | n
   }
 }
 
+/** Lien « ce n'était pas moi » joint à l'e-mail d'alerte de nouvel appareil (valable 7 jours). */
+export async function signNotMeToken(userId: string, deviceHash: string): Promise<string> {
+  return new SignJWT({ typ: 'not-me', dev: deviceHash })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(userId)
+    .setIssuer(ISSUER)
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(key);
+}
+
+export async function verifyNotMeToken(token: string): Promise<{ userId: string; deviceHash: string } | null> {
+  try {
+    const { payload } = await jwtVerify(token, key, { issuer: ISSUER, algorithms: ['HS256'] });
+    return payload.typ === 'not-me' && typeof payload.sub === 'string' && typeof payload.dev === 'string' ? { userId: payload.sub, deviceHash: payload.dev } : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Jeton court délivré après le mot de passe, à échanger contre une session avec le code 2FA. */
 export async function signTwoFactorChallenge(userId: string): Promise<string> {
   return new SignJWT({ typ: '2fa-challenge' })

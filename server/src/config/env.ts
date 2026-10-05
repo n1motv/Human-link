@@ -15,6 +15,9 @@ const key32 = (name: string) =>
     .string({ error: `${name} manquante (voir .env.example, npm run gen:keys)` })
     .regex(/^[0-9a-fA-F]{64}$/, `${name} doit être une clé de 32 octets en hexadécimal (64 caractères)`);
 
+const keyList = (name: string) =>
+  z.string().regex(/^[0-9a-fA-F]{64}(,[0-9a-fA-F]{64})*$/, `${name} doit contenir une ou plusieurs clés de 64 caractères hexadécimaux, séparées par des virgules`);
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
@@ -43,6 +46,12 @@ const schema = z.object({
   FILE_ENCRYPTION_KEY: key32('FILE_ENCRYPTION_KEY'),
   /** Sel de pseudonymisation (feedback anonyme, hash d'IP dans les logs d'audit). */
   PSEUDONYM_KEY: key32('PSEUDONYM_KEY'),
+  /**
+   * Rotation des clés sans arrêt : anciennes clés (64 caractères hexadécimaux, séparées par des virgules) encore acceptées
+   * en lecture. Les données sont rechiffrées avec la clé courante par `npm run rotate-keys`.
+   */
+  FIELD_ENCRYPTION_KEYS_OLD: keyList('FIELD_ENCRYPTION_KEYS_OLD').optional(),
+  FILE_ENCRYPTION_KEYS_OLD: keyList('FILE_ENCRYPTION_KEYS_OLD').optional(),
 
   // --- Stockage local ---
   STORAGE_DIR: z.string().default('./storage'),
@@ -62,6 +71,15 @@ const schema = z.object({
   // --- Assistant RH (optionnel, API compatible OpenAI /v1/completions : LM Studio, Ollama, vLLM...) ---
   LLM_API_URL: z.string().url().optional(),
   LLM_MODEL: z.string().optional(),
+
+  // --- Antivirus ClamAV (optionnel) : chaque fichier téléversé est analysé avant d'être stocké ---
+  CLAMAV_HOST: z.string().optional(),
+  CLAMAV_PORT: z.coerce.number().default(3310),
+  /** true : refuser les fichiers si l'antivirus est injoignable ; false (défaut) : les accepter en le journalisant. */
+  CLAMAV_REQUIRED: bool.default(false),
+
+  /** Vérification des mots de passe contre les fuites connues (Have I Been Pwned, k-anonymat). Actif par défaut hors tests. */
+  HIBP_ENABLED: bool.optional(),
 
   LOG_LEVEL: z.string().default('info'),
 });

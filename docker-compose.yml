@@ -50,6 +50,21 @@ services:
     ports:
       - "${APP_PORT:-4000}:4000"
 
+  # Antivirus optionnel : docker compose --profile antivirus up -d clamav ; puis CLAMAV_HOST=clamav dans le .env du client.
+  clamav:
+    image: clamav/clamav:1.4
+    profiles: ["antivirus"]
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+    # Aucun port publié : seule l'application joint le démon (port 3310 du réseau Compose).
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
   caddy:
     image: caddy:2
     profiles: ["https"]
@@ -69,3 +84,4 @@ volumes:
   mongo-data:
   app-data:
   caddy-data:
+  clamav-data:

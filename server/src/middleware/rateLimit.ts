@@ -14,6 +14,9 @@ export const apiLimiter = rateLimit({ ...common, windowMs: 60_000, limit: 300 })
 /** Endpoints d'authentification : freinage des attaques par force brute / credential stuffing. */
 export const authLimiter = rateLimit({ ...common, windowMs: 15 * 60_000, limit: 100 });
 
+/** Renouvellement de session : appelé automatiquement par le navigateur, donc nettement plus large que la connexion. */
+export const refreshLimiter = rateLimit({ ...common, windowMs: 15 * 60_000, limit: 600 });
+
 /** Formulaires publics (contact, mot de passe oublié). */
 export const publicFormLimiter = rateLimit({ ...common, windowMs: 60 * 60_000, limit: 10 });
 

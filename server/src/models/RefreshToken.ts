@@ -13,6 +13,7 @@ const schema = new Schema(
     usedAt: { type: Date },
     revokedAt: { type: Date },
     ipHash: { type: String },
+    ipMasked: { type: String, maxlength: 60 }, // adresse partiellement masquée, affichée dans la liste des appareils
     userAgent: { type: String, maxlength: 300 },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
