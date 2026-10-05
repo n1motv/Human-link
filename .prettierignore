@@ -1,0 +1,11 @@
+**/dist
+**/node_modules
+**/test-results
+**/playwright-report
+graphify-out
+clients
+.instances
+package-lock.json
+**/package-lock.json
+*.png
+*.md

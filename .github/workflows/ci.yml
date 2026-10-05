@@ -13,6 +13,22 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Style (ESLint, Prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: ESLint (React, hooks, accessibilité)
+        run: npm run lint
+      - name: Prettier
+        run: npm run format:check
+
   server:
     name: Serveur (typage, tests, build, audit)
     runs-on: ubuntu-latest
@@ -68,7 +84,7 @@ jobs:
     services:
       mongo:
         image: mongo:7
-        ports: ["27017:27017"]
+        ports: ['27017:27017']
         options: >-
           --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
           --health-interval 5s --health-timeout 5s --health-retries 12
@@ -85,10 +101,10 @@ jobs:
         working-directory: server
         env:
           NODE_ENV: production
-          PORT: "4000"
+          PORT: '4000'
           APP_URL: http://localhost:4000
           MONGODB_URI: mongodb://localhost:27017/zap
-          SERVE_CLIENT: "true"
+          SERVE_CLIENT: 'true'
           CLIENT_DIST: ../client/dist
           CLIENT_DIR: ../clients/example
           STORAGE_DIR: /tmp/humanlink-zap
