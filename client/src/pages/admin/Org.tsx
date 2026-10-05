@@ -4,10 +4,11 @@ import { Crown, Link2, Link2Off, Network, Trash2, UserX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/DecisionDialog';
-import { Button, Card, ErrorState, Field, FormActions, PageHeader, Select, Spinner } from '../../components/ui';
+import { PersonPicker, type Person } from '../../components/PersonPicker';
+import { Button, Card, ErrorState, Field, FormActions, PageHeader, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAction } from '../../lib/hooks';
-import type { Brief, User } from '../../lib/types';
+import type { Brief } from '../../lib/types';
 
 interface Assignments {
   assignments: { manager: Brief & { id: string }; supervise: Brief & { id: string } }[];
@@ -50,36 +51,30 @@ function Node({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 
 export default function Org() {
   const { t } = useTranslation();
-  const people = useQuery({ queryKey: ['users', 'active'], queryFn: () => api.get<{ items: User[] }>('/users?status=active&limit=200') });
   const sup = useQuery({ queryKey: ['org', 'supervisions'], queryFn: () => api.get<Assignments>('/org/supervisions') });
   const tree = useQuery({ queryKey: ['org', 'tree'], queryFn: () => api.get<Tree>('/org/tree') });
-  const [managerId, setManagerId] = useState('');
-  const [superviseId, setSuperviseId] = useState('');
-  const [directorId, setDirectorId] = useState('');
+  const [manager, setManager] = useState<Person | null>(null);
+  const [supervised, setSupervised] = useState<Person | null>(null);
+  const [director, setDirectorPick] = useState<Person | null>(null);
+  const managerId = manager?.id ?? '';
+  const superviseId = supervised?.id ?? '';
+  const directorId = director?.id ?? '';
   const [ask, setAsk] = useState<{ kind: 'assign' | 'unassign' | 'director'; a?: string; b?: string } | null>(null);
   const refresh = [['org']] as const;
 
   const assign = useAction(() => api.post('/org/supervisions', { managerId, superviseId }), {
     success: t('org.assigned'),
     invalidate: [...refresh],
-    onSuccess: () => setSuperviseId(''),
+    onSuccess: () => setSupervised(null),
   });
   const unassign = useAction((a: { m: string; s: string }) => api.delete(`/org/supervisions/${a.m}/${a.s}`), { success: t('org.unassigned'), invalidate: [...refresh] });
   const setDirector = useAction(() => api.put('/org/director', { managerId: directorId }), { success: t('org.directorSet'), invalidate: [...refresh] });
 
-  if (people.isLoading || sup.isLoading || tree.isLoading) return <Spinner />;
-  if (people.isError || sup.isError || tree.isError) return <ErrorState error={people.error ?? sup.error ?? tree.error} />;
+  if (sup.isLoading || tree.isLoading) return <Spinner />;
+  if (sup.isError || tree.isError) return <ErrorState error={sup.error ?? tree.error} />;
 
-  const nameOf = (id?: string) => {
-    const u = people.data!.items.find((p) => p.id === id);
-    return u ? `${u.prenom} ${u.nom}` : '';
-  };
-  const askName = (id?: string) => nameOf(id) || sup.data!.assignments.flatMap((x) => [x.manager, x.supervise]).map((u) => ({ id: u.id, n: `${u.prenom} ${u.nom}` })).find((u) => u.id === id)?.n || '';
-
-  const all = people.data!.items.filter((p) => p.role !== 'admin');
-  const managers = all.filter((p) => p.role === 'manager');
-  const assigned = new Set(sup.data!.assignments.map((a) => a.supervise.id));
-  const free = all.filter((p) => !assigned.has(p.id) && p.id !== managerId);
+  const nameOf = (p: Person | null) => (p ? `${p.prenom} ${p.nom}` : '');
+  const askName = (id?: string) => sup.data!.assignments.flatMap((x) => [x.manager, x.supervise]).map((u) => ({ id: u.id, n: `${u.prenom} ${u.nom}` })).find((u) => u.id === id)?.n || '';
 
   return (
     <>
@@ -92,24 +87,10 @@ export default function Org() {
             </h2>
             <div className="space-y-4">
               <Field label={t('common.manager')}>
-                <Select value={managerId} onChange={(e) => setManagerId(e.target.value)}>
-                  <option value="">—</option>
-                  {managers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.prenom} {m.nom}
-                    </option>
-                  ))}
-                </Select>
+                <PersonPicker value={manager} onChange={setManager} filter="status=active&role=manager" />
               </Field>
               <Field label={t('org.supervised')} hint={t('org.oneManager')}>
-                <Select value={superviseId} onChange={(e) => setSuperviseId(e.target.value)}>
-                  <option value="">—</option>
-                  {free.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.prenom} {m.nom} ({t(`role.${m.role}`)})
-                    </option>
-                  ))}
-                </Select>
+                <PersonPicker value={supervised} onChange={setSupervised} filter="status=active&notRole=admin&unsupervised=true" exclude={managerId ? [managerId] : []} />
               </Field>
               <FormActions>
                 <Button variant="primary" disabled={!managerId || !superviseId} loading={assign.isPending} onClick={() => setAsk({ kind: 'assign' })}>
@@ -127,14 +108,9 @@ export default function Org() {
               {sup.data!.director ? t('org.currentDirector', { name: `${sup.data!.director.prenom} ${sup.data!.director.nom}` }) : t('org.noDirector')}
             </p>
             <div className="flex gap-2">
-              <Select aria-label={t('org.director')} value={directorId} onChange={(e) => setDirectorId(e.target.value)}>
-                <option value="">—</option>
-                {managers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.prenom} {m.nom}
-                  </option>
-                ))}
-              </Select>
+              <div className="min-w-0 flex-1">
+                <PersonPicker aria-label={t('org.director')} value={director} onChange={setDirectorPick} filter="status=active&role=manager" />
+              </div>
               <Button disabled={!directorId} loading={setDirector.isPending} onClick={() => setAsk({ kind: 'director' })}>
                 {t('org.designate')}
               </Button>
@@ -204,9 +180,9 @@ export default function Org() {
         title={t(`confirm.${ask?.kind ?? 'assign'}Title`)}
         message={
           ask?.kind === 'assign'
-            ? t('confirm.assignMsg', { manager: nameOf(managerId), person: nameOf(superviseId) })
+            ? t('confirm.assignMsg', { manager: nameOf(manager), person: nameOf(supervised) })
             : ask?.kind === 'director'
-              ? t('confirm.directorMsg', { name: nameOf(directorId) })
+              ? t('confirm.directorMsg', { name: nameOf(director) })
               : t('confirm.unassignMsg', { manager: askName(ask?.a), person: askName(ask?.b) })
         }
         confirmLabel={ask?.kind === 'assign' ? t('org.assignBtn') : ask?.kind === 'director' ? t('org.designate') : t('confirm.unassignBtn')}

@@ -128,3 +128,8 @@ Le fichier `.env` de la version Flask était **versionné dans Git**. Il a été
 2. Si le dépôt a été partagé ou publié, **purger l'historique** (`git filter-repo --path .env --invert-paths`, ou BFG Repo-Cleaner) puis forcer le push et demander
    aux collaborateurs de re-cloner. Considérer les secrets comme compromis dans tous les cas.
 3. Vérifier qu'aucune copie de l'ancien `.env` ne subsiste (poste local, sauvegardes, messageries).
+
+## Suivi des erreurs
+
+Aucun service tiers : un rapport d'erreur ne quitte jamais le serveur du client. Le navigateur envoie `POST /api/client-errors` (message, pile, chemin de la page **sans paramètres**, composants) ; le serveur retire e-mails, identifiants, jetons et longs nombres, tronque, puis journalise.
+Aucun cookie, aucun compte, aucune IP n'est joint au rapport ; l'endpoint est limité à 10 rapports par minute et par IP et n'a d'autre effet qu'une ligne de journal. Le navigateur n'envoie pas deux fois la même erreur et au plus 5 par session.

@@ -19,6 +19,7 @@ import { contactRouter } from './modules/contact/contact.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { documentsRouter } from './modules/documents/documents.routes.js';
 import { feedbackRouter } from './modules/feedback/feedback.routes.js';
+import { monitoringRouter } from './modules/monitoring/monitoring.routes.js';
 import { leavesRouter } from './modules/leaves/leaves.routes.js';
 import { meetingsRouter } from './modules/meetings/meetings.routes.js';
 import { notificationsRouter } from './modules/notifications/notifications.routes.js';
@@ -72,6 +73,9 @@ export function createApp() {
     res.setHeader('Cache-Control', 'no-cache');
     res.json(publicConfig());
   });
+
+  // Avant la protection CSRF : un rapport d'erreur doit pouvoir partir même si la session ou le jeton sont absents.
+  app.use('/api/client-errors', monitoringRouter);
 
   app.use('/api', apiLimiter, csrfProtection);
 

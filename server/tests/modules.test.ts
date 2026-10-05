@@ -407,3 +407,35 @@ describe('feedback anonyme : seuil de ré-identification', () => {
     expect((await adm.c.get('/api/feedback/status')).status).toBe(403); // l'admin ne répond pas au feedback
   });
 });
+
+describe('liste des employés : pagination et recherche côté serveur (P-01)', () => {
+  it('pagine, recherche, exclut un rôle et ne propose que les personnes sans responsable', async () => {
+    const adm = await session('admin');
+    const mgr = await makeUser('manager', { nom: 'Zorro', prenom: 'Zed' });
+    const free = await makeUser('employe', { nom: 'Libre', prenom: 'Lou' });
+    const taken = await makeUser('employe', { nom: 'Pris', prenom: 'Paul' });
+    await supervise(mgr, taken);
+    for (let i = 0; i < 5; i++) await makeUser('employe', { nom: `Dupont${i}`, prenom: 'Zoe' });
+
+    const p1 = await adm.c.get('/api/users?status=active&limit=3&page=1');
+    const p2 = await adm.c.get('/api/users?status=active&limit=3&page=2');
+    expect(p1.body.items).toHaveLength(3);
+    expect(p1.body.total).toBe(p2.body.total);
+    expect(p1.body.total).toBeGreaterThan(6);
+    const seen = new Set([...p1.body.items, ...p2.body.items].map((u: { id: string }) => u.id));
+    expect(seen.size).toBe(6); // deux pages, aucune personne en double
+
+    const found = await adm.c.get('/api/users?status=active&q=dupont3');
+    expect(found.body.items.map((u: { nom: string }) => u.nom)).toEqual(['Dupont3']);
+
+    const noAdmin = await adm.c.get('/api/users?status=active&notRole=admin&limit=200');
+    expect(noAdmin.body.items.some((u: { role: string }) => u.role === 'admin')).toBe(false);
+    expect(noAdmin.body.items.length).toBeGreaterThan(0);
+
+    const open = await adm.c.get('/api/users?status=active&notRole=admin&unsupervised=true&limit=200');
+    const ids = open.body.items.map((u: { id: string }) => u.id);
+    expect(ids).toContain(id(free));
+    expect(ids).not.toContain(id(taken));
+    expect((await adm.c.get('/api/users?unsupervised=oui')).status).toBe(400);
+  });
+});

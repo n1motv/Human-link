@@ -27,6 +27,9 @@
     "goHome": "العودة إلى الرئيسية",
     "previous": "السابق",
     "next": "التالي",
+    "searchPerson": "ابحث عن شخص…",
+    "noResult": "لا توجد نتائج",
+    "refineSearch": "{{count}} أشخاص آخرون: دقّق البحث.",
     "language": "اللغة",
     "pickDate": "اختر تاريخًا",
     "clear": "مسح",
@@ -528,6 +531,7 @@
     "byDepartment": "الموظفون حسب القسم"
   },
   "employees": {
+    "range": "{{from}}–{{to}} من {{total}}",
     "subtitle": "{{count}} موظف",
     "add": "إضافة موظف",
     "edit": "تعديل الموظف",

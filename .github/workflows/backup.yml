@@ -1,0 +1,30 @@
+name: Sauvegardes
+
+# Rejoue le scénario complet des scripts de sauvegarde (deploy/backup) dans l'image livrée aux clients, contre un MongoDB jetable :
+# sauvegarde en clair et chiffrée, restauration dans une base temporaire, refus des sauvegardes corrompues ou incomplètes, conservation.
+# Chaque 1er du mois : un script qui aurait cessé de fonctionner (changement de version de MongoDB, d'image…) se voit avant d'en avoir besoin.
+on:
+  schedule:
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+  pull_request:
+    paths: ['deploy/backup/**', 'docker-compose*.yml', '.github/workflows/backup.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  restauration:
+    name: Sauvegarde et restauration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construire l'image de sauvegarde
+        run: docker build -t hl-backup deploy/backup
+      - name: Démarrer un MongoDB jetable
+        run: |
+          docker run -d --name mongo -p 127.0.0.1:27017:27017 mongo:7
+          for i in $(seq 1 30); do docker exec mongo mongosh --quiet --eval 1 > /dev/null 2>&1 && exit 0; sleep 1; done
+          echo "MongoDB ne démarre pas" >&2; exit 1
+      - name: Auto-test des scripts
+        run: docker run --rm --network host -e MONGODB_URI=mongodb://127.0.0.1:27017/humanlink hl-backup /scripts/selftest.sh

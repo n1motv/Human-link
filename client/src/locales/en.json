@@ -27,6 +27,9 @@
     "goHome": "Back to home",
     "previous": "Previous",
     "next": "Next",
+    "searchPerson": "Search for a person…",
+    "noResult": "No results",
+    "refineSearch": "{{count}} more people: refine your search.",
     "language": "Language",
     "pickDate": "Pick a date",
     "clear": "Clear",
@@ -528,6 +531,7 @@
     "byDepartment": "Employees per department"
   },
   "employees": {
+    "range": "{{from}}–{{to}} of {{total}}",
     "subtitle": "{{count}} employee(s)",
     "add": "Add an employee",
     "edit": "Edit employee",

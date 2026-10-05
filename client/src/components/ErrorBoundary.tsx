@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { reportError } from '../lib/errorReport';
 
 interface State {
   error: Error | null;
@@ -15,6 +16,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   componentDidCatch(error: Error, info: ErrorInfo) {
     // eslint-disable-next-line no-console
     console.error('Erreur de rendu', error, info.componentStack);
+    reportError('render', error, info.componentStack ?? undefined);
   }
 
   render() {

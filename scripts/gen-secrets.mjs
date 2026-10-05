@@ -24,6 +24,8 @@ const files = {
   mongo_password: mongoPassword,
   // Mot de passe en base64url : aucun caractère à échapper dans l'URI.
   mongodb_uri: `mongodb://humanlink:${mongoPassword}@mongo:27017/humanlink?authSource=admin`,
+  // Phrase de passe des sauvegardes (profil « backup ») : à conserver dans un coffre, SÉPARÉ des sauvegardes elles-mêmes.
+  backup_passphrase: pass() + pass(),
 };
 if (args.includes('--admin')) files.admin_password = pass() + '9aA';
 

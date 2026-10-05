@@ -12,6 +12,7 @@ clients/*/.env
 *.key
 
 # Données locales
+backups/
 server/storage/
 server/.devdb/
 clients/*/storage/

@@ -11,6 +11,7 @@ import { ThemeProvider } from './lib/theme';
 import { ToastProvider } from './lib/toast';
 import { applyBranding } from './lib/branding';
 import { ApiError } from './lib/api';
+import { installErrorReporting } from './lib/errorReport';
 import { initI18n } from './lib/i18n';
 import type { PublicConfig } from './lib/types';
 import './index.css';
@@ -25,6 +26,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+installErrorReporting();
 
 async function boot() {
   const root = createRoot(document.getElementById('root')!);

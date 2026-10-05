@@ -27,6 +27,9 @@
     "goHome": "Volver al inicio",
     "previous": "Anterior",
     "next": "Siguiente",
+    "searchPerson": "Buscar a una persona…",
+    "noResult": "Sin resultados",
+    "refineSearch": "{{count}} personas más: afine la búsqueda.",
     "language": "Idioma",
     "pickDate": "Elegir una fecha",
     "clear": "Borrar",
@@ -528,6 +531,7 @@
     "byDepartment": "Empleados por departamento"
   },
   "employees": {
+    "range": "{{from}}–{{to}} de {{total}}",
     "subtitle": "{{count}} empleado(s)",
     "add": "Añadir un empleado",
     "edit": "Editar empleado",

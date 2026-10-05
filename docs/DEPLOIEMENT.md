@@ -86,18 +86,61 @@ Le serveur refuse de démarrer si une clé est absente ou malformée.
 
 ## Sauvegardes
 
-À sauvegarder **ensemble** et à chiffrer :
+### Automatiques (profil `backup`)
 
-1. la base : `docker compose exec mongo mongodump --archive --gzip -u humanlink -p "$MONGO_PASSWORD" --authenticationDatabase admin > humanlink-$(date +%F).archive.gz`
-2. le volume des fichiers (`app-data`, dossier `STORAGE_DIR`) ;
-3. les clés (`clients/<client>/.env`) **dans un coffre distinct** : sans elles, les sauvegardes sont illisibles.
+```bash
+docker compose --profile backup up -d backup                    # ou : docker compose -f docker-compose.secrets.yml --profile backup up -d backup
+docker compose run --rm backup /scripts/backup.sh               # une sauvegarde immédiate
+docker compose run --rm backup /scripts/restore-test.sh         # un test de restauration immédiat
+```
 
-Tester régulièrement une restauration. Les sauvegardes contiennent des données personnelles : mêmes règles de conservation et d'accès que la production.
+Chaque nuit (`BACKUP_HOUR`, 2 h UTC par défaut), le conteneur `backup` écrit dans `BACKUP_PATH` (`./backups`) un dossier horodaté contenant :
+
+| Fichier | Contenu |
+|---|---|
+| `db.archive.gz` | la base MongoDB (`mongodump`) |
+| `files.tar.gz` | le volume des fichiers (déjà chiffrés par l'application) |
+| `SHA256SUMS` | les empreintes, vérifiées avant toute restauration |
+
+- **Conservation** : `BACKUP_KEEP_DAYS` jours (14 par défaut), puis suppression automatique.
+- **Chiffrement** : avec `BACKUP_PASSPHRASE` (ou le secret `backup_passphrase` créé par `npm run secrets:gen`), la base et les fichiers sont chiffrés en AES-256 (`.enc`). La base contient des noms et des e-mails : **chiffrez dès que les sauvegardes quittent le serveur**.
+  Conservez la phrase de passe et les clés de l'application (`FIELD_ENCRYPTION_KEY`, `FILE_ENCRYPTION_KEY`) dans un coffre **distinct** des sauvegardes : sans elles, elles sont illisibles.
+- **Écriture atomique** : un dossier n'apparaît qu'une fois complet ; une sauvegarde interrompue ne laisse rien.
+- **Supervision** : le conteneur passe en `unhealthy` si aucune sauvegarde n'a réussi depuis 26 h (`docker compose ps`). Avec `ERROR_WEBHOOK_URL`, un échec de sauvegarde ou de test de restauration prévient aussi l'équipe.
+- **Copie hors site** : `BACKUP_PATH` doit être sur un autre disque ou un montage réseau ; copiez-le ensuite hors du serveur (`rclone`, `rsync`, stockage objet). Un serveur perdu avec ses sauvegardes n'est pas sauvegardé.
+
+### Test de restauration (automatique le 1er de chaque mois)
+
+`restore-test.sh` prend la dernière sauvegarde, vérifie ses empreintes, la restaure dans une base **temporaire** `humanlink_restoretest` (jamais dans la production), contrôle qu'il y a des comptes et que chaque fichier référencé est dans l'archive, puis supprime la base temporaire.
+Il échoue, avec un code de sortie non nul, si la sauvegarde est corrompue, tronquée, indéchiffrable ou incomplète. À consigner : date du dernier test réussi dans `backups/last-restore-test`.
+
+Le workflow GitHub « Sauvegardes » rejoue ce scénario complet (données d'exemple, sauvegarde en clair et chiffrée, restauration, cas d'échec) chaque mois et à chaque modification de `deploy/backup/`.
+
+### Restaurer pour de bon (sinistre)
+
+```bash
+docker compose stop app
+# 1. décompresser et remettre les fichiers dans le volume
+docker compose run --rm --no-deps -v "$PWD/backups/<horodatage>:/restore:ro" --entrypoint sh app -c 'tar -xzf /restore/files.tar.gz -C /data/storage'
+# 2. recharger la base (--drop remplace les collections existantes)
+docker compose run --rm -v "$PWD/backups/<horodatage>:/restore:ro" backup sh -c 'mongorestore --uri="$MONGODB_URI" --archive=/restore/db.archive.gz --gzip --drop'
+docker compose start app
+```
+
+Sauvegardes chiffrées : déchiffrer d'abord (`openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in db.archive.gz.enc -out db.archive.gz`), de même pour `files.tar.gz.enc`.
+Les mêmes clés (`.env` du client) doivent être en place : une restauration avec d'autres clés donne des fichiers illisibles.
+
+### Sans le conteneur
+
+À sauvegarder **ensemble** : la base (`mongodump --archive --gzip`), le volume des fichiers (`app-data`, dossier `STORAGE_DIR`) et les clés (`clients/<client>/.env`, dans un coffre distinct).
+Les sauvegardes contiennent des données personnelles : mêmes règles de conservation et d'accès que la production.
 
 ## Exploitation
 
 - Santé : `GET /api/health` (utilisé par le HEALTHCHECK Docker).
 - Logs : sortie standard au format JSON (pino) — à collecter par l'infrastructure ; sans secrets ni cookies.
+- **Erreurs** : les plantages de page (navigateur) et les erreurs 500 ou non interceptées (serveur) sont journalisés au niveau `error` sous la clé `monitoring`, avec une empreinte (`id`) qui regroupe les répétitions. Rien de personnel n'y figure : e-mails, identifiants, jetons et paramètres d'adresse sont retirés avant l'écriture, et aucun compte n'est joint.
+  Avec `ERROR_WEBHOOK_URL` (Slack, Teams, Mattermost, ntfy… : un POST JSON dont le champ `text` est lisible), l'équipe est prévenue, au plus une fois par erreur et par 10 minutes. Sans outil tiers : filtrer les logs sur `monitoring.id`.
 - Créer un administrateur supplémentaire : depuis l'interface (Employés → Ajouter, rôle Administrateur).
 - Mot de passe admin perdu : « Mot de passe oublié » (SMTP requis) ; sinon relancer `seed` avec un nouvel `ADMIN_EMAIL`.
 - 2FA perdue (téléphone changé) : un autre administrateur utilise **Employés → Réinitialiser la 2FA** ; la personne la reconfigure à sa prochaine connexion

@@ -3,6 +3,7 @@ import { createApp } from './app.js';
 import { env, isProd } from './config/env.js';
 import { startJobs } from './jobs/scheduler.js';
 import { logger } from './utils/logger.js';
+import { reportError, scrubStack, scrubText } from './utils/monitoring.js';
 
 async function main() {
   mongoose.set('strictQuery', true);
@@ -24,6 +25,18 @@ async function main() {
   process.on('SIGINT', stop);
   process.on('SIGTERM', stop);
 }
+
+// Erreurs hors requête (tâche planifiée, promesse oubliée) : sans ceci, elles ne laisseraient aucune trace exploitable.
+process.on('unhandledRejection', (reason) => {
+  const err = reason as Error;
+  logger.error({ err }, 'Promesse rejetée non gérée');
+  reportError({ source: 'server', kind: 'unhandledRejection', message: scrubText(err?.message ?? reason), stack: scrubStack(err?.stack) });
+});
+process.on('uncaughtException', (err) => {
+  logger.fatal({ err }, 'Exception non interceptée');
+  reportError({ source: 'server', kind: 'uncaughtException', message: scrubText(err.message), stack: scrubStack(err.stack) });
+  setTimeout(() => process.exit(1), 1000).unref(); // laisse partir l'alerte ; Docker relance le conteneur (restart: unless-stopped)
+});
 
 main().catch((err) => {
   logger.fatal({ err }, 'Démarrage impossible');

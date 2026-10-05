@@ -120,6 +120,8 @@ usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
     z.object({
       q: z.string().max(80).optional(),
       role: z.enum(ROLES).optional(),
+      notRole: z.enum(ROLES).optional(),
+      unsupervised: z.enum(['true']).optional(),
       status: z.enum(['invited', 'active', 'archived']).optional(),
       page: z.coerce.number().int().min(1).default(1),
       limit: z.coerce.number().int().min(1).max(200).default(100),
@@ -129,6 +131,7 @@ usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
   const auth = authOf(req);
   const filter: Record<string, unknown> = { status: { $ne: 'anonymized' } };
   if (q.role) filter.role = q.role;
+  else if (q.notRole) filter.role = { $ne: q.notRole };
   if (q.status) filter.status = q.status;
   if (q.q) {
     const rx = new RegExp(escapeRegex(q.q), 'i');
@@ -137,6 +140,11 @@ usersRouter.get('/', requireRole('admin', 'manager'), async (req, res) => {
   if (auth.role === 'manager') {
     const ids = (await Supervision.find({ managerId: auth.userId }, { superviseId: 1 })).map((s) => s.superviseId);
     filter._id = { $in: ids };
+  }
+  if (q.unsupervised) {
+    // Personnes qui n'ont pas encore de responsable (un seul responsable par personne).
+    const taken = (await Supervision.find({}, { superviseId: 1 })).map((s) => s.superviseId);
+    filter.$and = [{ _id: { $nin: taken } }];
   }
   const [items, total] = await Promise.all([
     User.find(filter).sort({ nom: 1, prenom: 1 }).skip((q.page - 1) * q.limit).limit(q.limit),

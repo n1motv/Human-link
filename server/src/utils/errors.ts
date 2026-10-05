@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import { logger } from './logger.js';
 import { isProd } from '../config/env.js';
+import { reportError, scrubPath, scrubStack, scrubText } from './monitoring.js';
 
 export class HttpError extends Error {
   constructor(
@@ -68,6 +69,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
   logger.error({ err, path: req.path }, 'Erreur non gérée');
+  reportError({ source: 'server', kind: 'http', message: scrubText((err as Error)?.message ?? err), stack: scrubStack((err as Error)?.stack), route: scrubPath(req.originalUrl) });
   res.status(500).json({
     error: { code: 'INTERNAL', message: isProd ? 'Erreur interne du serveur' : String((err as Error)?.message ?? err) },
   });

@@ -20,5 +20,8 @@ export const refreshLimiter = rateLimit({ ...common, windowMs: 15 * 60_000, limi
 /** Formulaires publics (contact, mot de passe oublié). */
 export const publicFormLimiter = rateLimit({ ...common, windowMs: 60 * 60_000, limit: 10 });
 
+/** Rapports d'erreur du navigateur : public, donc strictement limité (une page cassée ne doit pas inonder les journaux). */
+export const errorReportLimiter = rateLimit({ ...common, windowMs: 60_000, limit: 10 });
+
 /** Assistant RH : appels potentiellement coûteux. */
 export const chatLimiter = rateLimit({ ...common, windowMs: 60_000, limit: 20 });

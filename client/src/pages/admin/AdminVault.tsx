@@ -4,11 +4,12 @@ import { ShieldCheck, Upload } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../components/DecisionDialog';
 import { Modal } from '../../components/Modal';
+import { PersonPicker, type Person } from '../../components/PersonPicker';
 import { VaultList } from '../../components/VaultList';
 import { Button, Card, ErrorState, Field, Input, PageHeader, Select, Spinner } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useAction, useErrorText } from '../../lib/hooks';
-import type { User, VaultFile } from '../../lib/types';
+import type { VaultFile } from '../../lib/types';
 
 function UploadModal({ userId, open, onClose }: { userId: string; open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
@@ -99,8 +100,8 @@ function UploadModal({ userId, open, onClose }: { userId: string; open: boolean;
 
 export default function AdminVault() {
   const { t } = useTranslation();
-  const people = useQuery({ queryKey: ['users', 'active'], queryFn: () => api.get<{ items: User[] }>('/users?status=active&limit=200') });
-  const [userId, setUserId] = useState('');
+  const [person, setPerson] = useState<Person | null>(null);
+  const userId = person?.id ?? '';
   const [upload, setUpload] = useState(false);
   const [del, setDel] = useState<VaultFile | null>(null);
   const files = useQuery({ queryKey: ['vault', userId], queryFn: () => api.get<{ items: VaultFile[] }>(`/documents/user/${userId}`), enabled: !!userId });
@@ -112,16 +113,7 @@ export default function AdminVault() {
       <Card className="mb-6">
         <div className="flex flex-wrap items-end gap-4">
           <Field label={t('common.employee')} className="min-w-[16rem] flex-1">
-            <Select value={userId} onChange={(e) => setUserId(e.target.value)}>
-              <option value="">{t('vault.choose')}</option>
-              {people.data?.items
-                .filter((p) => p.role !== 'admin')
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.prenom} {p.nom} ({p.matricule})
-                  </option>
-                ))}
-            </Select>
+            <PersonPicker value={person} onChange={setPerson} filter="status=active&notRole=admin" placeholder={t('vault.choose')} />
           </Field>
           <Button variant="primary" icon={<Upload size={16} />} disabled={!userId} onClick={() => setUpload(true)}>
             {t('vault.upload')}

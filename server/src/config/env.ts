@@ -94,6 +94,9 @@ const schema = z.object({
   /** Vérification des mots de passe contre les fuites connues (Have I Been Pwned, k-anonymat). Actif par défaut hors tests. */
   HIBP_ENABLED: bool.optional(),
 
+  /** Alerte d'erreur (Slack, Teams, Mattermost, ntfy… : un POST JSON avec un champ « text »). Les erreurs restent de toute façon dans les logs. */
+  ERROR_WEBHOOK_URL: z.string().url().optional(),
+
   LOG_LEVEL: z.string().default('info'),
 });
 

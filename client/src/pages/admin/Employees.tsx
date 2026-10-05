@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Archive, Eraser, KeyRound, MailPlus, Pencil, Plus, RotateCcw, Search, ShieldCheck, Users } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, Eraser, KeyRound, MailPlus, Pencil, Plus, RotateCcw, Search, ShieldCheck, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/DecisionDialog';
@@ -193,6 +193,7 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
 
 type Action = { kind: 'archive' | 'anonymize' | 'reset2fa' | 'restore' | 'resend'; user: Row } | null;
 const SAFE: string[] = ['restore', 'resend'];
+const PAGE_SIZE = 25;
 
 export default function Employees() {
   const { t, i18n } = useTranslation();
@@ -203,12 +204,13 @@ export default function Employees() {
     return () => clearTimeout(h);
   }, [search]);
   const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
   const [edit, setEdit] = useState<string | 'new' | null>(null);
   const [action, setAction] = useState<Action>(null);
 
   const q = useQuery({
-    queryKey: ['users', term, status],
-    queryFn: () => api.get<{ items: Row[]; total: number }>(`/users?limit=200${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
+    queryKey: ['users', term, status, page],
+    queryFn: () => api.get<{ items: Row[]; total: number }>(`/users?page=${page}&limit=${PAGE_SIZE}${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
     placeholderData: keepPreviousData,
   });
   const archive = useAction((id: string) => api.delete(`/users/${id}`), { success: t('employees.archived'), invalidate: [['users']] });
@@ -233,9 +235,9 @@ export default function Employees() {
       <div className="mb-5 flex flex-wrap gap-3">
         <div className="relative min-w-[14rem] flex-1 sm:max-w-sm">
           <Search size={16} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-          <Input className="!ps-10" placeholder={t('common.search')} aria-label={t('common.search')} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="!ps-10" placeholder={t('common.search')} aria-label={t('common.search')} value={search} onChange={(e) => (setSearch(e.target.value), setPage(1))} />
         </div>
-        <Select aria-label={t('common.status')} value={status} onChange={(e) => setStatus(e.target.value)} className="!w-auto">
+        <Select aria-label={t('common.status')} value={status} onChange={(e) => (setStatus(e.target.value), setPage(1))} className="!w-auto">
           <option value="">{t('common.all')}</option>
           <option value="active">{t('employees.st.active')}</option>
           <option value="invited">{t('employees.st.invited')}</option>
@@ -330,6 +332,18 @@ export default function Employees() {
             </tbody>
           </table>
         </TableWrap>
+      )}
+      {q.data && q.data.total > PAGE_SIZE && (
+        <div className="mt-4 flex items-center justify-between text-sm text-muted">
+          <span>{t('employees.range', { from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, q.data.total), total: q.data.total })}</span>
+          <div className="flex items-center gap-2">
+            <Button size="sm" icon={<ChevronLeft size={14} className="rtl:rotate-180" />} disabled={page <= 1} onClick={() => setPage((p) => p - 1)} aria-label={t('common.previous')} />
+            <span className="tabular-nums">
+              {page} / {Math.ceil(q.data.total / PAGE_SIZE)}
+            </span>
+            <Button size="sm" icon={<ChevronRight size={14} className="rtl:rotate-180" />} disabled={page * PAGE_SIZE >= q.data.total} onClick={() => setPage((p) => p + 1)} aria-label={t('common.next')} />
+          </div>
+        </div>
       )}
 
       {edit && <EmployeeForm key={edit} editId={edit} onClose={() => setEdit(null)} />}
