@@ -20,6 +20,8 @@ const PublicContact = page(() => import('../pages/common/Contact'));
 const InternalContact = page(() => import('../pages/common/Contact').then((m) => ({ default: m.ContactInternal })));
 const Privacy = page(() => import('../pages/common/Privacy'));
 const NotFound = page(() => import('../pages/common/NotFound'));
+// Page de styles : développement uniquement. `import.meta.env.DEV` est remplacé à la compilation : la page n'existe pas dans le build de production.
+const Styleguide = import.meta.env.DEV ? page(() => import('../pages/dev/Styleguide')) : null;
 
 const Notifications = page(() => import('../pages/common/Notifications'));
 const Security = page(() => import('../pages/common/Security'));
@@ -98,6 +100,7 @@ export function App() {
         <Route path="/activate" element={<SetPassword mode="activate" />} />
         <Route path="/not-me" element={<NotMe />} />
         <Route path="/privacy" element={<Privacy />} />
+        {Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
         <Route
           path="/contact"
           element={
