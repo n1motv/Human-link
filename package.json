@@ -17,7 +17,7 @@
     "seed:demo:reset": "npm --prefix server run seed -- --demo --reset-demo",
     "build": "npm --prefix client run build && npm --prefix server run build",
     "start": "npm --prefix server run start",
-    "test": "npm --prefix server test && npm --prefix client run i18n:check && npm --prefix client run typecheck",
+    "test": "npm --prefix server test && npm --prefix client test && npm --prefix client run i18n:check && npm --prefix client run typecheck",
     "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck"
   }
 }

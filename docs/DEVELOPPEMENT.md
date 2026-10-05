@@ -12,7 +12,8 @@
 ## Lancer et tester
 
 ```bash
-npm test                         # serveur (vitest + MongoDB temporaire), i18n, typage
+npm test                         # serveur (vitest + MongoDB temporaire), client (vitest + jsdom), i18n, typage
+npm --prefix client test         # tests du client seuls (composants : Select, DatePicker, code 2FA ; pages : connexion 2FA, congés, approbation)
 npm --prefix server test         # tests serveur seuls (télécharge un binaire MongoDB au premier lancement)
 npm run typecheck
 ```

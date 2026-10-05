@@ -55,7 +55,7 @@ jobs:
       - name: Cohérence des traductions
         run: npm run i18n:check
       - name: Tests
-        run: npx vitest run --passWithNoTests
+        run: npm test
       - name: Build
         run: npx vite build
       - name: Audit des dépendances de production
