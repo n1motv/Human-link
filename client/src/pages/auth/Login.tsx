@@ -39,6 +39,10 @@ export default function Login() {
   const reason = (e: unknown) => {
     const code = e instanceof ApiError ? e.code : '';
     if (code === 'CHALLENGE_EXPIRED') setChallenge(null);
+    if (code === 'LOGIN_THROTTLED') {
+      const seconds = (e as ApiError).details as unknown as { retryAfterSeconds?: number } | undefined;
+      return t('auth.throttled', { seconds: seconds?.retryAfterSeconds ?? 30 });
+    }
     return code === 'INVALID_2FA_CODE' ? t('auth.invalidCode') : code === 'RATE_LIMITED' ? t('auth.tooMany') : e instanceof ApiError && e.status < 500 ? t('auth.invalidCredentials') : t('common.error');
   };
 

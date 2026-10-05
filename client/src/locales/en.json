@@ -115,7 +115,11 @@
     "ATTACHMENT_REQUIRED": "A supporting document is required",
     "TWO_FACTOR_SETUP_REQUIRED": "Enable two-factor authentication to continue",
     "FORBIDDEN": "Access denied",
-    "NOT_ARCHIVED": "Archive the account before anonymizing it"
+    "NOT_ARCHIVED": "Archive the account before anonymizing it",
+    "PASSWORD_PWNED": "This password appears in known data breaches: choose another one.",
+    "INFECTED_FILE": "File rejected: malicious content was detected.",
+    "SCAN_UNAVAILABLE": "The antivirus scan is temporarily unavailable. Try again later.",
+    "LOGIN_THROTTLED": "Too many attempts, please wait a moment."
   },
   "auth": {
     "welcome": "Welcome back",
@@ -153,7 +157,8 @@
     "tagline": "Leave, documents and your team: your whole HR space in one place.",
     "useRecovery": "Use a recovery code",
     "useApp": "Use the app code",
-    "recoveryCode": "Recovery code"
+    "recoveryCode": "Recovery code",
+    "throttled": "Too many attempts. Try again in {{seconds}} s."
   },
   "home": {
     "hello": "Hello {{name}} 👋",
@@ -617,5 +622,26 @@
     "preparing": "Getting your workspace ready…",
     "bye": "See you soon, {{name}}",
     "byeHint": "Your session was closed securely."
+  },
+  "sessions": {
+    "title": "Connected devices",
+    "subtitle": "The devices where your account is signed in. Sign out any you do not recognise.",
+    "current": "This device",
+    "lastActive": "Last activity: {{when}}",
+    "signOut": "Sign out",
+    "signOutOthers": "Sign out other devices",
+    "none": "No other device is signed in.",
+    "confirmTitle": "Sign out this device?",
+    "confirmMsg": "{{device}} will be signed out. They will have to sign in again with the password.",
+    "confirmOthersTitle": "Sign out other devices?",
+    "confirmOthersMsg": "{{count}} device(s) will be signed out. This device stays signed in.",
+    "revoked": "Device signed out."
+  },
+  "notMe": {
+    "title": "Unknown sign-in?",
+    "hint": "If you did not sign in, we close all your sessions and email you a link to choose a new password.",
+    "button": "This was not me",
+    "done": "All your sessions have been closed. An email to choose a new password has just been sent to you.",
+    "invalid": "This link is invalid or has expired. Use “Forgot password” to secure your account."
   }
 }

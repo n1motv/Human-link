@@ -115,7 +115,11 @@
     "ATTACHMENT_REQUIRED": "Se requiere un justificante",
     "TWO_FACTOR_SETUP_REQUIRED": "Activa la autenticación en dos pasos para continuar",
     "FORBIDDEN": "Acceso denegado",
-    "NOT_ARCHIVED": "Archiva primero la cuenta antes de anonimizarla"
+    "NOT_ARCHIVED": "Archiva primero la cuenta antes de anonimizarla",
+    "PASSWORD_PWNED": "Esta contraseña aparece en filtraciones de datos conocidas: elige otra.",
+    "INFECTED_FILE": "Archivo rechazado: se detectó contenido malicioso.",
+    "SCAN_UNAVAILABLE": "El análisis antivirus no está disponible por el momento. Inténtalo más tarde.",
+    "LOGIN_THROTTLED": "Demasiados intentos, espera un momento."
   },
   "auth": {
     "welcome": "Te damos la bienvenida",
@@ -153,7 +157,8 @@
     "tagline": "Vacaciones, documentos y equipo: todo tu espacio de RR. HH. en un solo lugar.",
     "useRecovery": "Usar un código de recuperación",
     "useApp": "Usar el código de la aplicación",
-    "recoveryCode": "Código de recuperación"
+    "recoveryCode": "Código de recuperación",
+    "throttled": "Demasiados intentos. Vuelve a intentarlo en {{seconds}} s."
   },
   "home": {
     "hello": "Hola {{name}} 👋",
@@ -617,5 +622,26 @@
     "preparing": "Preparando tu espacio…",
     "bye": "Hasta pronto, {{name}}",
     "byeHint": "Tu sesión se ha cerrado de forma segura."
+  },
+  "sessions": {
+    "title": "Dispositivos conectados",
+    "subtitle": "Los dispositivos donde tu cuenta tiene la sesión abierta. Cierra los que no reconozcas.",
+    "current": "Este dispositivo",
+    "lastActive": "Última actividad: {{when}}",
+    "signOut": "Cerrar sesión",
+    "signOutOthers": "Cerrar sesión en los demás",
+    "none": "No hay otros dispositivos conectados.",
+    "confirmTitle": "¿Cerrar sesión en este dispositivo?",
+    "confirmMsg": "Se cerrará la sesión de {{device}}. Habrá que volver a entrar con la contraseña.",
+    "confirmOthersTitle": "¿Cerrar sesión en los demás dispositivos?",
+    "confirmOthersMsg": "Se cerrará la sesión en {{count}} dispositivo(s). Este sigue conectado.",
+    "revoked": "Sesión cerrada."
+  },
+  "notMe": {
+    "title": "¿Acceso desconocido?",
+    "hint": "Si no has iniciado sesión tú, cerramos todas tus sesiones y te enviamos un enlace para elegir una nueva contraseña.",
+    "button": "No he sido yo",
+    "done": "Se han cerrado todas tus sesiones. Te hemos enviado un correo para elegir una nueva contraseña.",
+    "invalid": "Este enlace no es válido o ha caducado. Usa «Olvidé mi contraseña» para proteger tu cuenta."
   }
 }

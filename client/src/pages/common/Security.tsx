@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Download, KeyRound, Lock } from 'lucide-react';
+import { Download, KeyRound, Laptop, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PasswordStrength } from '../../components/PasswordStrength';
+import { SessionsPanel } from '../../components/SessionsPanel';
 import { TwoFactorPanel } from '../../components/TwoFactorPanel';
 import { Button, Card, Field, FormActions, Input, PageHeader } from '../../components/ui';
 import { api, ApiError, downloadFile } from '../../lib/api';
@@ -77,6 +78,13 @@ export default function Security() {
         <Card>
           <h2 className="mb-4 text-lg font-bold">{t('security.twoFactor')}</h2>
           <TwoFactorPanel />
+        </Card>
+        <Card className="lg:col-span-2">
+          <h2 className="mb-1 flex items-center gap-2 text-lg font-bold">
+            <Laptop size={18} className="text-accent" /> {t('sessions.title')}
+          </h2>
+          <p className="mb-4 text-sm text-muted">{t('sessions.subtitle')}</p>
+          <SessionsPanel />
         </Card>
         <Card className="lg:col-span-2">
           <h2 className="mb-1 text-lg font-bold">{t('privacy.myDataTitle')}</h2>

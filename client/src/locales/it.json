@@ -115,7 +115,11 @@
     "ATTACHMENT_REQUIRED": "È obbligatorio un giustificativo",
     "TWO_FACTOR_SETUP_REQUIRED": "Attiva l'autenticazione a due fattori per continuare",
     "FORBIDDEN": "Accesso negato",
-    "NOT_ARCHIVED": "Archivia prima l'account prima di anonimizzarlo"
+    "NOT_ARCHIVED": "Archivia prima l'account prima di anonimizzarlo",
+    "PASSWORD_PWNED": "Questa password compare in violazioni di dati note: scegline un'altra.",
+    "INFECTED_FILE": "File rifiutato: rilevato contenuto dannoso.",
+    "SCAN_UNAVAILABLE": "L'analisi antivirus non è al momento disponibile. Riprova più tardi.",
+    "LOGIN_THROTTLED": "Troppi tentativi, attendi un momento."
   },
   "auth": {
     "welcome": "Bentornato",
@@ -153,7 +157,8 @@
     "tagline": "Ferie, documenti e team: tutto il tuo spazio HR in un unico posto.",
     "useRecovery": "Usa un codice di recupero",
     "useApp": "Usa il codice dell'app",
-    "recoveryCode": "Codice di recupero"
+    "recoveryCode": "Codice di recupero",
+    "throttled": "Troppi tentativi. Riprova tra {{seconds}} s."
   },
   "home": {
     "hello": "Ciao {{name}} 👋",
@@ -617,5 +622,26 @@
     "preparing": "Stiamo preparando il tuo spazio…",
     "bye": "A presto, {{name}}",
     "byeHint": "La tua sessione è stata chiusa in modo sicuro."
+  },
+  "sessions": {
+    "title": "Dispositivi connessi",
+    "subtitle": "I dispositivi su cui il tuo account è aperto. Disconnetti quelli che non riconosci.",
+    "current": "Questo dispositivo",
+    "lastActive": "Ultima attività: {{when}}",
+    "signOut": "Disconnetti",
+    "signOutOthers": "Disconnetti gli altri dispositivi",
+    "none": "Nessun altro dispositivo connesso.",
+    "confirmTitle": "Disconnettere questo dispositivo?",
+    "confirmMsg": "{{device}} verrà disconnesso. Dovrà accedere di nuovo con la password.",
+    "confirmOthersTitle": "Disconnettere gli altri dispositivi?",
+    "confirmOthersMsg": "{{count}} dispositivo/i verranno disconnessi. Questo resta connesso.",
+    "revoked": "Dispositivo disconnesso."
+  },
+  "notMe": {
+    "title": "Accesso sconosciuto?",
+    "hint": "Se non hai effettuato tu l'accesso, chiudiamo tutte le sessioni e ti inviamo un link per scegliere una nuova password.",
+    "button": "Non ero io",
+    "done": "Tutte le tue sessioni sono state chiuse. Ti abbiamo inviato un'e-mail per scegliere una nuova password.",
+    "invalid": "Questo link non è valido o è scaduto. Usa «Password dimenticata» per proteggere il tuo account."
   }
 }

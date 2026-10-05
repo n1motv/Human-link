@@ -15,6 +15,7 @@ const Login = page(() => import('../pages/auth/Login'));
 const ForgotPassword = page(() => import('../pages/auth/ForgotPassword'));
 const SetPassword = page(() => import('../pages/auth/SetPassword'));
 const Setup2fa = page(() => import('../pages/auth/Setup2fa'));
+const NotMe = page(() => import('../pages/auth/NotMe'));
 const PublicContact = page(() => import('../pages/common/Contact'));
 const InternalContact = page(() => import('../pages/common/Contact').then((m) => ({ default: m.ContactInternal })));
 const Privacy = page(() => import('../pages/common/Privacy'));
@@ -95,6 +96,7 @@ export function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<SetPassword mode="reset" />} />
         <Route path="/activate" element={<SetPassword mode="activate" />} />
+        <Route path="/not-me" element={<NotMe />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/contact" element={<RequireModule name="contact"><PublicContact /></RequireModule>} />
 

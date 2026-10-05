@@ -115,7 +115,11 @@
     "ATTACHMENT_REQUIRED": "Un justificatif est obligatoire",
     "TWO_FACTOR_SETUP_REQUIRED": "Activez la double authentification pour continuer",
     "FORBIDDEN": "Accès refusé",
-    "NOT_ARCHIVED": "Archivez d'abord le compte avant de l'anonymiser"
+    "NOT_ARCHIVED": "Archivez d'abord le compte avant de l'anonymiser",
+    "PASSWORD_PWNED": "Ce mot de passe figure dans des fuites de données connues : choisissez-en un autre.",
+    "INFECTED_FILE": "Fichier refusé : un contenu malveillant a été détecté.",
+    "SCAN_UNAVAILABLE": "L'analyse antivirus est momentanément indisponible. Réessayez plus tard.",
+    "LOGIN_THROTTLED": "Trop de tentatives, patientez quelques instants."
   },
   "auth": {
     "welcome": "Bon retour parmi nous",
@@ -153,7 +157,8 @@
     "tagline": "Congés, documents et équipe : tout votre espace RH au même endroit.",
     "useRecovery": "Utiliser un code de secours",
     "useApp": "Utiliser le code de l'application",
-    "recoveryCode": "Code de secours"
+    "recoveryCode": "Code de secours",
+    "throttled": "Trop de tentatives. Réessayez dans {{seconds}} s."
   },
   "home": {
     "hello": "Bonjour {{name}} 👋",
@@ -617,5 +622,26 @@
     "preparing": "Préparation de votre espace…",
     "bye": "À bientôt, {{name}}",
     "byeHint": "Votre session est fermée en toute sécurité."
+  },
+  "sessions": {
+    "title": "Appareils connectés",
+    "subtitle": "Les appareils sur lesquels votre compte est ouvert. Fermez ceux que vous ne reconnaissez pas.",
+    "current": "Cet appareil",
+    "lastActive": "Dernière activité : {{when}}",
+    "signOut": "Déconnecter",
+    "signOutOthers": "Déconnecter les autres appareils",
+    "none": "Aucun autre appareil connecté.",
+    "confirmTitle": "Déconnecter cet appareil ?",
+    "confirmMsg": "{{device}} sera déconnecté. Il faudra se reconnecter avec le mot de passe.",
+    "confirmOthersTitle": "Déconnecter les autres appareils ?",
+    "confirmOthersMsg": "{{count}} appareil(s) seront déconnectés. Cet appareil reste connecté.",
+    "revoked": "Appareil déconnecté."
+  },
+  "notMe": {
+    "title": "Connexion inconnue ?",
+    "hint": "Si vous n'êtes pas à l'origine de cette connexion, nous fermons toutes vos sessions et vous envoyons un lien pour choisir un nouveau mot de passe.",
+    "button": "Ce n'était pas moi",
+    "done": "Toutes vos sessions ont été fermées. Un e-mail pour choisir un nouveau mot de passe vient de vous être envoyé.",
+    "invalid": "Ce lien est invalide ou a expiré. Utilisez « Mot de passe oublié » pour sécuriser votre compte."
   }
 }
