@@ -11,6 +11,9 @@ export function applyBranding(cfg: PublicConfig) {
   root.style.setProperty('--accent', cfg.branding.accent);
   root.style.setProperty('--accent-2', cfg.branding.accent2);
   root.style.setProperty('--accent-rgb', hexToRgb(cfg.branding.accent));
+  root.style.setProperty('--accent-2-rgb', hexToRgb(cfg.branding.accent2));
+  // Texte posé sur l'accent (boutons, jour sélectionné...) : blanc ou foncé selon la couleur du client, pour rester lisible.
+  root.style.setProperty('--on-accent', readableOnAll([cfg.branding.accent, cfg.branding.accent2]));
   document.title = cfg.company.name;
 }
 
@@ -42,6 +45,14 @@ function parseColor(c: string): [number, number, number] {
   const hsl = /^hsl\(\s*([\d.]+)[ ,]+([\d.]+)%[ ,]+([\d.]+)%/i.exec(c);
   if (hsl) return hslToRgb(+hsl[1]!, +hsl[2]! / 100, +hsl[3]! / 100);
   return [90, 90, 120];
+}
+
+/** Texte (blanc ou quasi noir) offrant le meilleur contraste sur TOUS les fonds donnés (extrémités d'un dégradé). */
+export function readableOnAll(bgs: string[]): string {
+  const worst = (fg: number) => Math.min(...bgs.map((b) => contrast(fg, luminance(parseColor(b)))));
+  // Le blanc reste la référence tant qu'il est lisible (3:1, taille « grande » des boutons) ; sinon on passe au texte foncé.
+  if (worst(1) >= 3) return '#ffffff';
+  return worst(0.02) > worst(1) ? '#0b1020' : '#ffffff';
 }
 
 /** Texte (blanc ou quasi noir) le plus lisible sur un fond donné. */

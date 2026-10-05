@@ -1,0 +1,25 @@
+# Modèle d'unité systemd : une instance par client, sans Docker.
+#   sudo cp deploy/humanlink@.service /etc/systemd/system/
+#   sudo systemctl enable --now humanlink@acme humanlink@globex humanlink@initech humanlink@umbrella
+#   journalctl -u humanlink@acme -f
+# Chaque instance lit SON .env (clients/<nom>/.env) : port, base MongoDB, clés. Voir docs/INSTANCES.md.
+[Unit]
+Description=Human Link - instance %i
+After=network-online.target mongod.service
+Wants=network-online.target
+
+[Service]
+User=humanlink
+WorkingDirectory=/opt/human-link/clients/%i
+ExecStart=/usr/bin/node /opt/human-link/server/dist/index.js
+Restart=always
+RestartSec=3
+# Durcissement : l'instance ne peut écrire que dans son propre dossier de stockage.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/human-link/clients/%i/storage
+
+[Install]
+WantedBy=multi-user.target

@@ -93,7 +93,7 @@ export function MonthCalendar({ items, month, onMonthChange, weekStart = 1 }: Pr
                 selected === day ? 'border-accent bg-glass-hover' : 'border-transparent bg-glass hover:bg-glass-hover',
               )}
             >
-              <span className={clsx('inline-grid h-6 w-6 place-items-center rounded-full text-xs font-semibold', isToday && 'bg-gradient-to-br from-accent to-accent2 text-white')}>
+              <span className={clsx('inline-grid h-6 w-6 place-items-center rounded-full text-xs font-semibold', isToday && 'bg-gradient-to-br from-accent to-accent2 text-on-accent')}>
                 {Number(day.slice(8))}
               </span>
               <div className="mt-1 hidden space-y-0.5 sm:block">

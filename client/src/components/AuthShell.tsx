@@ -25,9 +25,10 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
 
       <div className="grid w-full max-w-5xl items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <aside className="hidden lg:block">
-          {!broken && <img src={logo} alt="" className="mb-8 h-14 w-auto max-w-[200px] object-contain" onError={() => setBroken(true)} />}
-          <p className="gradient-text font-display text-6xl font-extrabold leading-[1.05]">{cfg.company.name}</p>
-          <p className="mt-5 max-w-sm text-lg text-muted">{t('auth.tagline')}</p>
+          {!broken && <img src={logo} alt={cfg.company.name} className="h-24 w-auto max-w-[340px] object-contain object-left" onError={() => setBroken(true)} />}
+          {/* Le nom n'est répété que si le logo ne le contient pas (showName) ou s'il est introuvable. */}
+          {(cfg.branding.showName || broken) && <p className="gradient-text mt-6 font-display text-6xl font-extrabold leading-[1.05]">{cfg.company.name}</p>}
+          <p className="mt-8 max-w-sm text-lg text-muted">{t('auth.tagline')}</p>
         </aside>
 
         <main className="w-full max-w-md justify-self-center lg:justify-self-end">

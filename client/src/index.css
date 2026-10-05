@@ -12,6 +12,8 @@
   --accent: #8b5cf6;
   --accent-2: #ec4899;
   --accent-rgb: 139 92 246;
+  --accent-2-rgb: 236 72 153;
+  --on-accent: #ffffff;
   --radius: 24px;
   --radius-md: 16px;
   --radius-sm: 12px;
@@ -23,7 +25,7 @@
   color-scheme: dark;
   --bg: #090912;
   --orb-1: rgb(var(--accent-rgb) / 0.42);
-  --orb-2: rgb(236 72 153 / 0.32);
+  --orb-2: rgb(var(--accent-2-rgb) / 0.32);
   --orb-3: rgb(59 130 246 / 0.28);
   --fg: #f5f5fc;
   --fg-muted: rgb(245 245 252 / 0.68);
@@ -46,7 +48,7 @@
   color-scheme: light;
   --bg: #f3f0ff;
   --orb-1: rgb(var(--accent-rgb) / 0.3);
-  --orb-2: rgb(236 72 153 / 0.2);
+  --orb-2: rgb(var(--accent-2-rgb) / 0.2);
   --orb-3: rgb(56 189 248 / 0.26);
   --fg: #1a1930;
   --fg-muted: rgb(26 25 48 / 0.7);
@@ -76,6 +78,7 @@
   --color-line: var(--glass-border);
   --color-accent: var(--accent);
   --color-accent2: var(--accent-2);
+  --color-on-accent: var(--on-accent);
   --color-ok: var(--success);
   --color-warn: var(--warning);
   --color-bad: var(--danger);
@@ -191,7 +194,7 @@ body::before {
     cursor: not-allowed;
   }
   .btn-primary {
-    color: #fff;
+    color: var(--on-accent);
     border-color: transparent;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     box-shadow: 0 6px 18px rgb(var(--accent-rgb) / 0.32), inset 0 1px 0 rgb(255 255 255 / 0.25);
@@ -278,7 +281,7 @@ body::before {
   }
   .dp-day-sel,
   .dp-day-sel:hover:not(:disabled) {
-    color: #fff;
+    color: var(--on-accent);
     font-weight: 700;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     box-shadow: 0 6px 16px rgb(var(--accent-rgb) / 0.4);

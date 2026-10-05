@@ -28,6 +28,11 @@ export function Button({ variant = 'default', size = 'md', loading, icon, classN
   );
 }
 
+/** Rangée d'actions de fin de formulaire ou de carte : boutons centrés, qui passent à la ligne sur petit écran. */
+export function FormActions({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={clsx('flex flex-wrap items-center justify-center gap-3 pt-2', className)}>{children}</div>;
+}
+
 /* ---------- Champs de formulaire ---------- */
 interface FieldProps {
   label: string;
@@ -152,7 +157,7 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
           onClick={() => onChange(i.value)}
           className={clsx(
             'rounded-full px-4 py-1.5 text-sm font-semibold transition',
-            value === i.value ? 'bg-gradient-to-br from-accent to-accent2 text-white shadow-lg' : 'text-muted hover:text-fg',
+            value === i.value ? 'bg-gradient-to-br from-accent to-accent2 text-on-accent shadow-lg' : 'text-muted hover:text-fg',
           )}
         >
           {i.label}

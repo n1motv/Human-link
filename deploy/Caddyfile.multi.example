@@ -1,0 +1,32 @@
+# Un seul Caddy en frontal pour TOUS les clients hébergés sur ce serveur : un nom de domaine = une instance.
+# HTTPS (Let's Encrypt) automatique. Chaque instance n'écoute que sur 127.0.0.1:<port> (voir clients/<nom>/instance.json).
+# Installer : sudo cp deploy/Caddyfile.multi.example /etc/caddy/Caddyfile && sudo systemctl reload caddy
+# Avec cette configuration, mettre TRUST_PROXY=1 dans le .env de chaque instance.
+
+(securite) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+}
+
+rh.acme.example.com {
+	import securite
+	reverse_proxy 127.0.0.1:4101
+}
+
+rh.globex.example.com {
+	import securite
+	reverse_proxy 127.0.0.1:4102
+}
+
+rh.initech.example.com {
+	import securite
+	reverse_proxy 127.0.0.1:4103
+}
+
+rh.umbrella.example.com {
+	import securite
+	reverse_proxy 127.0.0.1:4104
+}

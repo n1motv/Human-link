@@ -36,6 +36,13 @@ services:
     environment:
       MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin
       TRUST_PROXY: ${TRUST_PROXY:-0}
+      # Chemins DANS le conteneur : prioritaires sur le .env du client, qui peut donc servir aussi aux tests locaux (npm run instances).
+      NODE_ENV: production
+      PORT: "4000"
+      CLIENT_DIR: /client
+      CLIENT_DIST: /app/client/dist
+      SERVE_CLIENT: "true"
+      STORAGE_DIR: /data/storage
     volumes:
       - ${CLIENT_DIR:-./clients/example}:/client:ro
       - app-data:/data

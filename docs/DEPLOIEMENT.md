@@ -1,6 +1,7 @@
 # Déploiement et exploitation
 
 Modèle recommandé : **un déploiement par client** (une application, une base MongoDB, ses propres clés).
+Plusieurs clients sur un même serveur, ou livraison d'un colis à un client : voir [INSTANCES.md](INSTANCES.md).
 
 ## Option A — Docker Compose (recommandé)
 
