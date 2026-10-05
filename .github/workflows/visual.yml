@@ -1,0 +1,73 @@
+name: Tests visuels
+
+# Captures de pages clés comparées à des références (client/e2e). Les rendus dépendent du système : la CI compare à des références
+# Linux, qui se génèrent en lançant ce workflow à la main avec « update » (elles sont alors enregistrées sur la branche choisie).
+on:
+  pull_request:
+    paths: ['client/**', '.github/workflows/visual.yml']
+  workflow_dispatch:
+    inputs:
+      update:
+        description: 'Régénérer les captures de référence Linux et les enregistrer sur la branche'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual:
+    name: Captures Playwright
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Régénérer les références
+        if: ${{ inputs.update }}
+        run: npx playwright test --update-snapshots
+      - name: Enregistrer les références sur la branche
+        if: ${{ inputs.update }}
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add client/e2e
+          git diff --staged --quiet && echo "Aucun changement." || (git commit -m "Met à jour les captures visuelles de référence (Linux)" && git push)
+
+      - name: Chercher les références Linux
+        id: baseline
+        if: ${{ !inputs.update }}
+        run: |
+          if ls e2e/visual.spec.ts-snapshots/*-linux.png > /dev/null 2>&1; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Tests visuels::Aucune capture de référence Linux. Lancez ce workflow à la main avec « update » pour les créer, puis recommencez."
+          fi
+      - name: Comparer aux références
+        if: ${{ !inputs.update && steps.baseline.outputs.present == 'true' }}
+        run: npx playwright test
+
+      - name: Rapport et images d'écart
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-visuel
+          path: |
+            client/playwright-report
+            client/test-results
+          if-no-files-found: ignore

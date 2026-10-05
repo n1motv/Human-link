@@ -14,6 +14,8 @@
 ```bash
 npm test                         # serveur (vitest + MongoDB temporaire), client (vitest + jsdom), i18n, typage
 npm --prefix client test         # tests du client seuls (composants : Select, DatePicker, code 2FA ; pages : connexion 2FA, congés, approbation)
+npm --prefix client run test:visual          # tests visuels (Playwright) : 3 pages clés x thème sombre et clair, comparées à des images de référence
+npm --prefix client run test:visual:update   # après un changement d'interface voulu : réécrit les références (à relire dans le diff d'images avant de commiter)
 npm --prefix server test         # tests serveur seuls (télécharge un binaire MongoDB au premier lancement)
 npm run typecheck
 ```
@@ -57,3 +59,13 @@ npm run typecheck
 | Stockage de fichiers | `server/src/utils/storage.ts`, `server/src/modules/files/files.service.ts` |
 | CSP et en-têtes | `server/src/app.ts` |
 | Rétention et anonymisation | `server/src/jobs/scheduler.ts`, `server/src/modules/rgpd/anonymize.ts` |
+
+## Tests visuels
+
+`client/e2e/visual.spec.ts` prend des captures de la connexion, de l'accueil employé et des demandes de congés d'un manager, en thème sombre puis clair, et les compare à `client/e2e/visual.spec.ts-snapshots/`. L'API est simulée (`e2e/fixtures.ts`) et l'heure figée : pas de serveur ni de base. Un décalage, une couleur ou une bande parasite produit une image « diff » dans `client/test-results/`.
+
+- **Sous Windows** avec Chrome installé : `PW_CHANNEL=chrome npm --prefix client run test:visual` (sans Chrome : `npx playwright install chromium`).
+- **Les rendus dépendent du système** (polices, anticrénelage) : les références portent la plateforme dans leur nom (`…-win32.png`, `…-linux.png`).
+  La CI (workflow « Tests visuels ») compare aux références **Linux** ; tant qu'elles n'existent pas, elle l'indique et ne bloque pas.
+  Pour les créer ou les mettre à jour : GitHub, onglet Actions, « Tests visuels », « Run workflow » sur la branche, case **update** cochée ; les images sont alors enregistrées sur la branche.
+- Un changement d'interface voulu fait échouer ces tests : relire les images « diff », puis `test:visual:update` (Windows) et relancer le workflow avec « update » (Linux).

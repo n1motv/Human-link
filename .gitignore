@@ -40,3 +40,7 @@ secrets/
 
 # Rapports du scan ZAP
 .zap/zap-report.*
+
+# Tests visuels Playwright
+client/playwright-report/
+client/test-results/
