@@ -10,6 +10,9 @@ interface Props {
   size?: number;
 }
 
+/** Taille de miniature à demander selon l'affichage : 96 px pour un avatar jusqu'à 48 px, 256 px jusqu'à 128 px, l'original au-delà. */
+export const photoSize = (px: number) => (px <= 48 ? 'sm' : px <= 128 ? 'md' : 'full');
+
 /** Photo protégée (servie par l'API avec le cookie de session), sinon initiales colorées. */
 export function Avatar({ id, prenom, nom, hasPhoto, size = 40 }: Props) {
   const [failed, setFailed] = useState(false);
@@ -17,7 +20,7 @@ export function Avatar({ id, prenom, nom, hasPhoto, size = 40 }: Props) {
   if (id && hasPhoto && !failed) {
     return (
       <img
-        src={`/api/users/${id}/photo`}
+        src={`/api/users/${id}/photo?size=${photoSize(size)}`}
         alt=""
         width={size}
         height={size}

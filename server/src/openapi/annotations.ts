@@ -12,7 +12,7 @@ import { directorBody, supervisionPair, teleworkMaxBody } from '../modules/org/o
 import { auditQuery } from '../modules/rgpd/rgpd.routes.js';
 import { sickCreateBody } from '../modules/sick/sick.routes.js';
 import { teleworkDatesBody } from '../modules/telework/telework.routes.js';
-import { listQuery, profileUpdateBody, userCreateBody, userUpdateBody } from '../modules/users/users.routes.js';
+import { listQuery, photoQuery, profileUpdateBody, userCreateBody, userUpdateBody } from '../modules/users/users.routes.js';
 
 /**
  * Description des routes : titre, corps de requête, paramètres et réponse.
@@ -134,7 +134,12 @@ export const ANNOTATIONS: Record<string, Annotation> = {
   },
   'POST /api/users/{id}/reset-2fa': { summary: 'Réinitialiser la 2FA d’un compte', response: ok },
   'POST /api/users/{id}/resend-invite': { summary: 'Renvoyer l’invitation', response: ok },
-  'GET /api/users/{id}/photo': { summary: 'Photo de profil', file: 'image/*' },
+  'GET /api/users/{id}/photo': {
+    summary: 'Photo de profil',
+    description: '`size=sm` (96 px) et `size=md` (256 px) renvoient une miniature WebP générée à la première demande ; sans paramètre, la photo d’origine.',
+    query: photoQuery,
+    file: 'image/*',
+  },
   'GET /api/users/me/profile': { summary: 'Mon profil', response: z.object({ user: schemas.user }) },
   'PATCH /api/users/me/profile': {
     summary: 'Modifier mon profil',

@@ -8693,7 +8693,7 @@
         ],
         "operationId": "get_users_id_photo",
         "summary": "Photo de profil",
-        "description": "Authentification requise (cookie de session).",
+        "description": "`size=sm` (96 px) et `size=md` (256 px) renvoient une miniature WebP générée à la première demande ; sans paramètre, la photo d’origine. Authentification requise (cookie de session).",
         "parameters": [
           {
             "name": "id",
@@ -8701,6 +8701,20 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "full",
+              "type": "string",
+              "enum": [
+                "sm",
+                "md",
+                "full"
+              ]
             }
           }
         ],

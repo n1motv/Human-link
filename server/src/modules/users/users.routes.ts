@@ -15,6 +15,7 @@ import { sendInvitation } from '../auth/auth.routes.js';
 import { revokeAllSessions } from '../auth/session.js';
 import { IMAGE, deleteStoredFile, saveUpload, sendStoredFile } from '../files/files.service.js';
 import { anonymizeUser } from '../rgpd/anonymize.js';
+import { clearThumbnails, ensureThumbnail } from '../files/thumbnails.js';
 import { escapeRegex } from '../../utils/regex.js';
 
 export const usersRouter = Router();
@@ -125,9 +126,12 @@ usersRouter.post('/me/photo', upload.single('photo'), async (req, res) => {
   const user = await loadUser(auth.userId);
   const stored = await saveUpload({ file: req.file, ownerId: user._id, category: 'photo', uploadedBy: auth.userId, allowed: IMAGE });
   const old = user.photoFileId;
+  const oldThumbs = user.photoThumbs;
   user.photoFileId = stored._id;
+  user.set('photoThumbs', undefined); // les miniatures de l'ancienne photo ne valent plus
   await user.save();
   await deleteStoredFile(old);
+  await clearThumbnails({ photoThumbs: oldThumbs });
   res.json({ user: toPublicUser(user) });
 });
 
@@ -280,14 +284,20 @@ usersRouter.post('/:id/anonymize', requireRole('admin'), async (req, res) => {
   res.json({ ok: true });
 });
 
+/** Taille demandée : miniature de 96 px (liste, avatar), de 256 px (fiche) ou photo d'origine. Exporté pour la documentation de l'API. */
+export const photoQuery = z.object({ size: z.enum(['sm', 'md', 'full']).default('full') });
+
 usersRouter.get('/:id/photo', async (req, res) => {
   const auth = authOf(req);
   const id = req.params.id as string;
   // Les photos sont visibles de toute personne connectée (annuaire interne) ; pas les autres fichiers.
   void auth;
+  const { size } = parse(photoQuery, req.query);
   const user = await User.findById(id, { photoFileId: 1 });
   if (!user?.photoFileId) throw notFound();
-  await sendStoredFile(req, res, String(user.photoFileId), { inline: true });
+  // Avatars : une miniature de quelques Ko plutôt que la photo d'origine ; « full » (défaut) renvoie l'original.
+  const fileId = size === 'full' ? String(user.photoFileId) : await ensureThumbnail(id, user.photoFileId, size);
+  await sendStoredFile(req, res, fileId, { inline: true });
 });
 
 // utilisé par les tests / l'admin pour fixer un mot de passe sans e-mail

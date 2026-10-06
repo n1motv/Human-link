@@ -39,6 +39,8 @@ const userSchema = new Schema(
     teleworkMax: { type: Number, default: 0, min: 0, max: 5 },
 
     photoFileId: { type: Schema.Types.ObjectId, ref: 'StoredFile' },
+    // Miniatures de la photo, générées à la première demande (modules/files/thumbnails.ts).
+    photoThumbs: { type: { _id: false, sm: Schema.Types.ObjectId, md: Schema.Types.ObjectId }, default: undefined },
 
     // Sécurité du compte
     failedAttempts: { type: Number, default: 0 },
@@ -77,6 +79,7 @@ applyJsonTransform(userSchema, [
   'lockUntil',
   'tokenVersion',
   'knownDevices',
+  'photoThumbs',
 ]);
 
 export type UserAttrs = InferSchemaType<typeof userSchema>;

@@ -58,6 +58,7 @@ export async function anonymizeUser(user: UserDoc): Promise<void> {
     numeroSecu: undefined,
     salaire: undefined,
     photoFileId: undefined,
+    photoThumbs: undefined,
     twoFactor: { enabled: false, recoveryCodes: [] },
   });
   user.passwordHash = undefined;
