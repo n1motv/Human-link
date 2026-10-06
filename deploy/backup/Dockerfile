@@ -4,6 +4,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends openssl curl \
  && rm -rf /var/lib/apt/lists/*
 COPY backup.sh restore-test.sh loop.sh selftest.sh /scripts/
-RUN chmod +x /scripts/*.sh
+# Fins de ligne Unix quoi qu'il arrive : un dépôt extrait sous Windows peut les avoir converties en CRLF, et « set -eu » suivi d'un retour chariot ferait échouer les scripts.
+RUN sed -i 's/\r$//' /scripts/*.sh && chmod +x /scripts/*.sh
 ENTRYPOINT []
 CMD ["/scripts/loop.sh"]

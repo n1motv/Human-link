@@ -57,5 +57,6 @@ describe('santé et version (T-16)', () => {
     expect(schemas.health.safeParse(res.body).success).toBe(true);
     expect(res.body).toEqual({ ok: true, version: BUILD_ID, maintenance: false });
     expect(res.headers['cache-control']).toBe('no-store');
+    expect(res.headers['permissions-policy']).toContain('camera=()'); // caméra, micro, position : interdits au navigateur
   });
 });

@@ -25,6 +25,11 @@ export function createApp() {
   app.use(metricsMiddleware);
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 
+  app.use((_req, res, next) => {
+    // L'application n'utilise ni caméra, ni micro, ni position, ni paiement : on l'interdit au navigateur (et aux éventuels scripts injectés).
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
+    next();
+  });
   app.use(
     helmet({
       contentSecurityPolicy: {

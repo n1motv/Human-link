@@ -52,3 +52,7 @@ server/src/_shared/
 # Listes de composants générées (npm run sbom) : jointes aux livraisons, pas au dépôt
 sbom/
 client/stats.html
+
+# Rapports du scan OWASP ZAP (générés)
+.zap/zap-report.*
+.zap/zap.yaml
