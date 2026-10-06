@@ -45,7 +45,7 @@ export function ChatWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={t('chat.title')}
         aria-expanded={open}
-        className="btn-primary fixed bottom-5 end-5 z-40 grid h-14 w-14 place-items-center rounded-full transition hover:scale-105"
+        className="btn-primary fixed bottom-24 end-4 z-40 md:bottom-5 md:end-5 grid h-14 w-14 place-items-center rounded-full transition hover:scale-105"
       >
         {open ? <X size={22} /> : <Bot size={24} />}
       </button>
@@ -53,7 +53,7 @@ export function ChatWidget() {
       {open && (
         <section
           aria-label={t('chat.title')}
-          className="glass-strong rise fixed bottom-24 end-3 z-40 flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:end-5"
+          className="glass-strong rise fixed bottom-40 end-3 z-40 md:bottom-24 flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-1.5rem))] flex-col sm:end-5"
         >
           <header className="flex items-center gap-3 border-b border-line px-4 py-3">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent2 text-on-accent">

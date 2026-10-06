@@ -11,6 +11,7 @@ import { useUser } from '../lib/auth';
 import { useConfig } from '../lib/config';
 import { useTheme } from '../lib/theme';
 import { COMMON_NAV, NAV, type NavItem } from './nav';
+import { BottomNav } from './BottomNav';
 import { NotificationBell } from './NotificationBell';
 import { ChatWidget } from './ChatWidget';
 import { CommandPalette } from './CommandPalette';
@@ -162,7 +163,7 @@ export function Layout() {
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-20 px-3 pt-3 sm:px-6">
           <div className="glass flex items-center gap-2 px-3 py-2 sm:px-4">
-            <button className="btn btn-icon lg:hidden" onClick={() => setOpen(true)} aria-label={t('common.menu')}>
+            <button className="btn btn-icon hidden md:inline-flex lg:hidden" onClick={() => setOpen(true)} aria-label={t('common.menu')}>
               <Menu size={18} />
             </button>
             <button onClick={() => setPalette(true)} className="btn !justify-start gap-2 !px-3 text-muted sm:min-w-64" aria-label={t('palette.open')} title={t('palette.open')}>
@@ -180,7 +181,7 @@ export function Layout() {
           </div>
         </header>
 
-        <main id="main" key={loc.pathname} tabIndex={-1} className="page-in mx-auto w-full max-w-7xl flex-1 px-3 py-6 outline-none sm:px-6 sm:py-8">
+        <main id="main" key={loc.pathname} tabIndex={-1} className="page-in mx-auto w-full max-w-7xl flex-1 px-3 py-6 pb-28 outline-none sm:px-6 sm:py-8 md:pb-8">
           <Suspense fallback={<Spinner />}>
             <Outlet />
           </Suspense>
@@ -193,6 +194,7 @@ export function Layout() {
         </footer>
       </div>
 
+      <BottomNav onMenu={() => setOpen(true)} />
       <CommandPalette open={palette} onClose={() => setPalette(false)} />
       {modules.chatbot && user.role !== 'admin' && <ChatWidget />}
     </div>

@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, Paperclip, Plane, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
+import { BulkBar, PeopleList } from '../../components/BulkBar';
 import { ConfirmDialog, RefuseDialog } from '../../components/DecisionDialog';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Button, Card, Empty, ErrorState, PageHeader, Spinner, TableWrap, Tabs } from '../../components/ui';
 import { api, downloadFile } from '../../lib/api';
 import { fmtDate } from '../../lib/format';
 import { useAction } from '../../lib/hooks';
+import { useBulkDecision } from '../../lib/useBulkDecision';
 import type { Leave } from '../../lib/types';
 
 type Filter = 'en attente' | 'accepte' | 'refuse' | 'all';
@@ -19,6 +21,7 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
   const lang = i18n.language;
   const [filter, setFilter] = useState<Filter>('en attente');
   const [refusing, setRefusing] = useState<Leave | null>(null);
+  const [bulk, setBulk] = useState<'approve' | 'refuse' | null>(null);
   const [approving, setApproving] = useState<Leave | null>(null);
 
   const q = useQuery({
@@ -32,6 +35,14 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
 
   /** Ce que cette personne peut faire sur la demande, selon son rôle et l'étape où elle en est. */
   const canDecide = (l: Leave) => l.statut === 'en attente' && (role === 'manager' ? l.statutManager === 'en attente' : l.statutManager === 'accepte');
+  const bulkSel = useBulkDecision<Leave>({
+    rows: q.data?.items,
+    canDecide,
+    path: (id) => `/leaves/${id}/decision`,
+    nameOf: (l) => `${l.user?.prenom ?? ''} ${l.user?.nom ?? ''}`.trim(),
+    invalidate: [['leaves'], ['dashboard'], ['team']],
+  });
+  const bulkNames = bulkSel.selectedRows.map((l) => `${l.user?.prenom ?? ''} ${l.user?.nom ?? ''}`.trim());
 
   return (
     <>
@@ -39,7 +50,10 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
       <div className="mb-5">
         <Tabs
           value={filter}
-          onChange={setFilter}
+          onChange={(f) => {
+            setFilter(f);
+            bulkSel.clear();
+          }}
           items={[
             { value: 'en attente', label: t('status.pending') },
             { value: 'accepte', label: t('status.approved') },
@@ -62,10 +76,20 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
           <table className="table-glass">
             <thead>
               <tr>
+                <th className="w-8 !pe-0">
+                  {bulkSel.selectable.length > 0 && (
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 cursor-pointer accent-[var(--accent)]"
+                      checked={bulkSel.allSelected}
+                      onChange={bulkSel.toggleAll}
+                      aria-label={t('bulk.selectAll')}
+                    />
+                  )}
+                </th>
                 <th>{t('common.employee')}</th>
                 <th>{t('leave.reason')}</th>
                 <th>{t('leave.period')}</th>
-                <th>{t('leave.daysCol')}</th>
                 <th>{t('common.status')}</th>
                 <th aria-label={t('common.actions')} />
               </tr>
@@ -73,6 +97,17 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
             <tbody>
               {q.data!.items.map((l) => (
                 <tr key={l.id}>
+                  <td className="!pe-0">
+                    {canDecide(l) && (
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-[var(--accent)]"
+                        checked={bulkSel.selected.has(l.id)}
+                        onChange={() => bulkSel.toggle(l.id)}
+                        aria-label={t('bulk.select', { name: `${l.user?.prenom ?? ''} ${l.user?.nom ?? ''}`.trim() })}
+                      />
+                    )}
+                  </td>
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar id={l.userId} prenom={l.user?.prenom} nom={l.user?.nom} hasPhoto={!!l.user?.photoFileId} size={34} />
@@ -90,8 +125,8 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
                   </td>
                   <td className="whitespace-nowrap">
                     {fmtDate(l.dateDebut, lang)} → {fmtDate(l.dateFin, lang)}
+                    <p className="text-xs text-muted tabular-nums">{t('leave.nDays', { count: l.nombreJours })}</p>
                   </td>
-                  <td className="tabular-nums">{l.nombreJours}</td>
                   <td>
                     <StatusBadge status={l.statut} />
                     {role === 'admin' && l.statut === 'en attente' && l.statutManager === 'en attente' && <p className="mt-1 text-xs text-muted">{t('leave.awaitingManager')}</p>}
@@ -133,6 +168,29 @@ export default function LeaveRequests({ role }: { role: 'admin' | 'manager' }) {
         </TableWrap>
       )}
 
+      <BulkBar count={bulkSel.selectedRows.length} onApprove={() => setBulk('approve')} onRefuse={() => setBulk('refuse')} onClear={bulkSel.clear} />
+      <ConfirmDialog
+        open={bulk === 'approve'}
+        icon={<Check size={22} />}
+        title={t('bulk.approveTitle', { count: bulkSel.selectedRows.length })}
+        message={t('bulk.approveMsg')}
+        details={<PeopleList names={bulkNames} />}
+        confirmLabel={t('bulk.approveConfirm', { count: bulkSel.selectedRows.length })}
+        onClose={() => setBulk(null)}
+        onConfirm={() => bulkSel.decide('accepte')}
+      />
+      <RefuseDialog
+        open={bulk === 'refuse'}
+        title={t('bulk.refuseTitle', { count: bulkSel.selectedRows.length })}
+        details={
+          <>
+            <p className="mb-2 text-sm text-muted">{t('bulk.refuseMsg')}</p>
+            <PeopleList names={bulkNames} />
+          </>
+        }
+        onClose={() => setBulk(null)}
+        onConfirm={(motif) => bulkSel.decide('refuse', motif)}
+      />
       <ConfirmDialog
         open={!!approving}
         icon={<Check size={22} />}

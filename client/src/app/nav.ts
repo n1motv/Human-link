@@ -101,4 +101,26 @@ export const COMMON_NAV: NavItem[] = [
   { to: '/support', label: 'nav.contact', icon: LifeBuoy, module: 'contact' },
 ];
 
+/** Barre du bas sur téléphone : les destinations les plus fréquentes de chaque rôle (voir BottomNav). */
+export const BOTTOM_NAV: Record<Role, NavItem[]> = {
+  employe: [
+    { to: '/me', label: 'nav.short.home', icon: Home, end: true },
+    { to: '/me/leaves', label: 'nav.short.leaves', icon: Plane, module: 'leaves' },
+    { to: '/me/calendar', label: 'nav.short.calendar', icon: CalendarDays },
+    { to: '/notifications', label: 'nav.short.alerts', icon: Bell },
+  ],
+  manager: [
+    { to: '/manager', label: 'nav.short.team', icon: Users, end: true },
+    { to: '/manager/leaves', label: 'nav.short.leaves', icon: Plane, module: 'leaves' },
+    { to: '/manager/calendar', label: 'nav.short.calendar', icon: CalendarRange },
+    { to: '/notifications', label: 'nav.short.alerts', icon: Bell },
+  ],
+  admin: [
+    { to: '/admin', label: 'nav.short.home', icon: BarChart3, end: true },
+    { to: '/admin/leaves', label: 'nav.short.requests', icon: Plane, module: 'leaves' },
+    { to: '/admin/calendar', label: 'nav.short.calendar', icon: CalendarRange },
+    { to: '/notifications', label: 'nav.short.alerts', icon: Bell },
+  ],
+};
+
 export const HOME: Record<Role, string> = { admin: '/admin', manager: '/manager', employe: '/me' };

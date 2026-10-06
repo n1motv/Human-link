@@ -125,3 +125,17 @@ En développement, `http://localhost:5173/styleguide` montre les composants (bou
 ## Décisions d'architecture
 
 `docs/adr/` : une page courte par décision (MongoDB, cookies httpOnly, un déploiement par client, chiffrement, fichiers sur disque, contrat partagé, tests dans Docker).
+
+## Performance de l'interface
+
+- **Taille des paquets** : `npm --prefix client run analyze` écrit `client/stats.html` (carte des paquets, tailles brutes, gzip et brotli). Les graphiques (recharts, ~350 Ko) ne sont chargés qu'à l'ouverture du tableau de bord, dans un fichier à part (`DashboardCharts`). Seul le français est embarqué ; les autres langues sont des fichiers séparés, téléchargés à la demande (`lib/i18n.ts`, `changeLanguage`).
+- **Cache des requêtes** : `lib/queryClient.ts` fixe la durée de fraîcheur par type de donnée (organigramme 10 min, personnes invitables 5 min, notifications 0, le reste 30 s). Une écriture (`invalidateQueries`) recharge toujours tout de suite.
+- **Grands tableaux** : au-delà de 60 lignes, `VirtualTBody` (TanStack Virtual) ne construit que les lignes visibles. Journal d'audit et liste des employés proposent 25, 50, 100 ou 200 lignes par page.
+- **Photos de profil** : `GET /api/users/:id/photo?size=sm|md` renvoie une miniature WebP (96 ou 256 px) générée à la première demande puis conservée, chiffrée comme tout fichier ; sans paramètre, l'original. L'avatar choisit la plus petite taille qui suffit.
+
+## Interface : composants à connaître
+
+- `Select` : au-delà de 8 options, un champ de recherche s'ouvre avec la liste (sans accents ni majuscules) ; une lettre tapée sur la liste fermée l'ouvre filtrée. `PersonPicker` : même idée avec recherche côté serveur, pour les annuaires.
+- `Select` et `DatePicker` suivent `setValue()` et `reset()` de react-hook-form sans rendu supplémentaire (`lib/useNativeValue.ts`).
+- Décisions groupées sur les demandes de congé et d'arrêt : cases à cocher, barre flottante, une confirmation qui liste les personnes (`lib/useBulkDecision.ts`). Chaque décision part vers la route habituelle ; un échec n'arrête pas les autres.
+- Téléphone (moins de 768 px) : barre de navigation du bas (`app/BottomNav.tsx`), le tiroir latéral donne accès au reste.

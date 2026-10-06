@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
 import { ConfirmDialog } from '../../components/DecisionDialog';
 import { Modal } from '../../components/Modal';
+import { PAGE_SIZES, PageSize } from '../../components/PageSize';
+import { VirtualTBody } from '../../components/VirtualRows';
 import { Button, Card, Empty, ErrorState, Field, Input, PageHeader, Select, Spinner, TableWrap } from '../../components/ui';
 import { api } from '../../lib/api';
 import { useConfig } from '../../lib/config';
@@ -217,7 +219,6 @@ function EmployeeForm({ editId, onClose }: { editId: string | 'new' | null; onCl
 
 type Action = { kind: 'archive' | 'anonymize' | 'reset2fa' | 'restore' | 'resend'; user: Row } | null;
 const SAFE: string[] = ['restore', 'resend'];
-const PAGE_SIZE = 25;
 
 export default function Employees() {
   const { t, i18n } = useTranslation();
@@ -229,13 +230,14 @@ export default function Employees() {
   }, [search]);
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [edit, setEdit] = useState<string | 'new' | null>(null);
   const [action, setAction] = useState<Action>(null);
 
   const q = useQuery({
-    queryKey: ['users', term, status, page],
+    queryKey: ['users', term, status, page, pageSize],
     queryFn: () =>
-      api.get<{ items: Row[]; total: number }>(`/users?page=${page}&limit=${PAGE_SIZE}${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
+      api.get<{ items: Row[]; total: number }>(`/users?page=${page}&limit=${pageSize}${term ? `&q=${encodeURIComponent(term)}` : ''}${status ? `&status=${status}` : ''}`),
     placeholderData: keepPreviousData,
   });
   const archive = useAction((id: string) => api.delete(`/users/${id}`), { success: t('employees.archived'), invalidate: [['users']] });
@@ -292,9 +294,9 @@ export default function Employees() {
                 <th aria-label={t('common.actions')} />
               </tr>
             </thead>
-            <tbody>
-              {q.data!.items.map((u) => (
-                <tr key={u.id}>
+            <VirtualTBody items={q.data!.items} colSpan={7}>
+              {(u, rowProps) => (
+                <tr key={u.id} {...rowProps}>
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar id={u.id} prenom={u.prenom} nom={u.nom} hasPhoto={!!u.photoFileId} size={36} />
@@ -378,15 +380,22 @@ export default function Employees() {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
+              )}
+            </VirtualTBody>
           </table>
         </TableWrap>
       )}
-      {q.data && q.data.total > PAGE_SIZE && (
+      {q.data && q.data.total > PAGE_SIZES[0]! && (
         <div className="mt-4 flex items-center justify-between text-sm text-muted">
-          <span>{t('employees.range', { from: (page - 1) * PAGE_SIZE + 1, to: Math.min(page * PAGE_SIZE, q.data.total), total: q.data.total })}</span>
+          <span>{t('employees.range', { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, q.data.total), total: q.data.total })}</span>
           <div className="flex items-center gap-2">
+            <PageSize
+              value={pageSize}
+              onChange={(n) => {
+                setPageSize(n);
+                setPage(1);
+              }}
+            />
             <Button
               size="sm"
               icon={<ChevronLeft size={14} className="rtl:rotate-180" />}
@@ -395,12 +404,12 @@ export default function Employees() {
               aria-label={t('common.previous')}
             />
             <span className="tabular-nums">
-              {page} / {Math.ceil(q.data.total / PAGE_SIZE)}
+              {page} / {Math.ceil(q.data.total / pageSize)}
             </span>
             <Button
               size="sm"
               icon={<ChevronRight size={14} className="rtl:rotate-180" />}
-              disabled={page * PAGE_SIZE >= q.data.total}
+              disabled={page * pageSize >= q.data.total}
               onClick={() => setPage((p) => p + 1)}
               aria-label={t('common.next')}
             />

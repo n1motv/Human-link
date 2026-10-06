@@ -14,14 +14,37 @@ import {
   type SelectHTMLAttributes,
 } from 'react';
 import { createPortal } from 'react-dom';
+import i18n from 'i18next';
+import { useNativeValue } from '../lib/useNativeValue';
 import { Check, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Opt {
   value: string;
   label: ReactNode;
+  /** Libellé en texte brut, pour la recherche et la saisie rapide. */
+  text: string;
   disabled: boolean;
 }
+
+/** Au-delà de ce nombre d'options, la liste s'ouvre avec un champ de recherche (choisir un manager parmi des dizaines de personnes). */
+export const SEARCH_FROM = 8;
+
+/** Texte d'un libellé JSX (« {prenom} {nom} » donne un tableau de morceaux). */
+function textOf(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children);
+  return '';
+}
+
+/** Minuscules sans accents : « elena » trouve « Éléna ». */
+const fold = (v: string) =>
+  v
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
 function readOptions(children: ReactNode): Opt[] {
   const out: Opt[] = [];
@@ -30,7 +53,7 @@ function readOptions(children: ReactNode): Opt[] {
     const p = c.props as { value?: string | number; children?: ReactNode; disabled?: boolean };
     if (c.type === 'option') {
       const label = p.children;
-      out.push({ value: String(p.value ?? (typeof label === 'string' ? label : '')), label, disabled: !!p.disabled });
+      out.push({ value: String(p.value ?? (typeof label === 'string' ? label : '')), label, text: textOf(label), disabled: !!p.disabled });
     } else if (p.children) {
       out.push(...readOptions(p.children)); // <optgroup> et fragments
     }
@@ -51,18 +74,24 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
   const nativeRef = useRef<HTMLSelectElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   useImperativeHandle(ref, () => nativeRef.current as HTMLSelectElement);
 
   const uid = useId();
   const options = readOptions(children);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [query, setQuery] = useState('');
+  const searchable = options.length > SEARCH_FROM;
+  const shown = searchable && query.trim() ? options.filter((o) => fold(o.text).includes(fold(query.trim()))) : options;
   const [current, setCurrent] = useState('');
   const [pos, setPos] = useState({ left: 0, top: 0, width: 0, up: false });
 
   // Valeur courante : lue sur le <select> natif (couvre contrôlé et react-hook-form).
   const sync = useCallback(() => setCurrent(nativeRef.current?.value ?? ''), []);
   useLayoutEffect(sync);
+  useNativeValue(nativeRef, sync); // react-hook-form écrit dans le champ natif sans rendu (setValue, reset)
 
   const place = useCallback(() => {
     const r = btnRef.current?.getBoundingClientRect();
@@ -74,6 +103,7 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
   const show = () => {
     if (disabled) return;
     sync();
+    setQuery('');
     const i = options.findIndex((o) => o.value === (nativeRef.current?.value ?? ''));
     setActive(Math.max(i, 0));
     place();
@@ -95,10 +125,10 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
     if (!open) return;
     const away = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (!btnRef.current?.contains(t) && !listRef.current?.contains(t)) setOpen(false);
+      if (!btnRef.current?.contains(t) && !boxRef.current?.contains(t)) setOpen(false);
     };
     const close = (e: Event) => {
-      if (e.target instanceof Node && listRef.current?.contains(e.target)) return;
+      if (e.target instanceof Node && boxRef.current?.contains(e.target)) return;
       setOpen(false);
     };
     document.addEventListener('mousedown', away);
@@ -115,32 +145,42 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
     if (open) listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [open, active]);
 
+  useEffect(() => {
+    if (open && searchable) searchRef.current?.focus(); // la saisie part directement dans le filtre
+  }, [open, searchable]);
+
   const move = (dir: 1 | -1) => {
-    let i = active;
-    for (let n = 0; n < options.length; n++) {
-      i = (i + dir + options.length) % options.length;
-      if (!options[i]?.disabled) break;
+    if (!shown.length) return;
+    let i = Math.min(active, shown.length - 1);
+    for (let n = 0; n < shown.length; n++) {
+      i = (i + dir + shown.length) % shown.length;
+      if (!shown[i]?.disabled) break;
     }
     setActive(i);
   };
 
-  const onKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+  const onKey = (e: KeyboardEvent<HTMLElement>) => {
+    const inSearch = e.target === searchRef.current; // frappe dans le filtre : l'espace et les lettres lui appartiennent
     if (e.key === 'Tab') return setOpen(false);
     if (!open) {
       if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
         e.preventDefault();
         show();
+      } else if (searchable && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        show();
+        setQuery(e.key); // la première lettre tapée sur la liste fermée ouvre le filtre déjà rempli
       }
       return;
     }
     if (e.key === 'ArrowDown') (e.preventDefault(), move(1));
     else if (e.key === 'ArrowUp') (e.preventDefault(), move(-1));
     else if (e.key === 'Home') (e.preventDefault(), setActive(0));
-    else if (e.key === 'End') (e.preventDefault(), setActive(options.length - 1));
-    else if (e.key === 'Enter' || e.key === ' ') (e.preventDefault(), options[active] && pick(options[active]));
+    else if (e.key === 'End') (e.preventDefault(), setActive(shown.length - 1));
+    else if (e.key === 'Enter' || (e.key === ' ' && !inSearch)) (e.preventDefault(), shown[active] && pick(shown[active]));
     else if (e.key === 'Escape') (e.preventDefault(), e.stopPropagation(), setOpen(false));
-    else if (e.key.length === 1) {
-      const i = options.findIndex((o) => typeof o.label === 'string' && o.label.toLowerCase().startsWith(e.key.toLowerCase()));
+    else if (e.key.length === 1 && !inSearch) {
+      const i = shown.findIndex((o) => fold(o.text).startsWith(fold(e.key)));
       if (i >= 0) setActive(i);
     }
   };
@@ -186,35 +226,57 @@ export const Select = forwardRef<HTMLSelectElement, Props>(function Select(
       </button>
       {open &&
         createPortal(
-          <ul
-            ref={listRef}
-            id={`${uid}-list`}
-            role="listbox"
+          <div
+            ref={boxRef}
             style={{ left: pos.left, top: pos.top, minWidth: pos.width, transform: pos.up ? 'translateY(calc(-100% - 6px))' : 'translateY(6px)' }}
-            className="glass-strong fixed z-[100] max-h-64 overflow-auto p-1.5"
+            className="glass-strong fixed z-[100] overflow-hidden"
           >
-            {options.map((o, i) => (
-              <li
-                key={`${o.value}-${i}`}
-                role="option"
-                aria-selected={o.value === current}
-                aria-disabled={o.disabled || undefined}
-                data-active={i === active}
-                onMouseEnter={() => setActive(i)}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(o)}
-                className={clsx(
-                  'flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm',
-                  o.disabled && 'cursor-not-allowed opacity-45',
-                  i === active && !o.disabled && 'bg-glass text-fg',
-                  o.value === current && 'font-semibold text-accent',
-                )}
-              >
-                <span className="min-w-0 flex-1 truncate">{o.label}</span>
-                {o.value === current && <Check size={14} aria-hidden />}
-              </li>
-            ))}
-          </ul>,
+            {searchable && (
+              <div className="border-b border-line p-1.5">
+                <input
+                  ref={searchRef}
+                  type="search"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setActive(0);
+                  }}
+                  onKeyDown={onKey}
+                  placeholder={i18n.t('common.search')}
+                  aria-label={i18n.t('common.search')}
+                  aria-controls={`${uid}-list`}
+                  aria-activedescendant={shown[active] ? `${uid}-opt-${active}` : undefined}
+                  autoComplete="off"
+                  className="field !py-2 text-sm"
+                />
+              </div>
+            )}
+            <ul ref={listRef} id={`${uid}-list`} role="listbox" className="max-h-64 overflow-auto p-1.5">
+              {shown.map((o, i) => (
+                <li
+                  key={`${o.value}-${i}`}
+                  id={`${uid}-opt-${i}`}
+                  role="option"
+                  aria-selected={o.value === current}
+                  aria-disabled={o.disabled || undefined}
+                  data-active={i === active}
+                  onMouseEnter={() => setActive(i)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pick(o)}
+                  className={clsx(
+                    'flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm',
+                    o.disabled && 'cursor-not-allowed opacity-45',
+                    i === active && !o.disabled && 'bg-glass text-fg',
+                    o.value === current && 'font-semibold text-accent',
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate">{o.label}</span>
+                  {o.value === current && <Check size={14} aria-hidden />}
+                </li>
+              ))}
+              {shown.length === 0 && <li className="px-3 py-2 text-sm text-muted">{i18n.t('common.noResult')}</li>}
+            </ul>
+          </div>,
           document.body,
         )}
     </div>

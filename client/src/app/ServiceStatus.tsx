@@ -77,7 +77,7 @@ export function ServiceStatus({ children }: { children: ReactNode }) {
   return (
     <>
       {outdated && (
-        <div role="status" className="glass-strong fixed inset-x-4 bottom-4 z-[90] mx-auto flex max-w-lg items-center gap-3 p-4 shadow-2xl">
+        <div role="status" className="glass-strong fixed inset-x-4 bottom-24 z-[90] md:bottom-4 mx-auto flex max-w-lg items-center gap-3 p-4 shadow-2xl">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent">
             <RefreshCw size={18} aria-hidden />
           </span>

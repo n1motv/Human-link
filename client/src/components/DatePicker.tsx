@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useNativeValue } from '../lib/useNativeValue';
 import { CalendarDays, CalendarClock, CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -46,6 +47,7 @@ export const DatePicker = forwardRef<HTMLInputElement, Props>(function DatePicke
 
   const sync = useCallback(() => setCurrent(nativeRef.current?.value ?? ''), []);
   useLayoutEffect(sync);
+  useNativeValue(nativeRef, sync); // react-hook-form écrit dans le champ natif sans rendu (setValue, reset)
 
   const minV = typeof min === 'string' ? min : '';
   const maxV = typeof max === 'string' ? max : '';

@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, Paperclip, ShieldAlert, Stethoscope, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../../components/Avatar';
+import { BulkBar, PeopleList } from '../../components/BulkBar';
 import { ConfirmDialog, RefuseDialog } from '../../components/DecisionDialog';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Button, Card, Empty, ErrorState, PageHeader, Spinner, TableWrap, Tabs } from '../../components/ui';
 import { api, downloadFile } from '../../lib/api';
 import { fmtDate } from '../../lib/format';
 import { useAction } from '../../lib/hooks';
+import { useBulkDecision } from '../../lib/useBulkDecision';
 import type { Sick } from '../../lib/types';
 
 type Filter = 'en attente' | 'accepte' | 'refuse' | 'all';
@@ -18,6 +20,7 @@ export default function SickRequests() {
   const lang = i18n.language;
   const [filter, setFilter] = useState<Filter>('en attente');
   const [refusing, setRefusing] = useState<Sick | null>(null);
+  const [bulk, setBulk] = useState<'approve' | 'refuse' | null>(null);
   const [approving, setApproving] = useState<Sick | null>(null);
   const q = useQuery({
     queryKey: ['sick', 'all', filter],
@@ -28,6 +31,16 @@ export default function SickRequests() {
     { success: t('decision.done'), invalidate: [['sick'], ['dashboard']] },
   );
 
+  const canDecide = (s: Sick) => s.statut === 'en attente';
+  const bulkSel = useBulkDecision<Sick>({
+    rows: q.data?.items,
+    canDecide,
+    path: (id) => `/sick-leaves/${id}/decision`,
+    nameOf: (s) => `${s.user?.prenom ?? ''} ${s.user?.nom ?? ''}`.trim(),
+    invalidate: [['sick'], ['dashboard']],
+  });
+  const bulkNames = bulkSel.selectedRows.map((s) => `${s.user?.prenom ?? ''} ${s.user?.nom ?? ''}`.trim());
+
   return (
     <>
       <PageHeader title={t('nav.sick')} subtitle={t('sick.adminSubtitle')} />
@@ -37,7 +50,10 @@ export default function SickRequests() {
       <div className="mb-5">
         <Tabs
           value={filter}
-          onChange={setFilter}
+          onChange={(f) => {
+            setFilter(f);
+            bulkSel.clear();
+          }}
           items={[
             { value: 'en attente', label: t('status.pending') },
             { value: 'accepte', label: t('status.approved') },
@@ -59,6 +75,17 @@ export default function SickRequests() {
           <table className="table-glass">
             <thead>
               <tr>
+                <th className="w-10">
+                  {bulkSel.selectable.length > 0 && (
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 cursor-pointer accent-[var(--accent)]"
+                      checked={bulkSel.allSelected}
+                      onChange={bulkSel.toggleAll}
+                      aria-label={t('bulk.selectAll')}
+                    />
+                  )}
+                </th>
                 <th>{t('common.employee')}</th>
                 <th>{t('sick.type')}</th>
                 <th>{t('leave.period')}</th>
@@ -69,6 +96,17 @@ export default function SickRequests() {
             <tbody>
               {q.data!.items.map((s) => (
                 <tr key={s.id}>
+                  <td>
+                    {canDecide(s) && (
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-[var(--accent)]"
+                        checked={bulkSel.selected.has(s.id)}
+                        onChange={() => bulkSel.toggle(s.id)}
+                        aria-label={t('bulk.select', { name: `${s.user?.prenom ?? ''} ${s.user?.nom ?? ''}`.trim() })}
+                      />
+                    )}
+                  </td>
                   <td>
                     <div className="flex items-center gap-3">
                       <Avatar id={s.userId} prenom={s.user?.prenom} nom={s.user?.nom} hasPhoto={!!s.user?.photoFileId} size={34} />
@@ -102,7 +140,7 @@ export default function SickRequests() {
                           <Paperclip size={16} />
                         </button>
                       )}
-                      {s.statut === 'en attente' && (
+                      {canDecide(s) && (
                         <>
                           <Button size="sm" variant="primary" icon={<Check size={14} />} onClick={() => setApproving(s)}>
                             {t('decision.approve')}
@@ -120,6 +158,29 @@ export default function SickRequests() {
           </table>
         </TableWrap>
       )}
+      <BulkBar count={bulkSel.selectedRows.length} onApprove={() => setBulk('approve')} onRefuse={() => setBulk('refuse')} onClear={bulkSel.clear} />
+      <ConfirmDialog
+        open={bulk === 'approve'}
+        icon={<Check size={22} />}
+        title={t('bulk.approveTitle', { count: bulkSel.selectedRows.length })}
+        message={t('bulk.approveMsg')}
+        details={<PeopleList names={bulkNames} />}
+        confirmLabel={t('bulk.approveConfirm', { count: bulkSel.selectedRows.length })}
+        onClose={() => setBulk(null)}
+        onConfirm={() => bulkSel.decide('accepte')}
+      />
+      <RefuseDialog
+        open={bulk === 'refuse'}
+        title={t('bulk.refuseTitle', { count: bulkSel.selectedRows.length })}
+        details={
+          <>
+            <p className="mb-2 text-sm text-muted">{t('bulk.refuseMsg')}</p>
+            <PeopleList names={bulkNames} />
+          </>
+        }
+        onClose={() => setBulk(null)}
+        onConfirm={(motif) => bulkSel.decide('refuse', motif)}
+      />
       <ConfirmDialog
         open={!!approving}
         icon={<Check size={22} />}

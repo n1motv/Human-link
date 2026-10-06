@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, ScrollText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { PageSize } from '../../components/PageSize';
+import { VirtualTBody } from '../../components/VirtualRows';
 import { Button, Card, Empty, ErrorState, Input, PageHeader, Spinner, TableWrap } from '../../components/ui';
 import { api } from '../../lib/api';
 import { fmtDateTime } from '../../lib/format';
@@ -16,23 +18,22 @@ interface Entry {
   ipHash?: string;
 }
 
-const LIMIT = 50;
-
 /** Journal d'audit : preuve, pour le client, de qui a consulté ou modifié des données personnelles. */
 export default function Audit() {
   const { t, i18n } = useTranslation();
   const [action, setAction] = useState('');
   const [actor, setActor] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const q = useQuery({
-    queryKey: ['audit', action, actor, page],
+    queryKey: ['audit', action, actor, page, limit],
     queryFn: () =>
       api.get<{ items: Entry[]; total: number }>(
-        `/rgpd/audit?page=${page}&limit=${LIMIT}${action ? `&action=${encodeURIComponent(action)}` : ''}${actor ? `&actor=${encodeURIComponent(actor)}` : ''}`,
+        `/rgpd/audit?page=${page}&limit=${limit}${action ? `&action=${encodeURIComponent(action)}` : ''}${actor ? `&actor=${encodeURIComponent(actor)}` : ''}`,
       ),
     placeholderData: (prev) => prev,
   });
-  const pages = Math.max(1, Math.ceil((q.data?.total ?? 0) / LIMIT));
+  const pages = Math.max(1, Math.ceil((q.data?.total ?? 0) / limit));
 
   return (
     <>
@@ -79,9 +80,9 @@ export default function Audit() {
                   <th>{t('audit.target')}</th>
                 </tr>
               </thead>
-              <tbody>
-                {q.data!.items.map((e) => (
-                  <tr key={e.id}>
+              <VirtualTBody items={q.data!.items} colSpan={4}>
+                {(e, rowProps) => (
+                  <tr key={e.id} {...rowProps}>
                     <td className="whitespace-nowrap text-muted">{fmtDateTime(e.at, i18n.language)}</td>
                     <td>{e.actorEmail ?? '—'}</td>
                     <td>
@@ -91,13 +92,20 @@ export default function Audit() {
                       {e.targetType ?? ''} {e.targetId ? `· ${e.targetId.slice(-8)}` : ''}
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                )}
+              </VirtualTBody>
             </table>
           </TableWrap>
           <div className="mt-4 flex items-center justify-between text-sm text-muted">
             <span>{t('audit.total', { count: q.data!.total })}</span>
             <div className="flex items-center gap-2">
+              <PageSize
+                value={limit}
+                onChange={(n) => {
+                  setLimit(n);
+                  setPage(1);
+                }}
+              />
               <Button
                 size="sm"
                 icon={<ChevronLeft size={14} className="rtl:rotate-180" />}
