@@ -1,6 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Banknote, Building2, CalendarCheck, Gift, Plane, Stethoscope, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card, ErrorState, PageHeader, Spinner, StatTile } from '../../components/ui';
@@ -19,14 +19,12 @@ interface Stats {
   pending: { leaves: number; sick: number; bonuses: number };
 }
 
-const tooltipStyle = {
-  background: 'var(--glass-strong)',
-  border: '1px solid var(--glass-border)',
-  borderRadius: 12,
-  color: 'var(--fg)',
-  fontSize: 12,
-  backdropFilter: 'blur(12px)',
-};
+// Les graphiques (recharts, ~350 Ko) se chargent à la demande : les chiffres du haut s'affichent sans les attendre.
+const LeavesByMonthChart = lazy(() => import('./DashboardCharts').then((m) => ({ default: m.LeavesByMonthChart })));
+const PresenceChart = lazy(() => import('./DashboardCharts').then((m) => ({ default: m.PresenceChart })));
+const DepartmentChart = lazy(() => import('./DashboardCharts').then((m) => ({ default: m.DepartmentChart })));
+
+const ChartSkeleton = () => <div className="h-full w-full animate-pulse rounded-2xl bg-glass" aria-hidden />;
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
@@ -86,37 +84,18 @@ export default function Dashboard() {
         <Card className="lg:col-span-2">
           <h2 className="mb-4 text-lg font-bold">{t('dashboard.leavesByMonth')}</h2>
           <div className="h-64" role="img" aria-label={t('dashboard.leavesByMonth')}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={months} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" />
-                    <stop offset="100%" stopColor="var(--accent-2)" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--grid)" vertical={false} />
-                <XAxis dataKey="m" stroke="var(--fg-subtle)" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis stroke="var(--fg-subtle)" tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgb(var(--accent-rgb) / 0.1)', radius: 10 }} />
-                <Bar dataKey="count" name={t('dashboard.acceptedLeaves')} fill="url(#bar)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<ChartSkeleton />}>
+              <LeavesByMonthChart data={months} name={t('dashboard.acceptedLeaves')} />
+            </Suspense>
           </div>
         </Card>
 
         <Card>
           <h2 className="mb-2 text-lg font-bold">{t('dashboard.today')}</h2>
           <div className="relative h-52">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={presence} dataKey="value" innerRadius={62} outerRadius={84} paddingAngle={3} stroke="none" cornerRadius={6}>
-                  {presence.map((p) => (
-                    <Cell key={p.name} fill={p.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<ChartSkeleton />}>
+              <PresenceChart presence={presence} />
+            </Suspense>
             <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
               <div>
                 <p className="text-3xl font-bold tabular-nums">{presenceTotal}</p>
@@ -142,15 +121,9 @@ export default function Dashboard() {
             <p className="py-6 text-center text-sm text-muted">—</p>
           ) : (
             <div style={{ height: Math.max(160, s.byDepartment.length * 44) }} role="img" aria-label={t('dashboard.byDepartment')}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={s.byDepartment} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
-                  <CartesianGrid stroke="var(--grid)" horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} stroke="var(--fg-subtle)" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis type="category" dataKey="name" width={110} stroke="var(--fg-muted)" tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgb(var(--accent-rgb) / 0.1)', radius: 10 }} />
-                  <Bar dataKey="count" name={t('dashboard.employees')} fill="var(--accent)" radius={[0, 8, 8, 0]} barSize={18} />
-                </BarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<ChartSkeleton />}>
+                <DepartmentChart data={s.byDepartment} name={t('dashboard.employees')} />
+              </Suspense>
             </div>
           )}
         </Card>

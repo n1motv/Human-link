@@ -51,3 +51,4 @@ server/src/_shared/
 
 # Listes de composants générées (npm run sbom) : jointes aux livraisons, pas au dépôt
 sbom/
+client/stats.html

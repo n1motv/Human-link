@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './app/App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConfigProvider } from './lib/config';
@@ -11,22 +11,13 @@ import { SessionFlowProvider } from './app/SessionFlow';
 import { ThemeProvider } from './lib/theme';
 import { ToastProvider } from './lib/toast';
 import { applyBranding } from './lib/branding';
-import { ApiError } from './lib/api';
+import { createQueryClient } from './lib/queryClient';
 import { installErrorReporting } from './lib/errorReport';
 import { initI18n } from './lib/i18n';
 import type { PublicConfig } from './lib/types';
 import './index.css';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      refetchOnWindowFocus: false,
-      // Inutile de réessayer une erreur 4xx (droits, validation) : seul le réseau mérite un nouvel essai.
-      retry: (count, err) => !(err instanceof ApiError) && count < 2,
-    },
-  },
-});
+const queryClient = createQueryClient();
 
 installErrorReporting();
 
@@ -38,7 +29,7 @@ async function boot() {
     if (!res.ok) throw new Error(String(res.status));
     const cfg = (await res.json()) as PublicConfig;
     applyBranding(cfg);
-    initI18n(cfg.i18n.defaultLanguage, cfg.i18n.languages);
+    await initI18n(cfg.i18n.defaultLanguage, cfg.i18n.languages);
     root.render(
       <StrictMode>
         <ConfigProvider value={cfg}>
