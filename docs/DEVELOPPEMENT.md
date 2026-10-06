@@ -117,3 +117,11 @@ npm --prefix server run gen:openapi    # régénère docs/openapi.json (sans bas
 ## Page de styles
 
 En développement, `http://localhost:5173/styleguide` montre les composants (boutons, champs, listes, dates, code 2FA, confirmations, badges, cartes, états) dans leurs différents états, côte à côte en thème sombre et clair. La page n'existe pas dans le build de production.
+
+## Lancer l'application pour tester : Docker uniquement
+
+`npm run instances -- up` (puis `watch` pour reconstruire à chaque modification) lance les 5 instances de test, chacune dans son image. Voir `docs/INSTANCES.md`, section 1, et `docs/adr/0007-tout-dans-docker-pour-les-tests.md`. Pour développer le front avec rechargement instantané, `npm run dev:client` (Vite) reste disponible ; les tests (`npm test`, `test:e2e`, `test:visual`) n'ont pas besoin de Docker.
+
+## Décisions d'architecture
+
+`docs/adr/` : une page courte par décision (MongoDB, cookies httpOnly, un déploiement par client, chiffrement, fichiers sur disque, contrat partagé, tests dans Docker).

@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const PORT = Number(process.env.E2E_PORT ?? 4100);
+const PORT = Number(process.env.E2E_PORT ?? 4190);
 const PASSWORD = 'E2e-Passw0rd-2026!';
 /** Secret TOTP de l'administrateur de test : le même que dans client/e2e/flows/accounts.ts (le test calcule les codes). */
 const ADMIN_TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';

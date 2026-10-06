@@ -13,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:4100',
+    baseURL: 'http://localhost:4190',
     locale: 'fr-FR',
     timezoneId: 'UTC',
     trace: 'retain-on-failure',
@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     // Compile le front, puis lance le serveur de test (base en mémoire, quatre comptes).
     command: 'npm run build && npm --prefix ../server run e2e:server',
-    url: 'http://localhost:4100/api/health',
+    url: 'http://localhost:4190/api/health',
     reuseExistingServer: false, // une base neuve à chaque lancement : les parcours supposent un état de départ connu
     timeout: 240_000,
   },
