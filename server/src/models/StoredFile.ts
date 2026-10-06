@@ -21,4 +21,5 @@ const schema = new Schema(
   { timestamps: { createdAt: true, updatedAt: false } },
 );
 applyJsonTransform(schema, ['storageKey']);
+schema.index({ ownerId: 1, year: -1, month: -1, createdAt: -1 }); // coffre-fort d’une personne, du plus récent au plus ancien
 export const StoredFile = model('StoredFile', schema);

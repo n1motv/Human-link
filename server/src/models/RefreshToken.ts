@@ -18,4 +18,5 @@ const schema = new Schema(
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );
+schema.index({ userId: 1, createdAt: 1 }); // appareils connectés d’une personne
 export const RefreshToken = model('RefreshToken', schema);

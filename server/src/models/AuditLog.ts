@@ -17,4 +17,8 @@ const schema = new Schema(
   { timestamps: false },
 );
 applyJsonTransform(schema);
+// Filtre + tri par date dans un même index : la page « journal d'audit » n'a jamais à trier en mémoire, même avec des millions de lignes.
+schema.index({ action: 1, at: -1 }); // filtre par préfixe d'action
+schema.index({ targetId: 1, at: -1 }); // historique d'une cible
+schema.index({ actorId: 1, at: -1 }); // actions d'une personne (export RGPD)
 export const AuditLog = model('AuditLog', schema);

@@ -81,6 +81,10 @@ applyJsonTransform(userSchema, [
 
 export type UserAttrs = InferSchemaType<typeof userSchema>;
 export type UserDoc = HydratedDocument<UserAttrs>;
+userSchema.index({ nom: 1, prenom: 1 }); // liste des employés triée par nom
+userSchema.index({ status: 1, nom: 1, prenom: 1 }); // liste filtrée par statut
+userSchema.index({ role: 1, nom: 1, prenom: 1 }); // liste filtrée par rôle
+userSchema.index({ isDirector: 1 }, { partialFilterExpression: { isDirector: true } }); // recherche du directeur (un seul document dans l’index)
 export const User = model('User', userSchema);
 
 /** Vue sérialisable d'un utilisateur : sans secrets 2FA ni données d'authentification. */

@@ -22,4 +22,6 @@ const schema = new Schema(
 );
 schema.index({ userId: 1, dateDebut: 1, dateFin: 1 });
 applyJsonTransform(schema);
+schema.index({ userId: 1, createdAt: -1 }); // mes demandes, la plus récente d’abord
+schema.index({ statut: 1, createdAt: -1 }); // demandes à traiter (administrateur et manager)
 export const LeaveRequest = model('LeaveRequest', schema);

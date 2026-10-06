@@ -14,4 +14,5 @@ const schema = new Schema(
 );
 schema.index({ userId: 1, createdAt: -1 });
 applyJsonTransform(schema);
+schema.index({ createdAt: 1 }); // purge de rétention (supprime les plus anciennes sans balayer la collection)
 export const Notification = model('Notification', schema);

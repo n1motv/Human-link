@@ -16,4 +16,6 @@ const schema = new Schema(
   { timestamps: true },
 );
 applyJsonTransform(schema);
+schema.index({ userId: 1, dateDebut: -1 }); // mes arrêts, le plus récent d’abord
+schema.index({ statut: 1, createdAt: -1 }); // arrêts à traiter
 export const SickLeave = model('SickLeave', schema);

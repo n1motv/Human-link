@@ -14,4 +14,6 @@ const schema = new Schema(
   { timestamps: true },
 );
 applyJsonTransform(schema);
+schema.index({ createdAt: -1 }); // liste de l’administrateur
+schema.index({ managerId: 1, createdAt: -1 }); // primes émises par un manager
 export const BonusRequest = model('BonusRequest', schema);
