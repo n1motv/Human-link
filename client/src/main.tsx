@@ -6,6 +6,7 @@ import { App } from './app/App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ConfigProvider } from './lib/config';
 import { AuthProvider } from './lib/auth';
+import { ServiceStatus } from './app/ServiceStatus';
 import { SessionFlowProvider } from './app/SessionFlow';
 import { ThemeProvider } from './lib/theme';
 import { ToastProvider } from './lib/toast';
@@ -44,15 +45,17 @@ async function boot() {
           <ThemeProvider defaultTheme={cfg.branding.defaultTheme}>
             <QueryClientProvider client={queryClient}>
               <ToastProvider>
-                <AuthProvider>
-                  <BrowserRouter>
-                    <SessionFlowProvider>
-                      <ErrorBoundary>
-                        <App />
-                      </ErrorBoundary>
-                    </SessionFlowProvider>
-                  </BrowserRouter>
-                </AuthProvider>
+                <ServiceStatus>
+                  <AuthProvider>
+                    <BrowserRouter>
+                      <SessionFlowProvider>
+                        <ErrorBoundary>
+                          <App />
+                        </ErrorBoundary>
+                      </SessionFlowProvider>
+                    </BrowserRouter>
+                  </AuthProvider>
+                </ServiceStatus>
               </ToastProvider>
             </QueryClientProvider>
           </ThemeProvider>

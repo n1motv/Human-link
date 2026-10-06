@@ -135,6 +135,16 @@ Les mêmes clés (`.env` du client) doivent être en place : une restauration av
 À sauvegarder **ensemble** : la base (`mongodump --archive --gzip`), le volume des fichiers (`app-data`, dossier `STORAGE_DIR`) et les clés (`clients/<client>/.env`, dans un coffre distinct).
 Les sauvegardes contiennent des données personnelles : mêmes règles de conservation et d'accès que la production.
 
+## Supervision, versions et maintenance
+
+- **Métriques** : `GET /metrics` au format Prometheus (débit, temps de réponse, erreurs par route modèle, connexions réussies et échouées, connexions et taille de MongoDB, mémoire, retard de la boucle d'événements). **Désactivé** tant que `METRICS_TOKEN` (16 caractères au moins) n'est pas défini ; sinon l'en-tête `Authorization: Bearer <jeton>` est exigé. Aucune donnée personnelle : les routes sont des modèles (`/api/users/:id`).
+  Un tableau Grafana prêt à l'emploi est dans `deploy/monitoring/` (voir « Instances » : `npm run instances -- up --monitoring`). Pour votre Prometheus : `metrics_path: /metrics`, `authorization: { type: Bearer, credentials_file: ... }`.
+- **Version déployée** : `GET /api/health` renvoie `{ ok, version, maintenance }`. `version` est l'empreinte des sources, calculée à la construction de l'image ; le front compilé porte la même. Quand elles diffèrent (mise à jour pendant qu'un onglet est ouvert), le client affiche « Nouvelle version disponible » avec un bouton **Recharger** (jamais de rechargement forcé : un formulaire en cours n'est pas perdu).
+- **Maintenance** : `MAINTENANCE=true` dans le `.env` du client puis redémarrage. L'API répond 503 (sauf santé et configuration) et les utilisateurs voient une page de maintenance qui se relance toute seule au retour du service.
+- **Requêtes lentes MongoDB** : le profil est activé (`--profile 1 --slowms 100`, voir `docker-compose*.yml`) : toute requête de plus de 100 ms est enregistrée. Lecture : `docker compose exec mongo mongosh -u humanlink -p "$MONGO_PASSWORD" --authenticationDatabase admin humanlink --eval "db.system.profile.find().sort({ts:-1}).limit(10).pretty()"` ; une entrée avec `planSummary: COLLSCAN` désigne un index manquant. `server/tests/indexes.test.ts` garantit en test que les requêtes connues utilisent un index.
+- **SBOM** : la CI produit la liste des composants de l'image (SPDX et CycloneDX, artefact « sbom » du job « Image Docker ») ; en local `npm run sbom`. À conserver avec chaque livraison.
+- **Images de base figées** : `node`, `mongo`, `caddy`, `clamav`, `prometheus` et `grafana` sont référencés par empreinte (`tag@sha256:…`). Dependabot propose chaque mise à jour avec la nouvelle empreinte ; à la main : `docker buildx imagetools inspect node:22-slim`.
+
 ## Exploitation
 
 - Santé : `GET /api/health` (utilisé par le HEALTHCHECK Docker).

@@ -124,6 +124,15 @@
     "SCAN_UNAVAILABLE": "The antivirus scan is temporarily unavailable. Try again later.",
     "LOGIN_THROTTLED": "Too many attempts, please wait a moment."
   },
+  "service": {
+    "newVersionTitle": "New version available",
+    "newVersionText": "The application has been updated. Reload once you have saved your work.",
+    "reload": "Reload",
+    "later": "Later",
+    "maintenanceTitle": "Maintenance in progress",
+    "maintenanceText": "The application will be back in a few minutes. This page will reload by itself.",
+    "retry": "Try again now"
+  },
   "auth": {
     "welcome": "Welcome back",
     "welcomeHint": "Sign in to access your HR space.",

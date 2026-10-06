@@ -226,6 +226,9 @@ export function createSchemas(z: Zod) {
     }),
   });
 
+  /** Santé du service : `version` est l'identifiant de build (T-16), `maintenance` vaut true quand l'API est fermée. */
+  const health = z.object({ ok: z.boolean(), version: z.string(), maintenance: z.boolean() });
+
   // --- Organisation ---
   const orgNode: zod.ZodType<OrgNode> = z.lazy(() => z.object({ id: z.string(), name: z.string(), poste: z.string().optional(), role: z.string(), children: z.array(orgNode) }));
   const orgTree = z.object({
@@ -353,6 +356,7 @@ export function createSchemas(z: Zod) {
     vaultFile,
     calendarEvent,
     publicConfig,
+    health,
     orgTree,
     supervisions,
     teamMember,

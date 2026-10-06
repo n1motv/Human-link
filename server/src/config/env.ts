@@ -94,6 +94,14 @@ const schema = z.object({
   /** Alerte d'erreur (Slack, Teams, Mattermost, ntfy… : un POST JSON avec un champ « text »). Les erreurs restent de toute façon dans les logs. */
   ERROR_WEBHOOK_URL: z.string().url().optional(),
 
+  /** Mode maintenance : l'API répond 503 (sauf santé et configuration) et le front affiche la page de maintenance. */
+  MAINTENANCE: bool.default(false),
+  /** Jeton « Bearer » de GET /metrics (Prometheus). Sans lui, l'endpoint n'existe pas. */
+  METRICS_TOKEN: z.string().min(16).optional(),
+  /** Identifiant de version : posé par la construction de l'image (fichier BUILD_ID_FILE) ; « dev » sinon. */
+  BUILD_ID: z.string().optional(),
+  BUILD_ID_FILE: z.string().optional(),
+
   LOG_LEVEL: z.string().default('info'),
 });
 

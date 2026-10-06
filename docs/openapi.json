@@ -3714,8 +3714,8 @@
           "service"
         ],
         "operationId": "get_health",
-        "summary": "État du service",
-        "description": "Utilisé par le HEALTHCHECK Docker. Public.",
+        "summary": "État du service et version déployée",
+        "description": "Utilisé par le HEALTHCHECK Docker et par le client pour détecter une nouvelle version ou la maintenance. Public.",
         "responses": {
           "200": {
             "description": "Succès",
@@ -3726,10 +3726,18 @@
                   "properties": {
                     "ok": {
                       "type": "boolean"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "maintenance": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
-                    "ok"
+                    "ok",
+                    "version",
+                    "maintenance"
                   ],
                   "additionalProperties": false
                 }
@@ -9701,6 +9709,40 @@
             "cookieAuth": []
           }
         ],
+        "x-documented": true
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "service"
+        ],
+        "operationId": "get__metrics",
+        "summary": "Métriques Prometheus",
+        "description": "Hors /api. Désactivé sans METRICS_TOKEN ; sinon en-tête `Authorization: Bearer <jeton>`. Public.",
+        "responses": {
+          "200": {
+            "description": "Fichier",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
         "x-documented": true
       }
     }

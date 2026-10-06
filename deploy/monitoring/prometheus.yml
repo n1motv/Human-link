@@ -1,0 +1,22 @@
+# Prometheus : relève /metrics de chaque instance toutes les 15 secondes.
+# Jeton : celui de METRICS_TOKEN (en production, le mettre dans un fichier : credentials_file au lieu de credentials).
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: human-link
+    metrics_path: /metrics
+    authorization:
+      type: Bearer
+      credentials: test-metrics-token
+    static_configs:
+      - targets: ['example:4000']
+        labels: { instance: example }
+      - targets: ['nvidia:4000']
+        labels: { instance: nvidia }
+      - targets: ['ibm:4000']
+        labels: { instance: ibm }
+      - targets: ['microsoft:4000']
+        labels: { instance: microsoft }
+      - targets: ['linkedin:4000']
+        labels: { instance: linkedin }

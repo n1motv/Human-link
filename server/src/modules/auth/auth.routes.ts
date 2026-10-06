@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { User, toPublicUser, type UserDoc } from '../../models/User.js';
 import { clientConfig } from '../../config/client.js';
+import { loginsTotal } from '../../utils/metrics.js';
 import { schemas } from '../../shared.js';
 import { env } from '../../config/env.js';
 import { authOf, requireAuth } from '../../middleware/auth.js';
@@ -47,6 +48,7 @@ export const twoFactorDisableBody = z.object({ password: z.string().max(200), co
 export const notMeBody = z.object({ token: z.string().min(20).max(2000) });
 
 async function recordFailure(user: UserDoc) {
+  loginsTotal.inc({ result: 'failure' });
   const { maxLoginAttempts, lockMinutes } = clientConfig.security;
   user.failedAttempts += 1;
   if (user.failedAttempts >= maxLoginAttempts) {
@@ -89,6 +91,7 @@ async function trackDevice(req: import('express').Request, user: UserDoc) {
 }
 
 async function completeLogin(req: import('express').Request, res: import('express').Response, user: UserDoc) {
+  loginsTotal.inc({ result: 'success' });
   user.failedAttempts = 0;
   user.lockUntil = undefined;
   user.lastLoginAt = new Date();
@@ -115,6 +118,7 @@ authRouter.post('/login', authLimiter, async (req, res) => {
   if (!user?.passwordHash || user.status !== 'active') {
     await dummyVerify(body.password);
     recordLoginFailure(ip, body.email);
+    loginsTotal.inc({ result: 'failure' });
     throw unauthorized(GENERIC_LOGIN_ERROR, 'INVALID_CREDENTIALS');
   }
   if (user.lockUntil && user.lockUntil > new Date()) {

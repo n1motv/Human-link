@@ -6,6 +6,8 @@ import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { env, isProd, isTest } from './config/env.js';
+import { BUILD_ID } from './config/version.js';
+import { metricsHandler, metricsMiddleware } from './utils/metrics.js';
 import { publicConfig, clientConfig } from './config/client.js';
 import { csrfProtection } from './middleware/csrf.js';
 import { apiLimiter } from './middleware/rateLimit.js';
@@ -20,6 +22,7 @@ export function createApp() {
   // Fait confiance à X-Forwarded-For uniquement si on est réellement derrière un proxy (sinon l'IP serait falsifiable).
   app.set('trust proxy', env.TRUST_PROXY);
 
+  app.use(metricsMiddleware);
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 
   app.use(
@@ -53,11 +56,24 @@ export function createApp() {
   // Logo et visuels du client (<CLIENT_DIR>/branding) : remplaçables sans recompiler le front.
   app.use('/branding', express.static(path.resolve(env.CLIENT_DIR, 'branding'), { maxAge: '1h', index: false }));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true }));
+  // Santé : sert aussi à repérer qu'un onglet ouvert tourne sur une ancienne version (version) ou que le service est en maintenance.
+  app.get('/api/health', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ ok: true, version: BUILD_ID, maintenance: env.MAINTENANCE });
+  });
+  app.get('/metrics', metricsHandler);
   app.get('/api/config', (_req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.json(publicConfig());
   });
+
+  // Maintenance : tout le reste de l'API répond 503 ; le client affiche alors sa page de maintenance.
+  if (env.MAINTENANCE) {
+    app.use('/api', (_req, res) => {
+      res.setHeader('Retry-After', '120');
+      res.status(503).json({ error: { code: 'MAINTENANCE', message: 'Service en maintenance, merci de réessayer dans quelques minutes' } });
+    });
+  }
 
   // Documentation de l'API (OpenAPI + page de lecture) : développement uniquement, jamais en production.
   if (!isProd && !isTest) app.use('/api', docsRouter);

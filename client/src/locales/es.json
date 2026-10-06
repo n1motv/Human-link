@@ -124,6 +124,15 @@
     "SCAN_UNAVAILABLE": "El análisis antivirus no está disponible por el momento. Inténtalo más tarde.",
     "LOGIN_THROTTLED": "Demasiados intentos, espera un momento."
   },
+  "service": {
+    "newVersionTitle": "Nueva versión disponible",
+    "newVersionText": "La aplicación se ha actualizado. Recargue cuando haya guardado su trabajo.",
+    "reload": "Recargar",
+    "later": "Más tarde",
+    "maintenanceTitle": "Mantenimiento en curso",
+    "maintenanceText": "La aplicación volverá en unos minutos. Esta página se recargará sola.",
+    "retry": "Reintentar ahora"
+  },
   "auth": {
     "welcome": "Te damos la bienvenida",
     "welcomeHint": "Inicia sesión para acceder a tu espacio de RR. HH.",

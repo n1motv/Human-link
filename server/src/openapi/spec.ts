@@ -44,6 +44,7 @@ export function listOperations(mounts: Mount[] = [...PUBLIC_MOUNTS, ...API_MOUNT
   const ops: Operation[] = [
     { method: 'get', path: '/api/health', auth: false, tag: 'service' },
     { method: 'get', path: '/api/config', auth: false, tag: 'service' },
+    { method: 'get', path: '/metrics', auth: false, tag: 'service' },
   ];
   for (const m of mounts) {
     let authBelow = false; // un `router.use(requireAuth())` protège toutes les routes déclarées après lui

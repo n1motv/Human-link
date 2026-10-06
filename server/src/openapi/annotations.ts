@@ -50,7 +50,12 @@ const FILE = 'application/octet-stream';
 
 export const ANNOTATIONS: Record<string, Annotation> = {
   // ---------- Service ----------
-  'GET /api/health': { summary: 'État du service', description: 'Utilisé par le HEALTHCHECK Docker.', response: ok },
+  'GET /api/health': {
+    summary: 'État du service et version déployée',
+    description: 'Utilisé par le HEALTHCHECK Docker et par le client pour détecter une nouvelle version ou la maintenance.',
+    response: schemas.health,
+  },
+  'GET /metrics': { summary: 'Métriques Prometheus', description: 'Hors /api. Désactivé sans METRICS_TOKEN ; sinon en-tête `Authorization: Bearer <jeton>`.', file: 'text/plain' },
   'GET /api/config': { summary: 'Configuration publique du client (nom, logo, couleurs, modules, règles)', response: schemas.publicConfig },
   'POST /api/client-errors': {
     summary: 'Signaler une erreur du navigateur',
