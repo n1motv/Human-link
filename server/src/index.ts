@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { createApp } from './app.js';
 import { env, isProd } from './config/env.js';
 import { startJobs } from './jobs/scheduler.js';
+import { startMailWorker, stopMailWorker } from './utils/mailer.js';
 import { logger } from './utils/logger.js';
 import { reportError, scrubStack, scrubText } from './utils/monitoring.js';
 
@@ -16,8 +17,10 @@ async function main() {
   const app = createApp();
   const server = app.listen(env.PORT, () => logger.info(`API Human Link sur http://localhost:${env.PORT}`));
   startJobs();
+  startMailWorker(); // reprise des e-mails en attente (file d'attente, T-10)
 
   const stop = async () => {
+    stopMailWorker();
     server.close();
     await mongoose.disconnect();
     process.exit(0);

@@ -9,6 +9,7 @@ import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { documentsRouter } from './modules/documents/documents.routes.js';
 import { feedbackRouter } from './modules/feedback/feedback.routes.js';
 import { leavesRouter } from './modules/leaves/leaves.routes.js';
+import { mailRouter } from './modules/mail/mail.routes.js';
 import { meetingsRouter } from './modules/meetings/meetings.routes.js';
 import { monitoringRouter } from './modules/monitoring/monitoring.routes.js';
 import { notificationsRouter } from './modules/notifications/notifications.routes.js';
@@ -37,6 +38,7 @@ export const API_MOUNTS: Mount[] = [
   { prefix: '/api/org', router: orgRouter },
   { prefix: '/api/notifications', router: notificationsRouter },
   { prefix: '/api/rgpd', router: rgpdRouter },
+  { prefix: '/api/mail-jobs', router: mailRouter },
   { prefix: '/api/dashboard', router: dashboardRouter },
   { prefix: '/api/calendar', router: calendarRouter },
   { prefix: '/api/leaves', router: leavesRouter, module: 'leaves' },
