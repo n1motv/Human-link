@@ -8,6 +8,7 @@ import { uploadBody } from '../modules/documents/documents.routes.js';
 import { feedbackBody, resultsQuery } from '../modules/feedback/feedback.routes.js';
 import { meetingCreateBody, meetingResponseBody } from '../modules/meetings/meetings.routes.js';
 import { errorReportBody } from '../modules/monitoring/monitoring.routes.js';
+import { mailListQuery } from '../modules/mail/mail.routes.js';
 import { directorBody, supervisionPair, teleworkMaxBody } from '../modules/org/org.routes.js';
 import { auditQuery } from '../modules/rgpd/rgpd.routes.js';
 import { sickCreateBody } from '../modules/sick/sick.routes.js';
@@ -290,6 +291,25 @@ export const ANNOTATIONS: Record<string, Annotation> = {
     summary: 'Tableau de bord administrateur',
     description: 'Agrégats seulement (aucun salaire individuel) ; la consultation est tracée.',
     response: schemas.adminDashboard,
+  },
+  'GET /api/mail-jobs': {
+    summary: 'E-mails en échec ou en attente de reprise',
+    description:
+      'File d’attente : un message est repris à 1 min, 5 min, 30 min, 2 h puis 6 h ; après le dernier essai il passe en échec et attend ici. Le corps du message n’est jamais renvoyé.',
+    query: mailListQuery,
+    response: schemas.mailQueue,
+  },
+  'POST /api/mail-jobs/{id}/retry': { summary: 'Relancer un envoi en échec', response: z.object({ job: schemas.mailJob }) },
+  'DELETE /api/mail-jobs/{id}': { summary: 'Abandonner un envoi en échec', response: ok },
+  'GET /api/rgpd/register': {
+    summary: 'Registre des activités de traitement',
+    description: 'Finalités, bases légales, catégories de données, destinataires, durées de conservation réellement appliquées. La consultation est tracée.',
+    response: schemas.complianceRegister,
+  },
+  'GET /api/rgpd/dossier/{id}': {
+    summary: 'Dossier complet d’un employé (archive ZIP)',
+    description: 'Données (donnees.json) et documents déchiffrés, pour une demande d’accès reçue par courrier. Tracé dans le journal d’audit.',
+    file: 'application/zip',
   },
   'GET /api/rgpd/audit': { summary: 'Journal d’audit : qui a consulté ou modifié quelles données', query: auditQuery, response: page(schemas.auditEntry) },
   'GET /api/rgpd/export': { summary: 'Exporter toutes mes données (droit d’accès)', description: 'Fichier JSON ; la demande est tracée.', file: 'application/json' },

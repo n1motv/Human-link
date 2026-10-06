@@ -13,5 +13,7 @@ Format : **Contexte → Décision → Pourquoi → Conséquences → Alternative
 | [0005](0005-fichiers-sur-disque.md) | Fichiers sur disque local plutôt que dans un stockage objet |
 | [0006](0006-contrat-partage-et-typescript.md) | TypeScript partout et un contrat de données partagé (zod) |
 | [0007](0007-tout-dans-docker-pour-les-tests.md) | Les instances de test tournent toutes dans Docker, une image par client |
+| [0008](0008-transactions-et-jeu-de-replicas.md) | Transactions MongoDB, donc jeu de réplicas d'un seul nœud |
+| [0009](0009-file-d-attente-des-emails-dans-mongodb.md) | File d'attente des e-mails dans MongoDB plutôt que BullMQ ou Agenda |
 
 Pour en ajouter une : copier une page existante, prendre le numéro suivant, l'ajouter au tableau ci-dessus.

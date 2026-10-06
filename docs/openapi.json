@@ -4625,6 +4625,318 @@
         "x-documented": true
       }
     },
+    "/api/mail-jobs": {
+      "get": {
+        "tags": [
+          "mail-jobs"
+        ],
+        "operationId": "get_mail_jobs",
+        "summary": "E-mails en échec ou en attente de reprise",
+        "description": "File d’attente : un message est repris à 1 min, 5 min, 30 min, 2 h puis 6 h ; après le dernier essai il passe en échec et attend ici. Le corps du message n’est jamais renvoyé. Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "failed",
+              "type": "string",
+              "enum": [
+                "failed",
+                "pending",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          },
+                          "subject": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "sent",
+                              "failed"
+                            ]
+                          },
+                          "attempts": {
+                            "type": "number"
+                          },
+                          "nextAttemptAt": {
+                            "type": "string"
+                          },
+                          "lastError": {
+                            "type": "string"
+                          },
+                          "sentAt": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "to",
+                          "subject",
+                          "status",
+                          "attempts",
+                          "nextAttemptAt",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "counts": {
+                      "type": "object",
+                      "properties": {
+                        "failed": {
+                          "type": "number"
+                        },
+                        "pending": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "failed",
+                        "pending"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "counts"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/mail-jobs/{id}": {
+      "delete": {
+        "tags": [
+          "mail-jobs"
+        ],
+        "operationId": "delete_mail_jobs_id",
+        "summary": "Abandonner un envoi en échec",
+        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
+    "/api/mail-jobs/{id}/retry": {
+      "post": {
+        "tags": [
+          "mail-jobs"
+        ],
+        "operationId": "post_mail_jobs_id_retry",
+        "summary": "Relancer un envoi en échec",
+        "description": "Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "job": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "to": {
+                          "type": "string"
+                        },
+                        "subject": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "sent",
+                            "failed"
+                          ]
+                        },
+                        "attempts": {
+                          "type": "number"
+                        },
+                        "nextAttemptAt": {
+                          "type": "string"
+                        },
+                        "lastError": {
+                          "type": "string"
+                        },
+                        "sentAt": {
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "to",
+                        "subject",
+                        "status",
+                        "attempts",
+                        "nextAttemptAt",
+                        "createdAt"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "job"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
     "/api/meetings": {
       "post": {
         "tags": [
@@ -6290,6 +6602,64 @@
         ]
       }
     },
+    "/api/rgpd/dossier/{id}": {
+      "get": {
+        "tags": [
+          "rgpd"
+        ],
+        "operationId": "get_rgpd_dossier_id",
+        "summary": "Dossier complet d’un employé (archive ZIP)",
+        "description": "Données (donnees.json) et documents déchiffrés, pour une demande d’accès reçue par courrier. Tracé dans le journal d’audit. Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fichier",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
+      }
+    },
     "/api/rgpd/export": {
       "get": {
         "tags": [
@@ -6330,6 +6700,201 @@
           }
         ],
         "x-documented": true
+      }
+    },
+    "/api/rgpd/register": {
+      "get": {
+        "tags": [
+          "rgpd"
+        ],
+        "operationId": "get_rgpd_register",
+        "summary": "Registre des activités de traitement",
+        "description": "Finalités, bases légales, catégories de données, destinataires, durées de conservation réellement appliquées. La consultation est tracée. Rôles autorisés : admin. Authentification requise (cookie de session).",
+        "responses": {
+          "200": {
+            "description": "Succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generatedAt": {
+                      "type": "string"
+                    },
+                    "controller": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "dpoEmail": {
+                          "type": "string"
+                        },
+                        "supportEmail": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "address",
+                        "dpoEmail",
+                        "supportEmail"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "retention": {
+                      "type": "object",
+                      "properties": {
+                        "departedEmployeeYears": {
+                          "type": "number"
+                        },
+                        "auditLogDays": {
+                          "type": "number"
+                        },
+                        "notificationDays": {
+                          "type": "number"
+                        },
+                        "contactRequestDays": {
+                          "type": "number"
+                        },
+                        "feedbackMonths": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "departedEmployeeYears",
+                        "auditLogDays",
+                        "notificationDays",
+                        "contactRequestDays",
+                        "feedbackMonths"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "treatments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "purpose": {
+                            "type": "string"
+                          },
+                          "legalBasis": {
+                            "type": "string"
+                          },
+                          "dataCategories": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "sensitive": {
+                            "type": "boolean"
+                          },
+                          "recipients": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "retention": {
+                            "type": "string"
+                          },
+                          "security": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "purpose",
+                          "legalBasis",
+                          "dataCategories",
+                          "sensitive",
+                          "recipients",
+                          "retention",
+                          "security"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "processors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "role"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "transfers": {
+                      "type": "string"
+                    },
+                    "rights": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "generatedAt",
+                    "controller",
+                    "retention",
+                    "treatments",
+                    "processors",
+                    "transfers",
+                    "rights"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié ou session expirée"
+          },
+          "403": {
+            "description": "Rôle insuffisant"
+          },
+          "default": {
+            "description": "Erreur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "x-documented": true,
+        "x-roles": [
+          "admin"
+        ]
       }
     },
     "/api/sick-leaves": {

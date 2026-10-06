@@ -319,6 +319,47 @@ export function createSchemas(z: Zod) {
     targetId: z.string().optional(),
     at: z.string(),
   });
+  /** Envoi d'e-mail de la file d'attente : jamais le corps du message. */
+  const mailJob = z.object({
+    id: z.string(),
+    to: z.string(),
+    subject: z.string(),
+    status: z.enum(['pending', 'sent', 'failed']),
+    attempts: z.number(),
+    nextAttemptAt: z.string(),
+    lastError: z.string().optional(),
+    sentAt: z.string().optional(),
+    createdAt: z.string(),
+  });
+  const mailQueue = z.object({ items: z.array(mailJob), counts: z.object({ failed: z.number(), pending: z.number() }) });
+  /** Registre des activités de traitement (art. 30 RGPD) : les durées de conservation sont celles réellement appliquées. */
+  const complianceRegister = z.object({
+    generatedAt: z.string(),
+    controller: z.object({ name: z.string(), address: z.string(), dpoEmail: z.string(), supportEmail: z.string() }),
+    retention: z.object({
+      departedEmployeeYears: z.number(),
+      auditLogDays: z.number(),
+      notificationDays: z.number(),
+      contactRequestDays: z.number(),
+      feedbackMonths: z.number(),
+    }),
+    treatments: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        purpose: z.string(),
+        legalBasis: z.string(),
+        dataCategories: z.array(z.string()),
+        sensitive: z.boolean(),
+        recipients: z.array(z.string()),
+        retention: z.string(),
+        security: z.array(z.string()),
+      }),
+    ),
+    processors: z.array(z.object({ name: z.string(), role: z.string() })),
+    transfers: z.string(),
+    rights: z.string(),
+  });
   const sessionInfo = z.object({
     id: z.string(),
     browser: z.string(),
@@ -372,6 +413,9 @@ export function createSchemas(z: Zod) {
     contactRequest,
     auditEntry,
     sessionInfo,
+    mailJob,
+    mailQueue,
+    complianceRegister,
     list,
     page,
   };

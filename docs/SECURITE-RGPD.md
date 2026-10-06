@@ -133,3 +133,11 @@ Le fichier `.env` de la version Flask était **versionné dans Git**. Il a été
 
 Aucun service tiers : un rapport d'erreur ne quitte jamais le serveur du client. Le navigateur envoie `POST /api/client-errors` (message, pile, chemin de la page **sans paramètres**, composants) ; le serveur retire e-mails, identifiants, jetons et longs nombres, tronque, puis journalise.
 Aucun cookie, aucun compte, aucune IP n'est joint au rapport ; l'endpoint est limité à 10 rapports par minute et par IP et n'a d'autre effet qu'une ligne de journal. Le navigateur n'envoie pas deux fois la même erreur et au plus 5 par session.
+
+## Registre des traitements et dossier d'accès
+
+La page **Conformité** (administration) affiche le registre des activités de traitement (art. 30) généré depuis la configuration du client : les durées de conservation qu'il annonce sont celles que les tâches de purge appliquent. `GET /api/rgpd/dossier/:id` livre en un clic un dossier complet (données en JSON et documents déchiffrés, en ZIP) pour une demande d'accès reçue par courrier (art. 15) ; réservé à l'administrateur, tracé avec la personne concernée, refusé pour un compte anonymisé. L'employé garde son propre export (« Mes données »).
+
+## Scan de sécurité automatique
+
+Le job ZAP baseline de la CI a été joué pour de vrai contre l'image Docker de production (instance de test) : 0 échec, 5 alertes non bloquantes, 62 contrôles passés. Les alertes restantes sont assumées : `style-src 'unsafe-inline'` (styles en ligne de Tailwind/React), contenu statique cachable (assets versionnés), en-tête COEP (sans objet : aucune ressource tierce intégrée). L’en-tête `Permissions-Policy` (caméra, micro, position, paiement interdits) a été ajouté à la suite d’un premier passage (6 alertes, 61 contrôles) : il a disparu des alertes au second.

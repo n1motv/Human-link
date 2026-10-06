@@ -50,6 +50,8 @@ const AdminVault = page(() => import('../pages/admin/AdminVault'));
 const FeedbackResults = page(() => import('../pages/admin/FeedbackResults'));
 const Contacts = page(() => import('../pages/admin/Contacts'));
 const Audit = page(() => import('../pages/admin/Audit'));
+const Compliance = page(() => import('../pages/admin/Compliance'));
+const MailQueue = page(() => import('../pages/admin/MailQueue'));
 
 function Protected() {
   const { user, loading, pending2fa } = useAuth();
@@ -154,6 +156,8 @@ export function App() {
             <Route path="/admin/feedback" element={adminOnly(<FeedbackResults />, 'feedback')} />
             <Route path="/admin/contacts" element={adminOnly(<Contacts />, 'contact')} />
             <Route path="/admin/audit" element={adminOnly(<Audit />)} />
+            <Route path="/admin/compliance" element={adminOnly(<Compliance />)} />
+            <Route path="/admin/mail" element={adminOnly(<MailQueue />)} />
           </Route>
         </Route>
 

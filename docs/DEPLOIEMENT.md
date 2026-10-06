@@ -145,6 +145,22 @@ Les sauvegardes contiennent des données personnelles : mêmes règles de conser
 - **SBOM** : la CI produit la liste des composants de l'image (SPDX et CycloneDX, artefact « sbom » du job « Image Docker ») ; en local `npm run sbom`. À conserver avec chaque livraison.
 - **Images de base figées** : `node`, `mongo`, `caddy`, `clamav`, `prometheus` et `grafana` sont référencés par empreinte (`tag@sha256:…`). Dependabot propose chaque mise à jour avec la nouvelle empreinte ; à la main : `docker buildx imagetools inspect node:22-slim`.
 
+## Transactions MongoDB (jeu de réplicas)
+
+Une décision de congé met à jour la demande, le solde, le télétravail et crée des notifications ; une anonymisation touche une douzaine de collections. Ces opérations s'exécutent dans une **transaction** : tout est validé, ou rien. MongoDB ne les permet que sur un **jeu de réplicas**, même d'un seul nœud : les fichiers `docker-compose*.yml` démarrent donc MongoDB en jeu de réplicas `rs0` (clé interne créée dans le volume, initialisation par le test de santé), et les URI contiennent `&replicaSet=rs0`.
+
+- **Installation existante** (volume MongoDB créé avant cette version) : relancer simplement `docker compose up -d`. MongoDB redémarre en jeu de réplicas sur les mêmes données (essayé : les 5 bases de test ont été conservées). Mettre `&replicaSet=rs0` à la fin de `MONGODB_URI` ; pour la variante secrets, le fichier `secrets/mongodb_uri`.
+- **Sans jeu de réplicas** (MongoDB géré par un tiers, installation qu'on ne veut pas migrer) : l'application fonctionne comme avant, sans transactions, et le signale dans les logs. La métrique `humanlink_mongo_transactions_supported` vaut alors 0.
+- Les e-mails et la suppression des fichiers sur disque n'ont lieu qu'**après** la validation de la transaction : une opération annulée n'envoie rien et ne supprime rien.
+
+## File d'attente des e-mails
+
+Avec `SMTP_HOST`, un e-mail (activation, mot de passe oublié, notification) est d'abord **enregistré** puis envoyé. Si le serveur SMTP est en panne, le message est repris automatiquement à 1 min, 5 min, 30 min, 2 h puis 6 h ; après le dernier essai il passe en « échec », l'équipe est prévenue (journal d'erreurs, `ERROR_WEBHOOK_URL`) et il attend dans **Administration, E-mails** : on peut le relancer ou l'abandonner. Le corps des messages (qui peut contenir un lien d'activation) est chiffré en base et effacé dès l'envoi ; les messages envoyés ne sont conservés que 7 jours, sans contenu. Un redémarrage du serveur ne perd rien : la file est dans MongoDB. Sans SMTP, les e-mails s'affichent dans les logs (développement).
+
+## Conformité (RGPD)
+
+Administration, **Conformité** : le registre des activités de traitement (finalités, bases légales, données, destinataires, durées de conservation), téléchargeable en CSV, et l'export d'un **dossier complet** (archive ZIP : toutes les données et les documents déchiffrés) pour une demande d'accès reçue par courrier. Les durées affichées sont celles de `client.config.json` (`gdpr`) réellement appliquées par les tâches de purge ; la consultation du registre et chaque export sont tracés dans le journal d'audit. Le DPO du client complète les mentions qui lui sont propres (hébergeur, sous-traitants).
+
 ## Exploitation
 
 - Santé : `GET /api/health` (utilisé par le HEALTHCHECK Docker).

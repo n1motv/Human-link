@@ -66,8 +66,8 @@ npm run typecheck
 
 - **Sous Windows** avec Chrome installé : `PW_CHANNEL=chrome npm --prefix client run test:visual` (sans Chrome : `npx playwright install chromium`).
 - **Les rendus dépendent du système** (polices, anticrénelage) : les références portent la plateforme dans leur nom (`…-win32.png`, `…-linux.png`).
-  La CI (workflow « Tests visuels ») compare aux références **Linux** ; tant qu'elles n'existent pas, elle l'indique et ne bloque pas.
-  Pour les créer ou les mettre à jour : GitHub, onglet Actions, « Tests visuels », « Run workflow » sur la branche, case **update** cochée ; les images sont alors enregistrées sur la branche.
+  La CI (workflow « Tests visuels ») compare aux références **Linux** (`…-linux.png`, présentes), dans l'image officielle Playwright : mêmes navigateur et polices que pour les générer.
+  Pour les mettre à jour après un changement d'interface voulu : GitHub, onglet Actions, « Tests visuels », « Run workflow » avec **update** coché (les images sont enregistrées sur la branche), ou en local avec Docker : `docker run --rm -v "$PWD:/repo" mcr.microsoft.com/playwright:v1.63.0-noble bash -c 'cp -r /repo/{client,shared} /work && cd /work/client && npm ci && npx playwright test --update-snapshots'` puis copier les `*-linux.png`.
 - Un changement d'interface voulu fait échouer ces tests : relire les images « diff », puis `test:visual:update` (Windows) et relancer le workflow avec « update » (Linux).
 
 ## Parcours de bout en bout
