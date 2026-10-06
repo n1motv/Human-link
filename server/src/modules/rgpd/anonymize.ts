@@ -10,6 +10,7 @@ import { Supervision } from '../../models/Supervision.js';
 import { Telework } from '../../models/Telework.js';
 import type { UserDoc } from '../../models/User.js';
 import { removeFile } from '../../utils/storage.js';
+import { withTransaction } from '../../utils/transaction.js';
 import { randomToken } from '../../utils/crypto.js';
 
 /**
@@ -20,47 +21,50 @@ export async function anonymizeUser(user: UserDoc): Promise<void> {
   const id = user._id;
 
   const files = await StoredFile.find({ ownerId: id }).select('+storageKey');
-  for (const f of files) await removeFile(f.storageKey);
-  await StoredFile.deleteMany({ ownerId: id });
+  const storageKeys = files.map((f) => f.storageKey);
 
-  await Promise.all([
-    Notification.deleteMany({ userId: id }),
-    Telework.deleteMany({ userId: id }),
-    ContactRequest.deleteMany({ userId: id }),
-    RefreshToken.deleteMany({ userId: id }),
-    Supervision.deleteMany({ $or: [{ managerId: id }, { superviseId: id }] }),
-    // Les motifs/justificatifs peuvent contenir des données de santé : on les vide mais on garde les dates (statistiques).
-    SickLeave.updateMany({ userId: id }, { $unset: { description: 1, attachmentFileId: 1 } }),
-    LeaveRequest.updateMany({ userId: id }, { $unset: { description: 1, attachmentFileId: 1, motifRefus: 1 } }),
-    BonusRequest.updateMany({ $or: [{ employeId: id }, { managerId: id }] }, { $unset: { motif: 1, motifRefus: 1 } }),
-    Meeting.updateMany({ 'invitees.userId': id }, { $pull: { invitees: { userId: id } } }),
-  ]);
+  // Toutes les écritures en base sont validées ensemble : un compte n'est jamais « à moitié » anonymisé (nom effacé mais fichiers
+  // ou notifications restants). Les fichiers du disque ne sont supprimés qu'après, une fois la base validée.
+  await withTransaction(async (session) => {
+    await StoredFile.deleteMany({ ownerId: id }, { session });
+    await Promise.all([
+      Notification.deleteMany({ userId: id }, { session }),
+      Telework.deleteMany({ userId: id }, { session }),
+      ContactRequest.deleteMany({ userId: id }, { session }),
+      RefreshToken.deleteMany({ userId: id }, { session }),
+      Supervision.deleteMany({ $or: [{ managerId: id }, { superviseId: id }] }, { session }),
+      // Les motifs/justificatifs peuvent contenir des données de santé : on les vide mais on garde les dates (statistiques).
+      SickLeave.updateMany({ userId: id }, { $unset: { description: 1, attachmentFileId: 1 } }, { session }),
+      LeaveRequest.updateMany({ userId: id }, { $unset: { description: 1, attachmentFileId: 1, motifRefus: 1 } }, { session }),
+      BonusRequest.updateMany({ $or: [{ employeId: id }, { managerId: id }] }, { $unset: { motif: 1, motifRefus: 1 } }, { session }),
+      Meeting.updateMany({ 'invitees.userId': id }, { $pull: { invitees: { userId: id } } }, { session }),
+    ]);
+    user.set({
+      nom: 'Ancien',
+      prenom: 'Employé',
+      email: `anonyme-${randomToken(8).toLowerCase()}@anonymized.invalid`,
+      status: 'anonymized',
+      anonymizedAt: new Date(),
+      isDirector: false,
+      tokenVersion: user.tokenVersion + 1,
+      poste: undefined,
+      sexe: undefined,
+      dateNaissance: undefined,
+      nationalite: undefined,
+      pays: undefined,
+      ville: undefined,
+      codePostal: undefined,
+      telephone: undefined,
+      adresse: undefined,
+      numeroSecu: undefined,
+      salaire: undefined,
+      photoFileId: undefined,
+      photoThumbs: undefined,
+      twoFactor: { enabled: false, recoveryCodes: [] },
+    });
+    user.passwordHash = undefined;
+    await user.save({ session });
+  });
 
-  user.set({
-    nom: 'Ancien',
-    prenom: 'Employé',
-    email: `anonyme-${randomToken(8).toLowerCase()}@anonymized.invalid`,
-    status: 'anonymized',
-    anonymizedAt: new Date(),
-    isDirector: false,
-    tokenVersion: user.tokenVersion + 1,
-  });
-  user.set({
-    poste: undefined,
-    sexe: undefined,
-    dateNaissance: undefined,
-    nationalite: undefined,
-    pays: undefined,
-    ville: undefined,
-    codePostal: undefined,
-    telephone: undefined,
-    adresse: undefined,
-    numeroSecu: undefined,
-    salaire: undefined,
-    photoFileId: undefined,
-    photoThumbs: undefined,
-    twoFactor: { enabled: false, recoveryCodes: [] },
-  });
-  user.passwordHash = undefined;
-  await user.save();
+  for (const key of storageKeys) await removeFile(key);
 }

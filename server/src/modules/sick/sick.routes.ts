@@ -8,7 +8,8 @@ import { upload } from '../../middleware/upload.js';
 import { audit } from '../../utils/audit.js';
 import { addDays, isoDate, today } from '../../utils/dates.js';
 import { badRequest, conflict, notFound, parse } from '../../utils/errors.js';
-import { notify, notifyAdmins } from '../../utils/notify.js';
+import { notify, notifyAdmins, sendDeferred, type DeferredMail } from '../../utils/notify.js';
+import { withTransaction } from '../../utils/transaction.js';
 import { assertCanAccessUser, displayName } from '../access.js';
 import { CONFLICT_MESSAGES, clearTelework, findConflict } from '../absences/absences.service.js';
 import { ATTACHMENT, saveUpload, sendStoredFile } from '../files/files.service.js';
@@ -73,18 +74,27 @@ sickRouter.post('/:id/decision', requireRole('admin'), async (req, res) => {
   const { id } = parse(z.object({ id: objectId }), req.params);
   const body = parse(schemas.decisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
-  const sick = await SickLeave.findOneAndUpdate(
-    { _id: id, statut: 'en attente' },
-    { statut: body.decision, motifRefus: body.decision === 'refuse' ? body.motifRefus : undefined },
-    { new: true },
-  );
+  // Décision, télétravail effacé et notification : validés ensemble, ou rien ; l'e-mail part après.
+  const mails: DeferredMail[] = [];
+  const emailSubject = 'Réponse à votre arrêt maladie';
+  const sick = await withTransaction(async (session) => {
+    mails.length = 0;
+    const decided = await SickLeave.findOneAndUpdate(
+      { _id: id, statut: 'en attente' },
+      { statut: body.decision, motifRefus: body.decision === 'refuse' ? body.motifRefus : undefined },
+      { new: true, session },
+    );
+    if (!decided) return null;
+    if (body.decision === 'accepte') {
+      await clearTelework(String(decided.userId), decided.dateDebut, decided.dateFin, session);
+      mails.push(...(await notify(decided.userId, 'Arrêt', 'sick.accepted', {}, { emailSubject, session, deferMail: true })));
+    } else {
+      mails.push(...(await notify(decided.userId, 'Arrêt', 'sick.refused', { motif: body.motifRefus ?? '' }, { emailSubject, session, deferMail: true })));
+    }
+    return decided;
+  });
   if (!sick) throw (await SickLeave.exists({ _id: id })) ? conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED') : notFound('Demande introuvable');
-  if (body.decision === 'accepte') {
-    await clearTelework(String(sick.userId), sick.dateDebut, sick.dateFin);
-    await notify(sick.userId, 'Arrêt', 'sick.accepted', {}, { emailSubject: 'Réponse à votre arrêt maladie' });
-  } else {
-    await notify(sick.userId, 'Arrêt', 'sick.refused', { motif: body.motifRefus ?? '' }, { emailSubject: 'Réponse à votre arrêt maladie' });
-  }
+  await sendDeferred(mails);
   await audit(req, { action: `sick.${body.decision}`, targetType: 'sick', targetId: id });
   res.json({ sick });
 });

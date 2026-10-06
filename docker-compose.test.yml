@@ -43,17 +43,31 @@ services:
     image: mongo:7@sha256:1f995ad6fdb93244a1addab1b58f934a0bc2f5643c38e02f5e9d7f0c7d227a7b
     restart: unless-stopped
     # Requêtes de plus de 100 ms enregistrées dans system.profile (T-15 : repérer les index manquants).
-    command: ['--auth', '--bind_ip_all', '--profile', '1', '--slowms', '100']
+    # Jeu de réplicas d'un seul nœud : exigé par MongoDB pour les transactions (une décision de congé met à jour plusieurs documents
+    # d'un coup, tout ou rien). L'authentification impose une clé interne, créée une fois dans le volume.
+    entrypoint:
+      - bash
+      - -c
+      - |
+        if [ ! -f /data/db/replica.key ]; then openssl rand -base64 756 > /data/db/replica.key; fi
+        chmod 400 /data/db/replica.key && chown mongodb:mongodb /data/db/replica.key
+        exec docker-entrypoint.sh mongod --auth --keyFile /data/db/replica.key --replSet rs0 --bind_ip_all --profile 1 --slowms 100
     environment:
       MONGO_INITDB_ROOT_USERNAME: humanlink
       MONGO_INITDB_ROOT_PASSWORD: test-only-password
     volumes:
       - mongo-data:/data/db
+    # Sain = le jeu de réplicas est initialisé et répond. La première exécution l'initialise (rs.initiate).
     healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet -u humanlink -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin
+          --eval "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}).ok }" | grep -q 1
       interval: 5s
-      timeout: 5s
+      timeout: 10s
       retries: 20
+      start_period: 20s
 
   example:
     <<: *app
@@ -63,7 +77,7 @@ services:
     environment:
       <<: *env
       APP_URL: http://localhost:4100
-      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_example?authSource=admin
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_example?authSource=admin&replicaSet=rs0
     ports: ['4100:4000']
     volumes: ['data-example:/data']
     develop:
@@ -77,7 +91,7 @@ services:
     environment:
       <<: *env
       APP_URL: http://localhost:4101
-      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_nvidia?authSource=admin
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_nvidia?authSource=admin&replicaSet=rs0
     ports: ['4101:4000']
     volumes: ['data-nvidia:/data']
     develop:
@@ -91,7 +105,7 @@ services:
     environment:
       <<: *env
       APP_URL: http://localhost:4102
-      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_ibm?authSource=admin
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_ibm?authSource=admin&replicaSet=rs0
     ports: ['4102:4000']
     volumes: ['data-ibm:/data']
     develop:
@@ -105,7 +119,7 @@ services:
     environment:
       <<: *env
       APP_URL: http://localhost:4103
-      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_microsoft?authSource=admin
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_microsoft?authSource=admin&replicaSet=rs0
     ports: ['4103:4000']
     volumes: ['data-microsoft:/data']
     develop:
@@ -119,7 +133,7 @@ services:
     environment:
       <<: *env
       APP_URL: http://localhost:4104
-      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_linkedin?authSource=admin
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_linkedin?authSource=admin&replicaSet=rs0
     ports: ['4104:4000']
     volumes: ['data-linkedin:/data']
     develop:

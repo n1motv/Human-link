@@ -1,4 +1,4 @@
-import type { Types } from 'mongoose';
+import type { ClientSession, Types } from 'mongoose';
 import { Notification } from '../models/Notification.js';
 import { User } from '../models/User.js';
 import { clientConfig } from '../config/client.js';
@@ -40,21 +40,45 @@ export type NotifKey = keyof typeof FR;
 interface NotifyOptions {
   /** Envoyer aussi un e-mail avec ce sujet. */
   emailSubject?: string;
+  /** Transaction en cours : les notifications y sont écrites. */
+  session?: ClientSession;
+  /** Ne pas envoyer les e-mails tout de suite : les rendre à l'appelant, qui les envoie une fois la transaction validée. */
+  deferMail?: boolean;
 }
 
-export async function notify(userIds: Id | Id[], type: string, key: NotifKey, params: Params = {}, opts: NotifyOptions = {}): Promise<void> {
+/** E-mail prêt à partir, à lancer quand la transaction est validée. */
+export type DeferredMail = () => Promise<void>;
+
+export async function notify(userIds: Id | Id[], type: string, key: NotifKey, params: Params = {}, opts: NotifyOptions = {}): Promise<DeferredMail[]> {
   const ids = [...new Set((Array.isArray(userIds) ? userIds : [userIds]).map(String))];
-  if (!ids.length) return;
+  const deferred: DeferredMail[] = [];
+  if (!ids.length) return deferred;
+  const { session } = opts;
   const message = FR[key](params);
   const users = await User.find({ _id: { $in: ids }, status: { $in: ['active', 'invited'] } }, { email: 1 });
   for (const u of users) {
-    await Notification.create({ userId: u._id, type, key, params, message });
+    await Notification.create([{ userId: u._id, type, key, params, message }], { session });
     // Plafond par utilisateur : on garde les plus récentes.
     const max = clientConfig.notifications.maxPerUser;
-    const stale = await Notification.find({ userId: u._id }).sort({ createdAt: -1 }).skip(max).select('_id');
-    if (stale.length) await Notification.deleteMany({ _id: { $in: stale.map((s) => s._id) } });
-    if (opts.emailSubject) void sendMail(u.email, opts.emailSubject, `Bonjour,\n\n${message}\n\nCordialement,\nL'équipe RH`);
+    const stale = await Notification.find({ userId: u._id })
+      .sort({ createdAt: -1 })
+      .skip(max)
+      .select('_id')
+      .session(session ?? null);
+    if (stale.length) await Notification.deleteMany({ _id: { $in: stale.map((s) => s._id) } }, { session });
+    if (opts.emailSubject) {
+      const subject = opts.emailSubject;
+      const send = () => sendMail(u.email, subject, `Bonjour,\n\n${message}\n\nCordialement,\nL'équipe RH`);
+      if (opts.deferMail) deferred.push(send);
+      else void send();
+    }
   }
+  return deferred;
+}
+
+/** Envoie les e-mails différés (après validation de la transaction). Un échec d'envoi ne remonte jamais : sendMail ne lève pas. */
+export async function sendDeferred(mails: DeferredMail[]): Promise<void> {
+  await Promise.all(mails.map((m) => m()));
 }
 
 export async function adminIds(): Promise<string[]> {

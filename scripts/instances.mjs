@@ -224,7 +224,9 @@ async function smoke(names) {
     await check('métriques protégées par jeton', async () => {
       must((await get('/metrics')).status === 401, 'accessible sans jeton');
       const r = await get('/metrics', { headers: { Authorization: `Bearer ${METRICS_TOKEN}` } });
-      must(r.ok && (await r.text()).includes('humanlink_http_requests_total'), `HTTP ${r.status} ou métriques absentes`);
+      const text = await r.text();
+      must(r.ok && text.includes('humanlink_http_requests_total'), `HTTP ${r.status} ou métriques absentes`);
+      must(text.includes('humanlink_mongo_transactions_supported 1'), 'MongoDB n’est pas un jeu de réplicas : transactions indisponibles');
     });
 
     console.log(bold(`\n${name}`) + dim(`  ${base}`));

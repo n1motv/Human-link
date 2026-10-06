@@ -110,7 +110,7 @@ services:
     env_file:
       - ./client/.env
     environment:
-      MONGODB_URI: mongodb://humanlink:\${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin
+      MONGODB_URI: mongodb://humanlink:\${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin&replicaSet=rs0
       TRUST_PROXY: \${TRUST_PROXY:-1}
       NODE_ENV: production
       PORT: "4000"

@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
 import { BUILD_ID } from '../config/version.js';
 import { env } from '../config/env.js';
+import { supportsTransactions } from './transaction.js';
 
 /**
  * Métriques d'exploitation au format Prometheus (T-14) : débit, temps de réponse, erreurs, connexions, base de données.
@@ -52,6 +53,15 @@ new Gauge({
     } catch {
       /* droits insuffisants ou base injoignable : la valeur reste celle du dernier relevé */
     }
+  },
+});
+
+new Gauge({
+  name: 'humanlink_mongo_transactions_supported',
+  help: '1 si MongoDB est un jeu de réplicas (transactions actives), 0 sinon : les décisions multi-documents ne sont alors pas atomiques.',
+  registers: [registry],
+  async collect() {
+    this.set((await supportsTransactions()) ? 1 : 0);
   },
 });
 

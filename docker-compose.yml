@@ -12,18 +12,32 @@ services:
   mongo:
     image: mongo:7@sha256:1f995ad6fdb93244a1addab1b58f934a0bc2f5643c38e02f5e9d7f0c7d227a7b
     restart: unless-stopped
-    command: ['--auth', '--bind_ip_all', '--profile', '1', '--slowms', '100'] # requêtes de plus de 100 ms consignées dans system.profile
+    # Jeu de réplicas d'un seul nœud : exigé par MongoDB pour les transactions (une décision de congé met à jour plusieurs documents
+    # d'un coup, tout ou rien). L'authentification impose une clé interne, créée une fois dans le volume.
+    entrypoint:
+      - bash
+      - -c
+      - |
+        if [ ! -f /data/db/replica.key ]; then openssl rand -base64 756 > /data/db/replica.key; fi
+        chmod 400 /data/db/replica.key && chown mongodb:mongodb /data/db/replica.key
+        exec docker-entrypoint.sh mongod --auth --keyFile /data/db/replica.key --replSet rs0 --bind_ip_all --profile 1 --slowms 100
     environment:
       MONGO_INITDB_ROOT_USERNAME: humanlink
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?définir MONGO_PASSWORD dans .env}
     volumes:
       - mongo-data:/data/db
     # Aucun port publié : seule l'application peut joindre la base.
+    # Sain = le jeu de réplicas est initialisé et répond. La première exécution l'initialise (rs.initiate).
     healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet -u humanlink -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin
+          --eval "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}).ok }" | grep -q 1
       interval: 15s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 20
+      start_period: 20s
 
   app:
     build: .
@@ -34,7 +48,7 @@ services:
     env_file:
       - ${CLIENT_DIR:-./clients/example}/.env
     environment:
-      MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin
+      MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin&replicaSet=rs0
       TRUST_PROXY: ${TRUST_PROXY:-0}
       # Chemins DANS le conteneur : prioritaires sur le .env du client, qui peut donc servir aussi aux tests locaux (npm run instances).
       NODE_ENV: production
@@ -76,7 +90,7 @@ services:
       mongo:
         condition: service_healthy
     environment:
-      MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin
+      MONGODB_URI: mongodb://humanlink:${MONGO_PASSWORD}@mongo:27017/humanlink?authSource=admin&replicaSet=rs0
       DATA_DIR: /data/storage
       BACKUP_DIR: /backups
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}

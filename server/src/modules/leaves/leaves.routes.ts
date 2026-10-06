@@ -9,7 +9,8 @@ import { schemas } from '../../shared.js';
 import { audit } from '../../utils/audit.js';
 import { countWorkingDays, today } from '../../utils/dates.js';
 import { badRequest, conflict, forbidden, notFound, parse } from '../../utils/errors.js';
-import { notify, notifyAdmins } from '../../utils/notify.js';
+import { notify, notifyAdmins, sendDeferred, type DeferredMail } from '../../utils/notify.js';
+import { withTransaction } from '../../utils/transaction.js';
 import { assertCanAccessUser, displayName, managedIds, managerOf } from '../access.js';
 import { CONFLICT_MESSAGES, clearTelework, findConflict } from '../absences/absences.service.js';
 import { ATTACHMENT, deleteStoredFile, saveUpload, sendStoredFile } from '../files/files.service.js';
@@ -101,40 +102,56 @@ leavesRouter.post('/:id/decision', requireRole('admin', 'manager'), async (req, 
   if (!employee) throw notFound();
   const params = { from: leave.dateDebut, to: leave.dateFin, name: displayName(employee), motif: body.motifRefus ?? '' };
 
+  // Chaque décision écrit plusieurs documents (demande, solde, télétravail, notifications) : tout est validé ensemble, ou rien.
+  // Les e-mails ne partent qu'après la validation (sendDeferred).
+  const mails: DeferredMail[] = [];
+  const emailSubject = 'Réponse à votre demande de congé';
+
   if (auth.role === 'manager') {
     // Un manager ne décide que pour son équipe, et seulement à l'étape manager.
     if (!(await managedIds(auth.userId)).includes(employeeId)) throw forbidden();
     if (leave.statutManager !== 'en attente') throw conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED');
-    if (body.decision === 'accepte') {
-      leave.statutManager = 'accepte';
-      await leave.save();
-      await notifyAdmins('Congé', 'leave.manager_accepted', params, { emailSubject: 'Demande de congé à approuver' });
-    } else {
-      leave.statutManager = 'refuse';
+    await withTransaction(async (session) => {
+      mails.length = 0;
+      if (body.decision === 'accepte') {
+        leave.statutManager = 'accepte';
+        await leave.save({ session });
+        mails.push(...(await notifyAdmins('Congé', 'leave.manager_accepted', params, { emailSubject: 'Demande de congé à approuver', session, deferMail: true })));
+      } else {
+        leave.statutManager = 'refuse';
+        leave.statut = 'refuse';
+        leave.motifRefus = body.motifRefus;
+        await leave.save({ session });
+        mails.push(...(await notify(employeeId, 'Congé', 'leave.refused_manager', params, { emailSubject, session, deferMail: true })));
+      }
+    });
+  } else if (body.decision === 'refuse') {
+    await withTransaction(async (session) => {
+      mails.length = 0;
+      leave.statutAdmin = 'refuse';
       leave.statut = 'refuse';
       leave.motifRefus = body.motifRefus;
-      await leave.save();
-      await notify(employeeId, 'Congé', 'leave.refused_manager', params, { emailSubject: 'Réponse à votre demande de congé' });
-    }
-  } else if (body.decision === 'refuse') {
-    leave.statutAdmin = 'refuse';
-    leave.statut = 'refuse';
-    leave.motifRefus = body.motifRefus;
-    await leave.save();
-    await notify(employeeId, 'Congé', 'leave.refused_admin', params, { emailSubject: 'Réponse à votre demande de congé' });
+      await leave.save({ session });
+      mails.push(...(await notify(employeeId, 'Congé', 'leave.refused_admin', params, { emailSubject, session, deferMail: true })));
+    });
   } else {
     if (leave.statutManager !== 'accepte') throw conflict("Le manager doit d'abord valider cette demande", 'MANAGER_PENDING');
-    // Prise de la demande de façon atomique, puis débit du solde conditionnel : pas de double décompte ni de solde négatif.
-    const claimed = await LeaveRequest.findOneAndUpdate({ _id: id, statut: 'en attente' }, { statut: 'accepte', statutAdmin: 'accepte' });
-    if (!claimed) throw conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED');
-    const debited = await User.findOneAndUpdate({ _id: employeeId, soldeConge: { $gte: leave.nombreJours } }, { $inc: { soldeConge: -leave.nombreJours } });
-    if (!debited) {
-      await LeaveRequest.updateOne({ _id: id }, { statut: 'en attente', statutAdmin: 'en attente' });
-      throw badRequest('Solde de congé insuffisant pour cette demande', 'INSUFFICIENT_BALANCE');
-    }
-    await clearTelework(employeeId, leave.dateDebut, leave.dateFin);
-    await notify(employeeId, 'Congé', 'leave.accepted', params, { emailSubject: 'Réponse à votre demande de congé' });
+    await withTransaction(async (session) => {
+      mails.length = 0;
+      // Prise de la demande de façon atomique, puis débit du solde conditionnel : pas de double décompte ni de solde négatif.
+      const claimed = await LeaveRequest.findOneAndUpdate({ _id: id, statut: 'en attente' }, { statut: 'accepte', statutAdmin: 'accepte' }, { session });
+      if (!claimed) throw conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED');
+      const debited = await User.findOneAndUpdate({ _id: employeeId, soldeConge: { $gte: leave.nombreJours } }, { $inc: { soldeConge: -leave.nombreJours } }, { session });
+      if (!debited) {
+        // Avec transaction, lever l'erreur annule la prise de la demande. Sans (base sans jeu de réplicas), on la rend à la main.
+        if (!session) await LeaveRequest.updateOne({ _id: id }, { statut: 'en attente', statutAdmin: 'en attente' });
+        throw badRequest('Solde de congé insuffisant pour cette demande', 'INSUFFICIENT_BALANCE');
+      }
+      await clearTelework(employeeId, leave.dateDebut, leave.dateFin, session);
+      mails.push(...(await notify(employeeId, 'Congé', 'leave.accepted', params, { emailSubject, session, deferMail: true })));
+    });
   }
+  await sendDeferred(mails);
   await audit(req, { action: `leave.${body.decision}`, targetType: 'leave', targetId: id });
   res.json({ leave: await LeaveRequest.findById(id) });
 });

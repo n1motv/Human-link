@@ -1,3 +1,4 @@
+import type { ClientSession } from 'mongoose';
 import { LeaveRequest } from '../../models/LeaveRequest.js';
 import { SickLeave } from '../../models/SickLeave.js';
 import { Telework } from '../../models/Telework.js';
@@ -40,6 +41,6 @@ export const CONFLICT_MESSAGES: Record<string, string> = {
 };
 
 /** Quand une absence est acceptée, le télétravail prévu sur la période n'a plus lieu d'être. */
-export async function clearTelework(userId: string, start: string, end: string): Promise<void> {
-  await Telework.deleteMany({ userId, date: { $gte: start, $lte: end } });
+export async function clearTelework(userId: string, start: string, end: string, session?: ClientSession): Promise<void> {
+  await Telework.deleteMany({ userId, date: { $gte: start, $lte: end } }, { session });
 }

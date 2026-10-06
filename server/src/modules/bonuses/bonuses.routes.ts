@@ -6,7 +6,8 @@ import { User } from '../../models/User.js';
 import { authOf, requireAuth, requireRole } from '../../middleware/auth.js';
 import { audit } from '../../utils/audit.js';
 import { conflict, forbidden, notFound, parse, badRequest } from '../../utils/errors.js';
-import { notify, notifyAdmins } from '../../utils/notify.js';
+import { notify, notifyAdmins, sendDeferred, type DeferredMail } from '../../utils/notify.js';
+import { withTransaction } from '../../utils/transaction.js';
 import { displayName, managedIds } from '../access.js';
 
 export const bonusesRouter = Router();
@@ -55,20 +56,26 @@ bonusesRouter.post('/:id/decision', requireRole('admin'), async (req, res) => {
   const { id } = parse(z.object({ id: objectId }), req.params);
   const body = parse(schemas.decisionBody, req.body);
   if (body.decision === 'refuse' && !body.motifRefus) throw badRequest('Un motif de refus est requis', 'REASON_REQUIRED');
-  const bonus = await BonusRequest.findOneAndUpdate(
-    { _id: id, statut: 'en attente' },
-    { statut: body.decision, motifRefus: body.decision === 'refuse' ? body.motifRefus : undefined },
-    { new: true },
-  );
+  let mails: DeferredMail[] = [];
+  const bonus = await withTransaction(async (session) => {
+    const decided = await BonusRequest.findOneAndUpdate(
+      { _id: id, statut: 'en attente' },
+      { statut: body.decision, motifRefus: body.decision === 'refuse' ? body.motifRefus : undefined },
+      { new: true, session },
+    );
+    if (!decided) return null;
+    const employee = await User.findById(decided.employeId).session(session ?? null);
+    mails = await notify(
+      decided.managerId,
+      'Prime',
+      body.decision === 'accepte' ? 'bonus.accepted' : 'bonus.refused',
+      { employee: displayName(employee ?? {}), motif: body.motifRefus ?? '' },
+      { emailSubject: 'Réponse à votre demande de prime', session, deferMail: true },
+    );
+    return decided;
+  });
   if (!bonus) throw (await BonusRequest.exists({ _id: id })) ? conflict('Cette demande a déjà été traitée', 'ALREADY_DECIDED') : notFound('Demande introuvable');
-  const employee = await User.findById(bonus.employeId);
-  await notify(
-    bonus.managerId,
-    'Prime',
-    body.decision === 'accepte' ? 'bonus.accepted' : 'bonus.refused',
-    { employee: displayName(employee ?? {}), motif: body.motifRefus ?? '' },
-    { emailSubject: 'Réponse à votre demande de prime' },
-  );
+  await sendDeferred(mails);
   await audit(req, { action: `bonus.${body.decision}`, targetType: 'bonus', targetId: id });
   res.json({ bonus });
 });

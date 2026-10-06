@@ -61,6 +61,8 @@ interface Case {
   model: unknown;
   filter: object;
   sort?: object;
+  /** Le tri en mémoire reste acceptable : il porte sur le résultat déjà filtré par l'index, jamais sur toute la collection. */
+  sortOnFiltered?: boolean;
 }
 
 const CASES: Case[] = [
@@ -112,7 +114,7 @@ const CASES: Case[] = [
   { name: 'contact : purge de rétention', model: ContactRequest, filter: { createdAt: { $lt: past } } },
   // Journal d’audit
   { name: 'audit : le plus récent d’abord', model: AuditLog, filter: {}, sort: { at: -1 } },
-  { name: 'audit : filtré par préfixe d’action', model: AuditLog, filter: { action: /^user\./ }, sort: { at: -1 } },
+  { name: 'audit : filtré par préfixe d’action', model: AuditLog, filter: { action: /^user\./ }, sort: { at: -1 }, sortOnFiltered: true }, // un préfixe couvre plusieurs actions : plusieurs plages d'index, donc un tri sur le résultat
   { name: 'audit : filtré par cible', model: AuditLog, filter: { targetId: 'abc' }, sort: { at: -1 } },
   { name: 'audit : actions d’une personne (export RGPD)', model: AuditLog, filter: { actorId: id }, sort: { at: -1 } },
   { name: 'audit : purge de rétention', model: AuditLog, filter: { at: { $lt: past } } },
@@ -132,7 +134,11 @@ describe('index MongoDB : aucune requête fréquente ne balaie toute la collecti
         `plan : ${found.join(' > ')}`,
       ).toBe(true);
       expect(found, 'balayage complet de la collection').not.toContain('COLLSCAN');
-      expect(found, 'tri en mémoire (aucun index ne fournit l’ordre demandé)').not.toContain('SORT');
+      if (!c.sortOnFiltered)
+        expect(
+          found.filter((x) => x.startsWith('SORT')),
+          'tri en mémoire (aucun index ne fournit l’ordre demandé)',
+        ).toEqual([]);
     });
   }
 
