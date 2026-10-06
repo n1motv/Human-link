@@ -23,7 +23,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sbom": "node scripts/sbom.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

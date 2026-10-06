@@ -168,6 +168,7 @@ jobs:
           context: .
           push: false
           tags: human-link:ci
+          load: true # l'image reste disponible pour Trivy et syft ci-dessous
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Analyse de l'image (vulnérabilités graves)
@@ -177,3 +178,26 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: '1'
+      # Liste des composants (SBOM) de l'image : chaque paquet système et npm avec sa version, pour savoir en une recherche
+      # si une faille publiée touche cette livraison. Deux formats standards, joints au job (et à conserver avec chaque livraison).
+      - name: SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: human-link:ci
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+      - name: SBOM (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: human-link:ci
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          upload-artifact: false
+      - name: Publier les SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom.spdx.json
+            sbom.cdx.json

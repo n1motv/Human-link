@@ -1,0 +1,77 @@
+{
+  "$comment": "Instance de test « NVIDIA » : branding, modules et règles RH propres à ce client. Aucun secret ici.",
+  "company": {
+    "name": "NVIDIA",
+    "legalName": "NVIDIA Corporation",
+    "supportEmail": "rh@nvidia.example.com",
+    "dpoEmail": "dpo@nvidia.example.com",
+    "address": "2788 San Tomas Expressway, Santa Clara, CA 95051"
+  },
+  "branding": {
+    "logoUrl": "/branding/logo.svg",
+    "logoOnDarkUrl": "/branding/logo-on-dark.svg",
+    "showName": false,
+    "accent": "#76b900",
+    "accent2": "#a3d92b",
+    "defaultTheme": "dark"
+  },
+  "i18n": {
+    "defaultLanguage": "en",
+    "languages": [
+      "en",
+      "fr",
+      "ar"
+    ]
+  },
+  "modules": {
+    "leaves": true,
+    "sickLeaves": true,
+    "bonuses": true,
+    "telework": true,
+    "meetings": true,
+    "vault": true,
+    "feedback": true,
+    "contact": true,
+    "chatbot": true,
+    "orgChart": true
+  },
+  "hr": {
+    "monthlyLeaveAccrual": 2.0,
+    "workingDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "minimumAge": 17,
+    "defaultTeleworkMaxDays": 2,
+    "leaveAttachmentRequiredForReasons": []
+  },
+  "security": {
+    "passwordMinLength": 12,
+    "maxLoginAttempts": 5,
+    "lockMinutes": 15,
+    "accessTokenMinutes": 10,
+    "refreshTokenDays": 7,
+    "inviteTokenHours": 48,
+    "resetTokenMinutes": 30,
+    "require2faForRoles": [
+      "admin",
+      "manager"
+    ]
+  },
+  "gdpr": {
+    "auditLogRetentionDays": 365,
+    "notificationRetentionDays": 90,
+    "contactRequestRetentionDays": 365,
+    "feedbackRetentionMonths": 24,
+    "departedEmployeeRetentionYears": 5
+  },
+  "notifications": {
+    "maxPerUser": 100,
+    "teleworkReminderCron": "0 8 * * 1",
+    "feedbackReminderCron": "0 8 1 * *",
+    "monthlyAccrualCron": "5 0 1 * *"
+  }
+}

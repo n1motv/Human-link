@@ -48,3 +48,6 @@ client/test-results/
 
 # Copie générée de shared/src pour le serveur (shared/sync.mjs)
 server/src/_shared/
+
+# Listes de composants générées (npm run sbom) : jointes aux livraisons, pas au dépôt
+sbom/

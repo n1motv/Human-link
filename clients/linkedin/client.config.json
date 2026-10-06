@@ -1,0 +1,76 @@
+{
+  "$comment": "Instance de test « LinkedIn » : branding, modules et règles RH propres à ce client. Aucun secret ici.",
+  "company": {
+    "name": "LinkedIn",
+    "legalName": "LinkedIn Corporation",
+    "supportEmail": "rh@linkedin.example.com",
+    "dpoEmail": "dpo@linkedin.example.com",
+    "address": "1000 West Maude Avenue, Sunnyvale, CA 94085"
+  },
+  "branding": {
+    "logoUrl": "/branding/logo.svg",
+    "logoOnDarkUrl": "/branding/logo-on-dark.svg",
+    "showName": false,
+    "accent": "#0a66c2",
+    "accent2": "#2d7fd6",
+    "defaultTheme": "dark"
+  },
+  "i18n": {
+    "defaultLanguage": "fr",
+    "languages": [
+      "fr",
+      "en",
+      "it"
+    ]
+  },
+  "modules": {
+    "leaves": true,
+    "sickLeaves": true,
+    "bonuses": true,
+    "telework": true,
+    "meetings": true,
+    "vault": false,
+    "feedback": true,
+    "contact": true,
+    "chatbot": true,
+    "orgChart": false
+  },
+  "hr": {
+    "monthlyLeaveAccrual": 2.5,
+    "workingDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "minimumAge": 17,
+    "defaultTeleworkMaxDays": 4,
+    "leaveAttachmentRequiredForReasons": []
+  },
+  "security": {
+    "passwordMinLength": 12,
+    "maxLoginAttempts": 5,
+    "lockMinutes": 15,
+    "accessTokenMinutes": 10,
+    "refreshTokenDays": 7,
+    "inviteTokenHours": 48,
+    "resetTokenMinutes": 30,
+    "require2faForRoles": [
+      "admin"
+    ]
+  },
+  "gdpr": {
+    "auditLogRetentionDays": 365,
+    "notificationRetentionDays": 90,
+    "contactRequestRetentionDays": 365,
+    "feedbackRetentionMonths": 24,
+    "departedEmployeeRetentionYears": 5
+  },
+  "notifications": {
+    "maxPerUser": 100,
+    "teleworkReminderCron": "0 8 * * 1",
+    "feedbackReminderCron": "0 8 1 * *",
+    "monthlyAccrualCron": "5 0 1 * *"
+  }
+}

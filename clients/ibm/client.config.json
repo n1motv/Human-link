@@ -1,0 +1,75 @@
+{
+  "$comment": "Instance de test « IBM » : branding, modules et règles RH propres à ce client. Aucun secret ici.",
+  "company": {
+    "name": "IBM",
+    "legalName": "International Business Machines Corporation",
+    "supportEmail": "rh@ibm.example.com",
+    "dpoEmail": "dpo@ibm.example.com",
+    "address": "1 New Orchard Road, Armonk, NY 10504"
+  },
+  "branding": {
+    "logoUrl": "/branding/logo.svg",
+    "logoOnDarkUrl": "/branding/logo-on-dark.svg",
+    "showName": false,
+    "accent": "#0f62fe",
+    "accent2": "#8a3ffc",
+    "defaultTheme": "light"
+  },
+  "i18n": {
+    "defaultLanguage": "fr",
+    "languages": [
+      "fr",
+      "en"
+    ]
+  },
+  "modules": {
+    "leaves": true,
+    "sickLeaves": true,
+    "bonuses": false,
+    "telework": true,
+    "meetings": true,
+    "vault": true,
+    "feedback": true,
+    "contact": true,
+    "chatbot": false,
+    "orgChart": true
+  },
+  "hr": {
+    "monthlyLeaveAccrual": 2.5,
+    "workingDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "minimumAge": 17,
+    "defaultTeleworkMaxDays": 3,
+    "leaveAttachmentRequiredForReasons": []
+  },
+  "security": {
+    "passwordMinLength": 12,
+    "maxLoginAttempts": 5,
+    "lockMinutes": 15,
+    "accessTokenMinutes": 10,
+    "refreshTokenDays": 7,
+    "inviteTokenHours": 48,
+    "resetTokenMinutes": 30,
+    "require2faForRoles": [
+      "admin"
+    ]
+  },
+  "gdpr": {
+    "auditLogRetentionDays": 365,
+    "notificationRetentionDays": 90,
+    "contactRequestRetentionDays": 365,
+    "feedbackRetentionMonths": 24,
+    "departedEmployeeRetentionYears": 5
+  },
+  "notifications": {
+    "maxPerUser": 100,
+    "teleworkReminderCron": "0 8 * * 1",
+    "feedbackReminderCron": "0 8 1 * *",
+    "monthlyAccrualCron": "5 0 1 * *"
+  }
+}

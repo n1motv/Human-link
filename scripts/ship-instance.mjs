@@ -55,7 +55,7 @@ if (!flag('no-image')) {
   const daemon = run('docker', ['info', '--format', '{{.ServerVersion}}']);
   if (daemon.status !== 0) fail('Docker ne répond pas (démarrez Docker Desktop / le service), ou utilisez --no-image.');
   console.log(`→ Construction de l'image ${imageName} …`);
-  const build = run('docker', ['build', '-t', imageName, '.'], { stdio: 'inherit' });
+  const build = run('docker', ['build', '--build-arg', `CLIENT=${slug}`, '-t', imageName, '.'], { stdio: 'inherit' });
   if (build.status !== 0) fail("La construction de l'image a échoué.");
   if (flag('push')) {
     if (!opt('registry')) fail('--push nécessite --registry <dépôt>');

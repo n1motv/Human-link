@@ -1,0 +1,162 @@
+# Instances de TEST : cinq clients (example, nvidia, ibm, microsoft, linkedin), chacun dans SON image Docker, en parallèle.
+# Rien ne tourne en dehors de Docker. Piloté par : npm run instances -- <commande>   (voir docs/INSTANCES.md)
+#
+#   npm run instances -- up            construit les 5 images et démarre tout (génère les clés au premier lancement)
+#   npm run instances -- watch         idem, puis RECONSTRUIT l'image d'une instance dès qu'un fichier de code change
+#   npm run instances -- seed all --demo
+#   npm run instances -- test          vérifie que les 5 instances répondent correctement
+#
+# Une image par client : `docker build --build-arg CLIENT=<nom>` embarque clients/<nom> (config + logos). Le code (serveur, front)
+# est le même et se compile une seule fois : les 5 images partagent leurs couches.
+# Les clés et mots de passe de test viennent de clients/<nom>/.env (créé par « init », jamais versionné) ; ce fichier est réservé aux tests.
+
+name: hl-test
+
+x-app: &app
+  restart: unless-stopped
+  depends_on:
+    mongo:
+      condition: service_healthy
+
+# Valeurs communes. Les chemins sont ceux DU CONTENEUR ; le reste (clés, administrateur) vient du .env du client.
+x-env: &env
+  NODE_ENV: production
+  COOKIE_SECURE: 'false' # test local en HTTP ; en production : HTTPS et cookies sécurisés
+  PORT: '4000'
+  CLIENT_DIR: /client
+  CLIENT_DIST: /app/client/dist
+  SERVE_CLIENT: 'true'
+  STORAGE_DIR: /data/storage
+  HIBP_ENABLED: 'false' # pas d'appel réseau sortant pendant les tests
+  METRICS_TOKEN: test-metrics-token # expose /metrics (jeton de test)
+
+# Fichiers surveillés par « watch » : un changement reconstruit l'image de l'instance et la relance.
+x-watch-server: &w-server { action: rebuild, path: ./server/src }
+x-watch-server-pkg: &w-server-pkg { action: rebuild, path: ./server/package.json }
+x-watch-client: &w-client { action: rebuild, path: ./client/src }
+x-watch-client-pkg: &w-client-pkg { action: rebuild, path: ./client/package.json }
+x-watch-shared: &w-shared { action: rebuild, path: ./shared/src }
+x-watch-dockerfile: &w-dockerfile { action: rebuild, path: ./Dockerfile }
+
+services:
+  mongo:
+    image: mongo:7@sha256:1f995ad6fdb93244a1addab1b58f934a0bc2f5643c38e02f5e9d7f0c7d227a7b
+    restart: unless-stopped
+    # Requêtes de plus de 100 ms enregistrées dans system.profile (T-15 : repérer les index manquants).
+    command: ['--auth', '--bind_ip_all', '--profile', '1', '--slowms', '100']
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: humanlink
+      MONGO_INITDB_ROOT_PASSWORD: test-only-password
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  example:
+    <<: *app
+    image: humanlink/test-example:dev
+    build: { context: ., args: { CLIENT: example } }
+    env_file: [./clients/example/.env]
+    environment:
+      <<: *env
+      APP_URL: http://localhost:4100
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_example?authSource=admin
+    ports: ['4100:4000']
+    volumes: ['data-example:/data']
+    develop:
+      watch: [*w-server, *w-server-pkg, *w-client, *w-client-pkg, *w-shared, *w-dockerfile, { action: rebuild, path: ./clients/example }]
+
+  nvidia:
+    <<: *app
+    image: humanlink/test-nvidia:dev
+    build: { context: ., args: { CLIENT: nvidia } }
+    env_file: [./clients/nvidia/.env]
+    environment:
+      <<: *env
+      APP_URL: http://localhost:4101
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_nvidia?authSource=admin
+    ports: ['4101:4000']
+    volumes: ['data-nvidia:/data']
+    develop:
+      watch: [*w-server, *w-server-pkg, *w-client, *w-client-pkg, *w-shared, *w-dockerfile, { action: rebuild, path: ./clients/nvidia }]
+
+  ibm:
+    <<: *app
+    image: humanlink/test-ibm:dev
+    build: { context: ., args: { CLIENT: ibm } }
+    env_file: [./clients/ibm/.env]
+    environment:
+      <<: *env
+      APP_URL: http://localhost:4102
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_ibm?authSource=admin
+    ports: ['4102:4000']
+    volumes: ['data-ibm:/data']
+    develop:
+      watch: [*w-server, *w-server-pkg, *w-client, *w-client-pkg, *w-shared, *w-dockerfile, { action: rebuild, path: ./clients/ibm }]
+
+  microsoft:
+    <<: *app
+    image: humanlink/test-microsoft:dev
+    build: { context: ., args: { CLIENT: microsoft } }
+    env_file: [./clients/microsoft/.env]
+    environment:
+      <<: *env
+      APP_URL: http://localhost:4103
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_microsoft?authSource=admin
+    ports: ['4103:4000']
+    volumes: ['data-microsoft:/data']
+    develop:
+      watch: [*w-server, *w-server-pkg, *w-client, *w-client-pkg, *w-shared, *w-dockerfile, { action: rebuild, path: ./clients/microsoft }]
+
+  linkedin:
+    <<: *app
+    image: humanlink/test-linkedin:dev
+    build: { context: ., args: { CLIENT: linkedin } }
+    env_file: [./clients/linkedin/.env]
+    environment:
+      <<: *env
+      APP_URL: http://localhost:4104
+      MONGODB_URI: mongodb://humanlink:test-only-password@mongo:27017/humanlink_linkedin?authSource=admin
+    ports: ['4104:4000']
+    volumes: ['data-linkedin:/data']
+    develop:
+      watch: [*w-server, *w-server-pkg, *w-client, *w-client-pkg, *w-shared, *w-dockerfile, { action: rebuild, path: ./clients/linkedin }]
+
+  # --- Supervision (profil « monitoring ») : npm run instances -- up --monitoring ---
+  prometheus:
+    image: prom/prometheus:v3@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    profiles: ['monitoring']
+    restart: unless-stopped
+    volumes:
+      - ./deploy/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports: ['9090:9090']
+
+  grafana:
+    image: grafana/grafana:12.2.0@sha256:74144189b38447facf737dfd0f3906e42e0776212bf575dc3334c3609183adf7
+    profiles: ['monitoring']
+    restart: unless-stopped
+    depends_on: [prometheus]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: test-only-grafana
+      GF_AUTH_ANONYMOUS_ENABLED: 'true' # lecture libre en local ; jamais en production
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./deploy/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports: ['3030:3000']
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  mongo-data:
+  data-example:
+  data-nvidia:
+  data-ibm:
+  data-microsoft:
+  data-linkedin:

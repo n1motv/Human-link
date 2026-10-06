@@ -14,3 +14,14 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule: { interval: monthly }
+  # Les images de base sont figées par empreinte (Dockerfile, docker-compose*.yml) : Dependabot propose les mises à jour avec la nouvelle empreinte.
+  - package-ecosystem: docker
+    directory: /deploy/backup
+    schedule: { interval: monthly }
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5

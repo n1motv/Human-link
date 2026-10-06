@@ -16,27 +16,54 @@ Un modèle est fourni : `clients/example/` (port 4100). Pour tester plusieurs cl
 
 ---
 
-## 1. Les lancer en parallèle sur votre machine (sans Docker)
+## 1. Les lancer en parallèle sur votre machine (tout dans Docker)
+
+Tout se fait avec Docker : **une image par client**, toutes lancées ensemble avec une base MongoDB. Plus rien ne tourne « en direct » sur la machine, ce qui est testé est exactement ce qui sera livré.
 
 ```bash
-npm run install:all && npm run build      # une seule compilation sert toutes les instances
-npm run dev:db                            # MongoDB local (terminal séparé) ; une seule base serveur, une base par client
-npm run instances -- init all             # crée clients/<nom>/.env avec des clés uniques par client
-npm run instances -- up all               # démarre toutes les instances en arrière-plan
+npm run instances -- up                   # construit les 5 images, génère les clés au premier lancement, démarre, attend qu'elles soient saines
 npm run instances -- seed all --demo      # administrateur + données de démonstration dans chaque base
-npm run instances -- status
+npm run instances -- test                 # vérifie les 5 instances de l'extérieur
+npm run instances -- status               # état, port, version déployée
 ```
 
-| Instance | Adresse | Base MongoDB |
-| --- | --- | --- |
-| example | http://localhost:4100 | humanlink_example |
-| acme (si créée) | http://localhost:4101 | humanlink_acme |
+Prérequis : Docker Desktop lancé (rien d'autre à installer : ni Node ni MongoDB n'ont besoin d'être présents pour cela).
 
-Autres commandes : `down`, `restart`, `logs <nom>`, et `up acme globex` pour n'en lancer que certaines. Le mot de passe de l'administrateur est affiché par `init` ; celui des comptes de démonstration par `seed --demo`.
+| Instance | Adresse | Image | Base MongoDB |
+| --- | --- | --- | --- |
+| example | http://localhost:4100 | `humanlink/test-example:dev` | humanlink_example |
+| nvidia | http://localhost:4101 | `humanlink/test-nvidia:dev` | humanlink_nvidia |
+| ibm | http://localhost:4102 | `humanlink/test-ibm:dev` | humanlink_ibm |
+| microsoft | http://localhost:4103 | `humanlink/test-microsoft:dev` | humanlink_microsoft |
+| linkedin | http://localhost:4104 | `humanlink/test-linkedin:dev` | humanlink_linkedin |
 
-Comment ça marche : chaque instance est un processus Node distinct, lancé **depuis son propre dossier** (`clients/<nom>/`). Elle y lit son `.env` (port, base, clés) et son `client.config.json`. Les clés sont propres à chaque client : une base ne peut pas être lue avec les clés d'un autre.
+### Modifier le code : les images se reconstruisent toutes seules
 
-Modifier un logo, une couleur ou un module : éditer `clients/<nom>/` puis `npm run instances -- restart <nom>` (pas de recompilation).
+```bash
+npm run instances -- watch                # up, puis surveillance du code
+```
+
+Toute modification de `server/`, `client/`, `shared/`, du `Dockerfile` ou du dossier d'un client reconstruit l'image concernée et relance le conteneur (`docker compose watch`). Les 5 images partagent leurs couches : la compilation se fait une fois et l'installation des paquets (`npm ci`) n'est refaite que si `package.json` change, soit environ une minute par modification. La version affichée par `status` change à chaque reconstruction ; un onglet resté ouvert voit alors la bannière « Nouvelle version disponible ».
+`Ctrl+C` arrête la surveillance, pas les instances.
+
+### Autres commandes
+
+| Commande | Effet |
+| --- | --- |
+| `list` | instances détectées, port, image |
+| `build [nom]` | construit seulement les images |
+| `logs [nom] [--follow]` | journaux des conteneurs |
+| `images` | images `humanlink/test-*` construites |
+| `restart [nom]` | relance sans reconstruire |
+| `down [--purge]` | arrête ; `--purge` supprime aussi les bases et fichiers de test |
+| `up --monitoring` | ajoute Prometheus (http://localhost:9090) et Grafana (http://localhost:3030, tableau « Human Link : exploitation ») |
+| `npm run sbom` | liste des composants (SBOM) de chaque image, dans `sbom/` |
+
+Le mot de passe de l'administrateur de chaque instance est affiché à la création de `clients/<nom>/.env` (premier `up`) et reste lisible dans ce fichier. Celui des comptes de démonstration est affiché par `seed --demo`.
+
+Comment ça marche : `docker build --build-arg CLIENT=<nom>` embarque `clients/<nom>/` (config et logos) dans l'image ; `docker-compose.test.yml` fixe les chemins du conteneur, l'adresse et la base de chaque instance ; les clés viennent de `clients/<nom>/.env`. Les clés sont propres à chaque client : une base ne peut pas être lue avec les clés d'un autre.
+
+Modifier un logo, une couleur ou un module : éditer `clients/<nom>/` (avec `watch`, l'image est reconstruite) ou relancer `npm run instances -- up <nom>`.
 
 ---
 

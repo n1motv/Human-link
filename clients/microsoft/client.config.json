@@ -1,0 +1,78 @@
+{
+  "$comment": "Instance de test « Microsoft » : branding, modules et règles RH propres à ce client. Aucun secret ici.",
+  "company": {
+    "name": "Microsoft",
+    "legalName": "Microsoft Corporation",
+    "supportEmail": "rh@microsoft.example.com",
+    "dpoEmail": "dpo@microsoft.example.com",
+    "address": "One Microsoft Way, Redmond, WA 98052"
+  },
+  "branding": {
+    "logoUrl": "/branding/logo.svg",
+    "logoOnDarkUrl": "/branding/logo-on-dark.svg",
+    "showName": false,
+    "accent": "#0067c0",
+    "accent2": "#0078d4",
+    "defaultTheme": "light"
+  },
+  "i18n": {
+    "defaultLanguage": "en",
+    "languages": [
+      "en",
+      "fr",
+      "es"
+    ]
+  },
+  "modules": {
+    "leaves": true,
+    "sickLeaves": true,
+    "bonuses": true,
+    "telework": true,
+    "meetings": false,
+    "vault": true,
+    "feedback": true,
+    "contact": true,
+    "chatbot": true,
+    "orgChart": true
+  },
+  "hr": {
+    "monthlyLeaveAccrual": 2.0,
+    "workingDays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "minimumAge": 17,
+    "defaultTeleworkMaxDays": 2,
+    "leaveAttachmentRequiredForReasons": []
+  },
+  "security": {
+    "passwordMinLength": 12,
+    "maxLoginAttempts": 5,
+    "lockMinutes": 15,
+    "accessTokenMinutes": 10,
+    "refreshTokenDays": 7,
+    "inviteTokenHours": 48,
+    "resetTokenMinutes": 30,
+    "require2faForRoles": [
+      "admin",
+      "manager",
+      "employe"
+    ]
+  },
+  "gdpr": {
+    "auditLogRetentionDays": 365,
+    "notificationRetentionDays": 90,
+    "contactRequestRetentionDays": 365,
+    "feedbackRetentionMonths": 24,
+    "departedEmployeeRetentionYears": 5
+  },
+  "notifications": {
+    "maxPerUser": 100,
+    "teleworkReminderCron": "0 8 * * 1",
+    "feedbackReminderCron": "0 8 1 * *",
+    "monthlyAccrualCron": "5 0 1 * *"
+  }
+}

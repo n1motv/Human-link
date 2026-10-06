@@ -8,7 +8,20 @@ coffre-fort de documents, feedback anonyme, assistant RH multilingue, organigram
 > La version précédente (Flask + SQLite) a été retirée de la branche principale ; elle reste consultable sur le tag git `v2-flask-archive` (`git checkout v2-flask-archive`).
 > Script de migration des données : [docs/MIGRATION.md](docs/MIGRATION.md).
 
-## Démarrage rapide (développement)
+## Démarrage rapide : tout dans Docker (5 clients de test)
+
+Prérequis : Docker Desktop. Chaque client de test (`example`, `nvidia`, `ibm`, `microsoft`, `linkedin`) a **sa propre image** ; elles tournent ensemble avec MongoDB.
+
+```bash
+npm run instances -- up                  # construit les 5 images et démarre (http://localhost:4100 à 4104)
+npm run instances -- seed all --demo     # administrateur + données de démonstration
+npm run instances -- test                # vérifie les 5 instances
+npm run instances -- watch               # reconstruit l'image concernée à chaque modification du code
+```
+
+Détails, commandes et supervision (Prometheus, Grafana) : [docs/INSTANCES.md](docs/INSTANCES.md).
+
+## Développement du code (sans conteneur)
 
 Prérequis : Node.js ≥ 20. MongoDB est facultatif en local : un script en lance un pour vous.
 
@@ -90,7 +103,8 @@ Détails, limites et **responsabilités du client** : [docs/SECURITE-RGPD.md](do
 
 - [Personnalisation par client](docs/PERSONNALISATION.md) — config, logos, modules, langues, règles RH
 - [Sécurité et RGPD](docs/SECURITE-RGPD.md) — mesures, procédures, checklist client
-- [Instances par client](docs/INSTANCES.md) — lancer plusieurs clients en parallèle, en livrer un (`npm run instances`, `npm run ship`)
+- [Instances par client](docs/INSTANCES.md) — les 5 instances de test dans Docker, en livrer un (`npm run instances`, `npm run ship`)
+- [Décisions d'architecture](docs/adr/README.md) — une page courte par choix structurant
 - [Déploiement et exploitation](docs/DEPLOIEMENT.md) — Docker, HTTPS, sauvegardes, mises à jour
 - [Migration depuis l'ancienne version](docs/MIGRATION.md)
 - [Développement](docs/DEVELOPPEMENT.md) — architecture, ajouter un module ou une langue
