@@ -104,6 +104,7 @@ Détails, limites et **responsabilités du client** : [docs/SECURITE-RGPD.md](do
 - [Personnalisation par client](docs/PERSONNALISATION.md) — config, logos, modules, langues, règles RH
 - [Sécurité et RGPD](docs/SECURITE-RGPD.md) — mesures, procédures, checklist client
 - [Instances par client](docs/INSTANCES.md) — les 5 instances de test dans Docker, en livrer un (`npm run instances`, `npm run ship`)
+- [Idées et suivi du diagnostic](docs/IDEES-ET-SUIVI.md) — la liste des points (faits, partiels, restants) avec leurs commits ; l'original est un artefact web privé mis à jour à chaque point traité
 - [Décisions d'architecture](docs/adr/README.md) — une page courte par choix structurant
 - [Déploiement et exploitation](docs/DEPLOIEMENT.md) — Docker, HTTPS, sauvegardes, mises à jour
 - [Migration depuis l'ancienne version](docs/MIGRATION.md)
